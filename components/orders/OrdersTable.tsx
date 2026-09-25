@@ -6,13 +6,7 @@ import Link from "next/link";
 
 import { DataTable } from "@/components/data-table/DataTable";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { TableEmpty } from "@/components/data-table/TableEmpty";
 import type { OrderListItem } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format/date";
 import { formatMoney } from "@/lib/format/money";
@@ -59,19 +53,15 @@ export function OrdersTable({ orders, filtered }: { orders: OrderListItem[]; fil
       data={orders}
       getRowId={(order) => order.id}
       empty={
-        <Empty className="border-0">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <InboxIcon />
-            </EmptyMedia>
-            <EmptyTitle>{filtered ? "No orders match these filters" : "No orders yet"}</EmptyTitle>
-            <EmptyDescription>
-              {filtered
-                ? "Pick another status or widen the dates."
-                : "Orders placed on the storefront appear here."}
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <TableEmpty
+          icon={InboxIcon}
+          title={filtered ? "No orders match these filters" : "No orders yet"}
+          description={
+            filtered
+              ? "Pick another status or widen the dates."
+              : "Orders placed on the storefront appear here."
+          }
+        />
       }
     />
   );

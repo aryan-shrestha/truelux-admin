@@ -12,7 +12,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
-export type Crumb = { label: string; href?: string };
+type Crumb = { label: string; href?: string };
 
 type PageHeaderProps = {
   crumbs: Crumb[];

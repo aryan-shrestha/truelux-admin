@@ -13,7 +13,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 
-export type LoadFailureProps = {
+type LoadFailureProps = {
   error: Error & { digest?: string };
   retry: () => void;
 };

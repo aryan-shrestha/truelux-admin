@@ -3,6 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { DataTable } from "@/components/data-table/DataTable";
+import { slugColumn, sortOrderColumn, usageColumn } from "@/components/taxonomy/columns";
 import { RowActions } from "@/components/taxonomy/RowActions";
 import { SizeDialog } from "@/components/taxonomy/SizeDialog";
 import { TaxonomyEmpty } from "@/components/taxonomy/TaxonomyEmpty";
@@ -14,15 +15,9 @@ const COLUMNS: ColumnDef<Size>[] = [
     header: "Name",
     cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
   },
-  {
-    accessorKey: "slug",
-    header: "Slug",
-    cell: ({ row }) => (
-      <span className="text-muted-foreground font-mono text-xs">{row.original.slug}</span>
-    ),
-  },
-  { accessorKey: "sort_order", header: "Order", meta: { className: "w-20 text-right" } },
-  { accessorKey: "variant_count", header: "Variants", meta: { className: "w-24 text-right" } },
+  slugColumn<Size>(),
+  sortOrderColumn<Size>(),
+  usageColumn<Size>("variant_count"),
   {
     id: "actions",
     meta: { className: "w-12 text-right" },

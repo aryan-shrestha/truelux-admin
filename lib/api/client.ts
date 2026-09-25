@@ -8,7 +8,7 @@ import { clearSession, readSession, writeSession } from "@/lib/auth/session";
 import { env } from "@/lib/env";
 
 type QueryValue = string | number | boolean | string[] | undefined;
-export type Query = Record<string, QueryValue>;
+type Query = Record<string, QueryValue>;
 
 type Body = FormData | object;
 
@@ -20,7 +20,7 @@ type SendOptions = {
 };
 
 export const LOGIN_PATH = "/login";
-export const EXPIRED_LOGIN_PATH = "/login?expired=1";
+const EXPIRED_LOGIN_PATH = "/login?expired=1";
 
 function buildUrl(path: string, query: Query | undefined): string {
   const params = new URLSearchParams();

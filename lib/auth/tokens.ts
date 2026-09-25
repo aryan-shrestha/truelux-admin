@@ -1,7 +1,7 @@
 export const ACCESS_COOKIE = "tl_access";
 export const REFRESH_COOKIE = "tl_refresh";
 
-export type CookieOptions = {
+type CookieOptions = {
   httpOnly: true;
   secure: boolean;
   sameSite: "lax";

@@ -17,7 +17,7 @@ import {
 import type { TaxonomyKind } from "@/lib/api/types";
 import { removeTaxonomy } from "@/lib/taxonomy/actions";
 
-export type EditDialogRenderer = (state: {
+type EditDialogRenderer = (state: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) => ReactNode;

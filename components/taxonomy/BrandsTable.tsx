@@ -3,6 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { DataTable } from "@/components/data-table/DataTable";
+import { slugColumn, sortOrderColumn, usageColumn } from "@/components/taxonomy/columns";
 import { BrandDialog } from "@/components/taxonomy/BrandDialog";
 import { RowActions } from "@/components/taxonomy/RowActions";
 import { TaxonomyEmpty } from "@/components/taxonomy/TaxonomyEmpty";
@@ -26,13 +27,7 @@ const COLUMNS: ColumnDef<Brand>[] = [
       </span>
     ),
   },
-  {
-    accessorKey: "slug",
-    header: "Slug",
-    cell: ({ row }) => (
-      <span className="text-muted-foreground font-mono text-xs">{row.original.slug}</span>
-    ),
-  },
+  slugColumn<Brand>(),
   {
     accessorKey: "is_active",
     header: "Status",
@@ -43,8 +38,8 @@ const COLUMNS: ColumnDef<Brand>[] = [
         <Badge variant="outline">Inactive</Badge>
       ),
   },
-  { accessorKey: "sort_order", header: "Order", meta: { className: "w-20 text-right" } },
-  { accessorKey: "product_count", header: "Products", meta: { className: "w-24 text-right" } },
+  sortOrderColumn<Brand>(),
+  usageColumn<Brand>("product_count"),
   {
     id: "actions",
     meta: { className: "w-12 text-right" },

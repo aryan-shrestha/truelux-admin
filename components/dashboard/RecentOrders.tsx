@@ -4,13 +4,7 @@ import Link from "next/link";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { TableEmpty } from "@/components/data-table/TableEmpty";
 import {
   Table,
   TableBody,
@@ -36,15 +30,11 @@ export function RecentOrders({ orders }: { orders: OrderListItem[] }) {
       </CardHeader>
       <CardContent>
         {orders.length === 0 ? (
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <InboxIcon />
-              </EmptyMedia>
-              <EmptyTitle>No orders yet</EmptyTitle>
-              <EmptyDescription>New orders from the storefront appear here.</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          <TableEmpty
+            icon={InboxIcon}
+            title={"No orders yet"}
+            description={"New orders from the storefront appear here."}
+          />
         ) : (
           <Table>
             <TableHeader>

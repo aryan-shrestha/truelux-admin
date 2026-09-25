@@ -3,13 +3,7 @@ import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { TableEmpty } from "@/components/data-table/TableEmpty";
 import {
   Table,
   TableBody,
@@ -29,15 +23,11 @@ export function LowStockTable({ variants }: { variants: LowStockVariant[] }) {
       </CardHeader>
       <CardContent>
         {variants.length === 0 ? (
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <PackageCheckIcon />
-              </EmptyMedia>
-              <EmptyTitle>Stock is healthy</EmptyTitle>
-              <EmptyDescription>No variant is running low.</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          <TableEmpty
+            icon={PackageCheckIcon}
+            title={"Stock is healthy"}
+            description={"No variant is running low."}
+          />
         ) : (
           <Table>
             <TableHeader>

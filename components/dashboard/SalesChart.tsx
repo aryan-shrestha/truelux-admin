@@ -19,7 +19,7 @@ const CONFIG = {
 
 const COMPACT = new Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: 1 });
 
-export type SalesPoint = {
+type SalesPoint = {
   day: string;
   revenue: number;
   revenueLabel: string;

@@ -6,17 +6,12 @@ import { toast } from "sonner";
 import { ConfirmAction } from "@/components/form/ConfirmAction";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import type { ActionFailure } from "@/lib/actions/attempt";
 import type { OrderStatus } from "@/lib/api/types";
 import { moveOrder } from "@/lib/orders/actions";
 import { ORDER_STATUS, TRANSITION_LABEL, type TransitionTarget } from "@/lib/orders/status";
 
 function isTarget(status: OrderStatus): status is TransitionTarget {
   return status !== "pending";
-}
-
-function reportFailure(failure: ActionFailure) {
-  toast.error(failure.message);
 }
 
 type OrderActionsProps = {
@@ -38,7 +33,7 @@ export function OrderActions({ orderId, orderNumber, allowed }: OrderActionsProp
     startTransition(async () => {
       const result = await moveOrder(orderId, to);
       if (result.ok) toast.success(`${orderNumber} is now ${ORDER_STATUS[to].label.toLowerCase()}`);
-      else reportFailure(result);
+      else toast.error(result.message);
     });
   }
 
@@ -56,7 +51,6 @@ export function OrderActions({ orderId, orderNumber, allowed }: OrderActionsProp
           confirmLabel="Cancel order"
           successMessage={`${orderNumber} cancelled`}
           action={() => moveOrder(orderId, "cancelled")}
-          onFailure={reportFailure}
         />
       ) : null}
       {forward.map((target) => (

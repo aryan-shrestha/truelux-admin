@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import type { SelectOption } from "@/components/form/SelectField";
 import { VariantRow } from "@/components/products/VariantRow";
+import { ShadeDot } from "@/components/taxonomy/ShadeDot";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -32,27 +33,20 @@ type VariantsEditorProps = {
 };
 
 export function VariantsEditor({ productId, variants, sizes, shades }: VariantsEditorProps) {
-  const [drafts, setDrafts] = useState<number[]>(variants.length === 0 ? [0] : []);
-  const [nextDraft, setNextDraft] = useState(1);
+  const [drafts, setDrafts] = useState<string[]>(() =>
+    variants.length === 0 ? [crypto.randomUUID()] : [],
+  );
   const shadeOptions: SelectOption[] = shades.map((shade) => ({
     value: shade.id,
     label: shade.name,
-    adornment: (
-      // The swatch colour is API data, so it cannot be a theme class.
-      <span
-        aria-hidden
-        className="ring-foreground/15 size-3 rounded-full ring-1"
-        style={{ backgroundColor: shade.hex_code }}
-      />
-    ),
+    adornment: <ShadeDot hex={shade.hex_code} />,
   }));
 
   function addDraft() {
-    setDrafts((current) => [...current, nextDraft]);
-    setNextDraft((current) => current + 1);
+    setDrafts((current) => [...current, crypto.randomUUID()]);
   }
 
-  function removeDraft(key: number) {
+  function removeDraft(key: string) {
     setDrafts((current) => current.filter((draft) => draft !== key));
   }
 
@@ -110,7 +104,7 @@ export function VariantsEditor({ productId, variants, sizes, shades }: VariantsE
               ))}
               {drafts.map((key) => (
                 <VariantRow
-                  key={`draft-${key}`}
+                  key={key}
                   productId={productId}
                   sizes={sizes}
                   shades={shadeOptions}

@@ -8,13 +8,7 @@ import { DataTable } from "@/components/data-table/DataTable";
 import { ProductRowActions } from "@/components/products/ProductRowActions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { TableEmpty } from "@/components/data-table/TableEmpty";
 import type { ProductListItem } from "@/lib/api/types";
 import { formatMoney } from "@/lib/format/money";
 
@@ -99,21 +93,15 @@ export function ProductsTable({
       data={products}
       getRowId={(product) => product.id}
       empty={
-        <Empty className="border-0">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <PackageSearchIcon />
-            </EmptyMedia>
-            <EmptyTitle>
-              {filtered ? "No products match these filters" : "No products yet"}
-            </EmptyTitle>
-            <EmptyDescription>
-              {filtered
-                ? "Clear a filter or search for something shorter."
-                : "Create the first product to start selling."}
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <TableEmpty
+          icon={PackageSearchIcon}
+          title={filtered ? "No products match these filters" : "No products yet"}
+          description={
+            filtered
+              ? "Clear a filter or search for something shorter."
+              : "Create the first product to start selling."
+          }
+        />
       }
     />
   );

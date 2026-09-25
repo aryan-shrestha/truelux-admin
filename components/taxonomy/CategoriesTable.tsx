@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { CornerDownRightIcon } from "lucide-react";
 
 import { DataTable } from "@/components/data-table/DataTable";
+import { slugColumn, sortOrderColumn, usageColumn } from "@/components/taxonomy/columns";
 import type { SelectOption } from "@/components/form/SelectField";
 import { CategoryDialog } from "@/components/taxonomy/CategoryDialog";
 import { RowActions } from "@/components/taxonomy/RowActions";
@@ -31,15 +32,9 @@ function columns(roots: SelectOption[]): ColumnDef<CategoryRow>[] {
       cell: ({ row }) =>
         row.original.parentName ?? <span className="text-muted-foreground">Top level</span>,
     },
-    {
-      accessorKey: "slug",
-      header: "Slug",
-      cell: ({ row }) => (
-        <span className="text-muted-foreground font-mono text-xs">{row.original.slug}</span>
-      ),
-    },
-    { accessorKey: "sort_order", header: "Order", meta: { className: "w-20 text-right" } },
-    { accessorKey: "product_count", header: "Products", meta: { className: "w-24 text-right" } },
+    slugColumn<CategoryRow>(),
+    sortOrderColumn<CategoryRow>(),
+    usageColumn<CategoryRow>("product_count"),
     {
       id: "actions",
       meta: { className: "w-12 text-right" },

@@ -3,6 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { DataTable } from "@/components/data-table/DataTable";
+import { slugColumn, sortOrderColumn, usageColumn } from "@/components/taxonomy/columns";
 import { RowActions } from "@/components/taxonomy/RowActions";
 import { ShadeDialog } from "@/components/taxonomy/ShadeDialog";
 import { ShadeSwatch } from "@/components/taxonomy/ShadeSwatch";
@@ -20,15 +21,9 @@ const COLUMNS: ColumnDef<Shade>[] = [
     header: "Hex",
     cell: ({ row }) => <span className="font-mono text-xs">{row.original.hex_code}</span>,
   },
-  {
-    accessorKey: "slug",
-    header: "Slug",
-    cell: ({ row }) => (
-      <span className="text-muted-foreground font-mono text-xs">{row.original.slug}</span>
-    ),
-  },
-  { accessorKey: "sort_order", header: "Order", meta: { className: "w-20 text-right" } },
-  { accessorKey: "variant_count", header: "Variants", meta: { className: "w-24 text-right" } },
+  slugColumn<Shade>(),
+  sortOrderColumn<Shade>(),
+  usageColumn<Shade>("variant_count"),
   {
     id: "actions",
     meta: { className: "w-12 text-right" },
