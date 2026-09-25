@@ -52,7 +52,7 @@ export function KpiCards({ revenue, ordersByStatus }: KpiCardsProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => (
-        <Card key={card.label} size="sm">
+        <Card key={card.label}>
           <CardHeader>
             <CardDescription>{card.label}</CardDescription>
             <CardTitle className="text-2xl tabular-nums">{card.value}</CardTitle>

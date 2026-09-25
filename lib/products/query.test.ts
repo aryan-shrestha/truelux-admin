@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseProductFilters, productsHref, toProductQuery } from "@/lib/products/query";
+import { parseProductFilters, parseProductTab, productsHref, toProductQuery } from "@/lib/products/query";
 
 describe("product filters in the URL", () => {
   it("turns the URL into an API query with offset paging", () => {
@@ -28,5 +28,13 @@ describe("product filters in the URL", () => {
     const filters = parseProductFilters({ q: "silk", category: "c1", stock: "low" });
 
     expect(productsHref({ ...filters, page: 2 })).toBe("/products?q=silk&category=c1&stock=low&page=2");
+  });
+});
+
+describe("parseProductTab", () => {
+  it("opens a known tab and falls back to details", () => {
+    expect(parseProductTab({ tab: "images" })).toBe("images");
+    expect(parseProductTab({ tab: "pricing" })).toBe("details");
+    expect(parseProductTab({})).toBe("details");
   });
 });

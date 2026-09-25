@@ -3,6 +3,15 @@ import { type SearchParams, firstParam, pageParam, queryParam } from "@/lib/sear
 
 export const PRODUCTS_PAGE_SIZE = 25;
 
+const PRODUCT_TABS = ["details", "variants", "images"] as const;
+
+export type ProductTab = (typeof PRODUCT_TABS)[number];
+
+export function parseProductTab(params: SearchParams): ProductTab {
+  const tab = firstParam(params.tab);
+  return PRODUCT_TABS.find((candidate) => candidate === tab) ?? "details";
+}
+
 export type ProductFilters = {
   q: string;
   brand: string | undefined;

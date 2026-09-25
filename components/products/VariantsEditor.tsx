@@ -71,8 +71,8 @@ export function VariantsEditor({ productId, variants, sizes, shades }: VariantsE
                 <TableHead className="min-w-40">SKU</TableHead>
                 <TableHead className="min-w-32">Size</TableHead>
                 <TableHead className="min-w-40">Shade</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Price override (Rs)</TableHead>
+                <TableHead className="min-w-28">Stock</TableHead>
+                <TableHead className="min-w-36">Price override (Rs)</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>

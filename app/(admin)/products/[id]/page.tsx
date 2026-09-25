@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { ImagesManager } from "@/components/products/ImagesManager";
 import { ProductDetailsForm } from "@/components/products/ProductDetailsForm";
-import { PRODUCT_TABS, type ProductTab, ProductTabs } from "@/components/products/ProductTabs";
+import { ProductTabs } from "@/components/products/ProductTabs";
 import { VariantsEditor } from "@/components/products/VariantsEditor";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import { hasCode } from "@/lib/api/errors";
 import { getProduct } from "@/lib/api/products";
 import { listTaxonomy } from "@/lib/api/taxonomy";
 import type { Product } from "@/lib/api/types";
-import { firstParam } from "@/lib/search-params";
+import { parseProductTab } from "@/lib/products/query";
 
 export const metadata: Metadata = { title: "Edit product" };
 
@@ -24,13 +24,8 @@ async function findProduct(id: string): Promise<Product> {
   }
 }
 
-function isProductTab(value: string | undefined): value is ProductTab {
-  return PRODUCT_TABS.some((tab) => tab === value);
-}
-
 export default async function ProductPage({ params, searchParams }: PageProps<"/products/[id]">) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
-  const requested = firstParam(query.tab);
   const [product, brands, categories, sizes, shades] = await Promise.all([
     findProduct(id),
     listTaxonomy("brands"),
@@ -50,7 +45,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
       </PageHeader>
       <div className="p-4 md:p-6">
         <ProductTabs
-          tab={isProductTab(requested) ? requested : "details"}
+          tab={parseProductTab(query)}
           variantCount={product.variants.length}
           imageCount={product.images.length}
           details={

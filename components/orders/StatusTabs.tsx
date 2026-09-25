@@ -14,7 +14,7 @@ export function StatusTabs({ selected }: { selected: OrderStatus[] }) {
 
   return (
     <Tabs value={value} onValueChange={(next) => update({ status: next === ALL ? null : next })}>
-      <TabsList className="max-w-full overflow-x-auto">
+      <TabsList className="max-w-full justify-start overflow-x-auto">
         <TabsTrigger value={ALL}>All</TabsTrigger>
         {ORDER_STATUSES.map((status) => (
           <TabsTrigger key={status} value={status}>

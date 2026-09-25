@@ -4,9 +4,7 @@ import type { ReactNode } from "react";
 
 import { useUrlParams } from "@/components/data-table/use-url-params";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-export const PRODUCT_TABS = ["details", "variants", "images"] as const;
-export type ProductTab = (typeof PRODUCT_TABS)[number];
+import type { ProductTab } from "@/lib/products/query";
 
 type ProductTabsProps = {
   tab: ProductTab;
