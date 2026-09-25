@@ -12,6 +12,7 @@ type UseActionFormOptions<TInput extends FieldValues, TOutput extends FieldValue
   defaultValues: DefaultValues<TInput>;
   action: (values: TOutput) => Promise<ActionResult<TData>>;
   onSuccess: (data: TData) => void;
+  fieldForCode?: Record<string, Path<TInput>>;
 };
 
 export function useActionForm<TInput extends FieldValues, TOutput extends FieldValues, TData>({
@@ -19,6 +20,7 @@ export function useActionForm<TInput extends FieldValues, TOutput extends FieldV
   defaultValues,
   action,
   onSuccess,
+  fieldForCode = {},
 }: UseActionFormOptions<TInput, TOutput, TData>) {
   const [isPending, startTransition] = useTransition();
   const form = useForm<TInput, unknown, TOutput>({
@@ -31,6 +33,11 @@ export function useActionForm<TInput extends FieldValues, TOutput extends FieldV
       const result = await action(values);
       if (result.ok) {
         onSuccess(result.data);
+        return;
+      }
+      const codeField = result.code ? fieldForCode[result.code] : undefined;
+      if (codeField) {
+        form.setError(codeField, { message: result.message });
         return;
       }
       const fields = Object.entries(result.fieldErrors);
