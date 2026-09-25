@@ -214,4 +214,6 @@ export type Taxonomy = {
   sizes: Size;
 };
 
+export const TAXONOMY_KINDS: TaxonomyKind[] = ["brands", "categories", "shades", "sizes"];
+
 export type TaxonomyKind = keyof Taxonomy;

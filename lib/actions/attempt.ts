@@ -12,6 +12,16 @@ export type ActionFailure = {
 
 export type ActionResult<T = null> = { ok: true; data: T } | ActionFailure;
 
+export function invalidInput(): ActionFailure {
+  return {
+    ok: false,
+    code: "validation_error",
+    message: "Check the highlighted fields.",
+    fieldErrors: {},
+    details: {},
+  };
+}
+
 export async function attempt<T>(work: () => Promise<T>): Promise<ActionResult<T>> {
   try {
     return { ok: true, data: await work() };

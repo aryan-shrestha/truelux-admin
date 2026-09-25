@@ -1,18 +1,15 @@
 import { ORDER_STATUSES, type OrderQuery, type OrderStatus } from "@/lib/api/types";
+import {
+  type SearchParams,
+  allParams,
+  firstParam,
+  pageParam,
+  queryParam,
+} from "@/lib/search-params";
 
 export const ORDERS_PAGE_SIZE = 25;
 
-type SearchParams = Record<string, string | string[] | undefined>;
-
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-
-function all(value: string | string[] | undefined): string[] {
-  return value === undefined ? [] : Array.isArray(value) ? value : [value];
-}
-
-function first(value: string | string[] | undefined): string | undefined {
-  return all(value)[0];
-}
 
 function isOrderStatus(value: string): value is OrderStatus {
   return ORDER_STATUSES.some((status) => status === value);
@@ -27,15 +24,14 @@ export type OrderFilters = {
 };
 
 export function parseOrderFilters(params: SearchParams): OrderFilters {
-  const from = first(params.from);
-  const to = first(params.to);
-  const page = Number.parseInt(first(params.page) ?? "1", 10);
+  const from = firstParam(params.from);
+  const to = firstParam(params.to);
   return {
-    status: all(params.status).filter(isOrderStatus),
-    q: first(params.q)?.trim() ?? "",
+    status: allParams(params.status).filter(isOrderStatus),
+    q: queryParam(params),
     from: from && ISO_DATE.test(from) ? from : undefined,
     to: to && ISO_DATE.test(to) ? to : undefined,
-    page: Number.isInteger(page) && page > 0 ? page : 1,
+    page: pageParam(params),
   };
 }
 
