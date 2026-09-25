@@ -48,6 +48,7 @@ const MESSAGES: Record<string, string> = {
   not_found: "That record no longer exists.",
   conflict: "This is still in use, so it cannot be removed.",
   throttled: "Too many requests. Wait a moment and try again.",
+  invalid_refresh_token: "Your session had already ended.",
   product_has_no_variants: "Add at least one variant before publishing.",
   invalid_status_transition: "The order cannot move to that status from where it is now.",
   order_already_shipped: "The order has already shipped, so it can no longer be changed that way.",

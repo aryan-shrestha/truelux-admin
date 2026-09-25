@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 
-import { type ActionFailure, attempt } from "@/lib/actions/attempt";
+import { type ActionFailure, attempt, invalidInput } from "@/lib/actions/attempt";
 import { logout, obtainTokens } from "@/lib/api/auth";
 import { LOGIN_PATH } from "@/lib/api/client";
 import { type LoginInput, loginSchema } from "@/lib/auth/login-schema";
@@ -12,13 +12,7 @@ import { clearSession, readSession, writeSession } from "@/lib/auth/session";
 export async function signIn(input: LoginInput, next: string | null): Promise<ActionFailure> {
   const parsed = loginSchema.safeParse(input);
   if (!parsed.success) {
-    return {
-      ok: false,
-      code: "validation_error",
-      message: "Enter your email and password.",
-      fieldErrors: {},
-      details: {},
-    };
+    return { ...invalidInput(), message: "Enter your email and password." };
   }
 
   const result = await attempt(() => obtainTokens(parsed.data));
@@ -37,6 +31,8 @@ export async function signIn(input: LoginInput, next: string | null): Promise<Ac
 export async function signOut(): Promise<void> {
   const { refresh } = await readSession();
   if (refresh) {
+    // A 422 invalid_refresh_token means the token is already unusable; either way the
+    // cookies go, so the outcome of the call does not change what happens next.
     await attempt(() => logout({ refresh }));
   }
   await clearSession();

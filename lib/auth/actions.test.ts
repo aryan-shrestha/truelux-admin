@@ -89,6 +89,15 @@ describe("signOut", () => {
     expect(cookieJar.values.size).toBe(0);
   });
 
+  it("still clears the cookies when the API rejects the refresh token with a 422", async () => {
+    cookieJar.reset({ tl_access: fakeJwt(300), tl_refresh: "revoked" });
+    fetchMock.mockResolvedValueOnce(errorResponse(422, "invalid_refresh_token"));
+
+    await expect(signOut()).rejects.toMatchObject({ url: "/login" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(cookieJar.values.size).toBe(0);
+  });
+
   it("still clears the cookies when the API is unreachable", async () => {
     cookieJar.reset({ tl_access: fakeJwt(300), tl_refresh: "the-refresh" });
     fetchMock.mockRejectedValueOnce(new TypeError("fetch failed"));

@@ -157,6 +157,12 @@ describe("apiRead", () => {
     expect(cookieJar.sets).toHaveLength(0);
   });
 
+  it("treats a 403 from a de-staffed account as an ended session", async () => {
+    fetchMock.mockResolvedValueOnce(errorResponse(403, "permission_denied"));
+
+    await expect(apiRead("/auth/me/")).rejects.toMatchObject({ url: "/login?expired=1" });
+  });
+
   it("rejects a path without its trailing slash before sending", async () => {
     await expect(apiRead("/admin/dashboard")).rejects.toThrow(/end in a slash/);
     expect(fetchMock).not.toHaveBeenCalled();

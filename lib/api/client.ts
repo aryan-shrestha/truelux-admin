@@ -87,11 +87,13 @@ export async function refreshTokens(refresh: string): Promise<TokenPair | null> 
 }
 
 // Server Components cannot write cookies, so a read never refreshes: proxy.ts renews the
-// access token before any render. A 401 here means the session is gone.
+// access token before any render. A 401 here means the session is gone; a 403 means the
+// account lost staff rights, which an access token keeps passing authentication for until
+// it expires.
 export async function apiRead<T>(path: string, query?: Query): Promise<T> {
   const { access } = await readSession();
   const response = await send(path, { method: "GET", query, accessToken: access });
-  if (response.status === 401) {
+  if (response.status === 401 || response.status === 403) {
     redirect(EXPIRED_LOGIN_PATH);
   }
   return parse<T>(response);

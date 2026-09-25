@@ -72,15 +72,16 @@ Backend `docs/features/staff-auth.md`. [ADR 0001](../decisions/0001-auth-is-a-ba
 - `lib/api/client.ts` (`server-only`) — `apiRead` for Server Components, `apiWrite` for
   server actions. `apiWrite` refreshes once on a 401, rewrites both cookies and retries;
   if the refresh fails it clears the cookies and redirects to `/login`. `apiRead`
-  never refreshes (see Decisions).
+  never refreshes (see Decisions); it sends a 401 or a 403 to `/login?expired=1`.
 - `lib/api/auth.ts` — `obtainTokens`, `logout`, `getMe`.
 
 ---
 
 ## Remaining
 
-- Not yet exercised against the live API: the token, refresh, logout and `me` calls
-  are verified with a stubbed `fetch` only.
+- Not yet exercised against the live API. The backend's staff-auth is implemented;
+  the calls here are verified against its documented behaviour with a stubbed
+  `fetch` only.
 
 ---
 
@@ -137,6 +138,18 @@ next server action.
   sizes the cookie; the API verifies every token.
 - A `redirect()` inside a server action is an exception. `attempt()` rethrows it with
   `unstable_rethrow`; any other `try/catch` around an API call must do the same.
+- A user who loses staff rights keeps a valid access token for up to its 15-minute
+  lifetime; the API answers it with `403 permission_denied`, not 401. `apiRead` treats
+  both as an ended session. The next refresh is refused with 401 by the API's
+  `USER_AUTHENTICATION_RULE`.
+- A refresh token whose user was deleted is answered `404 not_found`. The proxy and
+  `apiWrite` treat any non-2xx refresh as refused, so it ends the session the same way.
+- A throttled refresh (`429`, `auth` scope) is also treated as refused. The cookies
+  are kept, so the session resumes once the throttle window passes.
+- Logout with a revoked or foreign refresh token returns `422 invalid_refresh_token`.
+  `signOut` clears the cookies whatever the call returned.
+- Lifetimes come from the API (access 15 minutes, refresh 7 days); the cookies follow
+  each token's `exp`, so nothing here hard-codes them.
 - The login message for a wrong password, unknown email and non-staff account is the
   same sentence, because the API returns the same body for all four.
 
@@ -168,6 +181,8 @@ GET  /api/v1/auth/me/              server (admin layout)
 | `authentication_failed` (login) | "Email or password is incorrect." |
 | `throttled` (login) | "Too many requests. Wait a moment and try again." |
 | `authentication_failed` (refresh) | proxy: `/login?expired=1`; `apiWrite`: clear cookies, `/login` |
+| `authentication_failed` / `permission_denied` (any read) | `/login?expired=1` |
+| `invalid_refresh_token` (logout) | ignored; the cookies are cleared anyway |
 
 ---
 
@@ -192,10 +207,11 @@ GET  /api/v1/auth/me/              server (admin layout)
 - `lib/auth/actions.test.ts` — sign-in sets both cookies httpOnly with each token's
   lifetime; an off-site `next` lands on `/`; a rejected login returns one generic
   message with no field errors and sets no cookie; throttling has its own message;
-  sign-out blacklists and clears, even when the API is unreachable.
+  sign-out blacklists and clears, and still clears on a `422 invalid_refresh_token`
+  or when the API is unreachable.
 - `lib/api/client.test.ts` — a write refreshes once on 401, rewrites both cookies and
   retries; a second 401 is not refreshed again; a failed refresh clears the cookies
-  and redirects to `/login`; a read never refreshes.
+  and redirects to `/login`; a read never refreshes; a 403 on a read ends the session.
 - `proxy.test.ts` — anonymous requests go to `/login?next=`; signed-in visitors leave
   `/login`; `?expired=1` does not loop; an expiring token is renewed on the request
   and the response; a refused refresh goes to `/login?expired=1`.
