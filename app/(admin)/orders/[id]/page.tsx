@@ -27,11 +27,19 @@ export default async function OrderPage({ params }: PageProps<"/orders/[id]">) {
   return (
     <>
       <PageHeader
-        crumbs={[{ label: "Shop" }, { label: "Orders", href: "/orders" }, { label: order.order_number }]}
+        crumbs={[
+          { label: "Shop" },
+          { label: "Orders", href: "/orders" },
+          { label: order.order_number },
+        ]}
         title={order.order_number}
         description={<OrderStatusBadge status={order.status} />}
       >
-        <OrderActions orderId={order.id} orderNumber={order.order_number} allowed={order.allowed_transitions} />
+        <OrderActions
+          orderId={order.id}
+          orderNumber={order.order_number}
+          allowed={order.allowed_transitions}
+        />
       </PageHeader>
       <div className="grid gap-4 p-4 md:p-6 xl:grid-cols-3">
         <div className="xl:col-span-2">

@@ -9,7 +9,10 @@ import type { OrderDetail } from "@/lib/api/types";
 
 const targetSchema = z.enum(["confirmed", "shipped", "delivered", "cancelled"]);
 
-export async function moveOrder(id: string, to: z.input<typeof targetSchema>): Promise<ActionResult<OrderDetail>> {
+export async function moveOrder(
+  id: string,
+  to: z.input<typeof targetSchema>,
+): Promise<ActionResult<OrderDetail>> {
   const parsed = targetSchema.safeParse(to);
   if (!parsed.success) return invalidInput();
   const result = await attempt(() => transitionOrder({ id, to: parsed.data }));

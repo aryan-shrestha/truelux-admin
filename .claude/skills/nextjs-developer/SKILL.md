@@ -30,17 +30,18 @@ Senior Next.js developer with expertise in Next.js 14+ App Router, server compon
 
 Load detailed guidance based on context:
 
-| Topic | Reference | Load When |
-|-------|-----------|-----------|
-| App Router | `references/app-router.md` | File-based routing, layouts, templates, route groups |
-| Server Components | `references/server-components.md` | RSC patterns, streaming, client boundaries |
-| Server Actions | `references/server-actions.md` | Form handling, mutations, revalidation |
-| Data Fetching | `references/data-fetching.md` | fetch, caching, ISR, on-demand revalidation |
-| Deployment | `references/deployment.md` | Vercel, self-hosting, Docker, optimization |
+| Topic             | Reference                         | Load When                                            |
+| ----------------- | --------------------------------- | ---------------------------------------------------- |
+| App Router        | `references/app-router.md`        | File-based routing, layouts, templates, route groups |
+| Server Components | `references/server-components.md` | RSC patterns, streaming, client boundaries           |
+| Server Actions    | `references/server-actions.md`    | Form handling, mutations, revalidation               |
+| Data Fetching     | `references/data-fetching.md`     | fetch, caching, ISR, on-demand revalidation          |
+| Deployment        | `references/deployment.md`        | Vercel, self-hosting, Docker, optimization           |
 
 ## Constraints
 
 ### MUST DO (Next.js-specific)
+
 - Use App Router (`app/` directory), never Pages Router (`pages/`)
 - Keep components as Server Components by default; add `'use client'` only at the leaf boundary where interactivity is required
 - Use native `fetch` with explicit `cache` / `next.revalidate` options — do not rely on implicit caching
@@ -49,6 +50,7 @@ Load detailed guidance based on context:
 - Add `loading.tsx` and `error.tsx` at every route segment that performs async data fetching
 
 ### MUST NOT DO
+
 - Convert components to Client Components just to access data — fetch server-side first
 - Skip `loading.tsx`/`error.tsx` boundaries on async route segments
 - Deploy without running `next build` to confirm zero errors
@@ -56,17 +58,18 @@ Load detailed guidance based on context:
 ## Code Examples
 
 ### Server Component with data fetching and caching
+
 ```tsx
 // app/products/page.tsx
-import { Suspense } from 'react'
+import { Suspense } from "react";
 
 async function ProductList() {
   // Revalidate every 60 seconds (ISR)
-  const res = await fetch('https://api.example.com/products', {
+  const res = await fetch("https://api.example.com/products", {
     next: { revalidate: 60 },
-  })
-  if (!res.ok) throw new Error('Failed to fetch products')
-  const products: Product[] = await res.json()
+  });
+  if (!res.ok) throw new Error("Failed to fetch products");
+  const products: Product[] = await res.json();
 
   return (
     <ul>
@@ -74,7 +77,7 @@ async function ProductList() {
         <li key={p.id}>{p.name}</li>
       ))}
     </ul>
-  )
+  );
 }
 
 export default function Page() {
@@ -82,25 +85,26 @@ export default function Page() {
     <Suspense fallback={<p>Loading…</p>}>
       <ProductList />
     </Suspense>
-  )
+  );
 }
 ```
 
 ### Server Action with form handling and revalidation
+
 ```tsx
 // app/products/actions.ts
-'use server'
+"use server";
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath } from "next/cache";
 
 export async function createProduct(formData: FormData) {
-  const name = formData.get('name') as string
-  await db.product.create({ data: { name } })
-  revalidatePath('/products')
+  const name = formData.get("name") as string;
+  await db.product.create({ data: { name } });
+  revalidatePath("/products");
 }
 
 // app/products/new/page.tsx
-import { createProduct } from '../actions'
+import { createProduct } from "../actions";
 
 export default function NewProductPage() {
   return (
@@ -108,30 +112,30 @@ export default function NewProductPage() {
       <input name="name" placeholder="Product name" required />
       <button type="submit">Create</button>
     </form>
-  )
+  );
 }
 ```
 
 ### generateMetadata for dynamic SEO
+
 ```tsx
 // app/products/[id]/page.tsx
-import type { Metadata } from 'next'
+import type { Metadata } from "next";
 
-export async function generateMetadata(
-  { params }: { params: { id: string } }
-): Promise<Metadata> {
-  const product = await fetchProduct(params.id)
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const product = await fetchProduct(params.id);
   return {
     title: product.name,
     description: product.description,
     openGraph: { title: product.name, images: [product.imageUrl] },
-  }
+  };
 }
 ```
 
 ## Output Templates
 
 When implementing Next.js features, provide:
+
 1. App structure (route organization)
 2. Layout/page components with proper data fetching
 3. Server actions if mutations needed

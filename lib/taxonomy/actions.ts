@@ -3,11 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { type ActionResult, attempt, invalidInput } from "@/lib/actions/attempt";
-import {
-  createTaxonomy,
-  deleteTaxonomy,
-  updateTaxonomy,
-} from "@/lib/api/taxonomy";
+import { createTaxonomy, deleteTaxonomy, updateTaxonomy } from "@/lib/api/taxonomy";
 import { TAXONOMY_KINDS, type Taxonomy, type TaxonomyKind } from "@/lib/api/types";
 import { withoutBlankSlug } from "@/lib/catalog/fields";
 import {

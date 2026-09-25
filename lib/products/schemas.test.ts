@@ -44,7 +44,9 @@ describe("variantSchema", () => {
   });
 
   it("keeps a price override as a decimal string", () => {
-    expect(variantSchema.parse({ ...variant, price_override: "2999.50" }).price_override).toBe("2999.50");
+    expect(variantSchema.parse({ ...variant, price_override: "2999.50" }).price_override).toBe(
+      "2999.50",
+    );
   });
 
   it.each(["0", "0.00", "-1", "12.345"])("rejects the price override %s", (price_override) => {
@@ -72,14 +74,27 @@ describe("imageUploadSchema", () => {
 
   it("accepts a JPEG, PNG or WebP up to 5 MB", () => {
     for (const type of ["image/jpeg", "image/png", "image/webp"]) {
-      expect(imageUploadSchema.safeParse({ file: file(type, 5 * 1024 * 1024), alt_text: "", is_primary: false }).success).toBe(true);
+      expect(
+        imageUploadSchema.safeParse({
+          file: file(type, 5 * 1024 * 1024),
+          alt_text: "",
+          is_primary: false,
+        }).success,
+      ).toBe(true);
     }
   });
 
   it("rejects a GIF and anything over 5 MB", () => {
-    expect(imageUploadSchema.safeParse({ file: file("image/gif", 10), alt_text: "", is_primary: false }).success).toBe(false);
     expect(
-      imageUploadSchema.safeParse({ file: file("image/png", 5 * 1024 * 1024 + 1), alt_text: "", is_primary: false }).success,
+      imageUploadSchema.safeParse({ file: file("image/gif", 10), alt_text: "", is_primary: false })
+        .success,
+    ).toBe(false);
+    expect(
+      imageUploadSchema.safeParse({
+        file: file("image/png", 5 * 1024 * 1024 + 1),
+        alt_text: "",
+        is_primary: false,
+      }).success,
     ).toBe(false);
   });
 });

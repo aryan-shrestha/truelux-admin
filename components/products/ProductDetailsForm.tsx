@@ -65,7 +65,12 @@ export function ProductDetailsForm({ product, brands, categories }: ProductDetai
               </div>
               <TextareaField name="description" label="Description" />
               <div className="grid gap-6 md:grid-cols-2">
-                <SelectField name="brand_id" label="Brand" placeholder="Choose a brand" options={brands} />
+                <SelectField
+                  name="brand_id"
+                  label="Brand"
+                  placeholder="Choose a brand"
+                  options={brands}
+                />
                 <SelectField
                   name="category_id"
                   label="Category"
@@ -82,7 +87,11 @@ export function ProductDetailsForm({ product, brands, categories }: ProductDetai
                   autoComplete="off"
                   description="Variants use this unless they set their own price."
                 />
-                <NumberField name="sort_order" label="Sort order" description="Lower numbers come first." />
+                <NumberField
+                  name="sort_order"
+                  label="Sort order"
+                  description="Lower numbers come first."
+                />
               </div>
               <SwitchField
                 name="is_published"

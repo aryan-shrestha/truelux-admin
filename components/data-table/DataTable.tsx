@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  type ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import type { ReactNode } from "react";
 
 import {
@@ -39,7 +34,7 @@ export function DataTable<TData>({ columns, data, getRowId, empty }: DataTablePr
   });
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-card">
+    <div className="bg-card overflow-hidden rounded-lg border">
       <Table>
         <TableHeader className="bg-muted/50">
           {table.getHeaderGroups().map((group) => (

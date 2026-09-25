@@ -43,6 +43,8 @@ describe("URL-driven table controls", () => {
     await userEvent.click(screen.getByRole("combobox", { name: "Status" }));
     await userEvent.click(await screen.findByRole("option", { name: "Published" }));
 
-    expect(router.replace).toHaveBeenLastCalledWith("/products?brand=b1&published=yes", { scroll: false });
+    expect(router.replace).toHaveBeenLastCalledWith("/products?brand=b1&published=yes", {
+      scroll: false,
+    });
   });
 });

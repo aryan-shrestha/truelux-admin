@@ -1,10 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-import { parseProductFilters, parseProductTab, productsHref, toProductQuery } from "@/lib/products/query";
+import {
+  parseProductFilters,
+  parseProductTab,
+  productsHref,
+  toProductQuery,
+} from "@/lib/products/query";
 
 describe("product filters in the URL", () => {
   it("turns the URL into an API query with offset paging", () => {
-    const filters = parseProductFilters({ q: " silk ", brand: "b1", published: "no", stock: "low", page: "3" });
+    const filters = parseProductFilters({
+      q: " silk ",
+      brand: "b1",
+      published: "no",
+      stock: "low",
+      page: "3",
+    });
 
     expect(toProductQuery(filters)).toEqual({
       search: "silk",
@@ -27,7 +38,9 @@ describe("product filters in the URL", () => {
   it("writes the same filters back to a link", () => {
     const filters = parseProductFilters({ q: "silk", category: "c1", stock: "low" });
 
-    expect(productsHref({ ...filters, page: 2 })).toBe("/products?q=silk&category=c1&stock=low&page=2");
+    expect(productsHref({ ...filters, page: 2 })).toBe(
+      "/products?q=silk&category=c1&stock=low&page=2",
+    );
   });
 });
 

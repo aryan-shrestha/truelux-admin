@@ -8,7 +8,13 @@ import { DataTable } from "@/components/data-table/DataTable";
 import { ProductRowActions } from "@/components/products/ProductRowActions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import type { ProductListItem } from "@/lib/api/types";
 import { formatMoney } from "@/lib/format/money";
 
@@ -31,10 +37,15 @@ const COLUMNS: ColumnDef<ProductListItem>[] = [
     header: "Product",
     cell: ({ row }) => (
       <span className="flex min-w-0 flex-col">
-        <Link href={`/products/${row.original.id}`} className="truncate font-medium hover:underline">
+        <Link
+          href={`/products/${row.original.id}`}
+          className="truncate font-medium hover:underline"
+        >
           {row.original.name}
         </Link>
-        <span className="truncate font-mono text-xs text-muted-foreground">{row.original.slug}</span>
+        <span className="text-muted-foreground truncate font-mono text-xs">
+          {row.original.slug}
+        </span>
       </span>
     ),
   },
@@ -52,7 +63,11 @@ const COLUMNS: ColumnDef<ProductListItem>[] = [
     header: "Stock",
     meta: { className: "text-right" },
     cell: ({ row }) =>
-      row.original.total_stock === 0 ? <Badge variant="destructive">Out</Badge> : row.original.total_stock,
+      row.original.total_stock === 0 ? (
+        <Badge variant="destructive">Out</Badge>
+      ) : (
+        row.original.total_stock
+      ),
   },
   {
     accessorKey: "is_published",
@@ -71,7 +86,13 @@ const COLUMNS: ColumnDef<ProductListItem>[] = [
   },
 ];
 
-export function ProductsTable({ products, filtered }: { products: ProductListItem[]; filtered: boolean }) {
+export function ProductsTable({
+  products,
+  filtered,
+}: {
+  products: ProductListItem[];
+  filtered: boolean;
+}) {
   return (
     <DataTable
       columns={COLUMNS}
@@ -83,9 +104,13 @@ export function ProductsTable({ products, filtered }: { products: ProductListIte
             <EmptyMedia variant="icon">
               <PackageSearchIcon />
             </EmptyMedia>
-            <EmptyTitle>{filtered ? "No products match these filters" : "No products yet"}</EmptyTitle>
+            <EmptyTitle>
+              {filtered ? "No products match these filters" : "No products yet"}
+            </EmptyTitle>
             <EmptyDescription>
-              {filtered ? "Clear a filter or search for something shorter." : "Create the first product to start selling."}
+              {filtered
+                ? "Clear a filter or search for something shorter."
+                : "Create the first product to start selling."}
             </EmptyDescription>
           </EmptyHeader>
         </Empty>

@@ -7,12 +7,19 @@ import { listTaxonomy } from "@/lib/api/taxonomy";
 export const metadata: Metadata = { title: "New product" };
 
 export default async function NewProductPage() {
-  const [brands, categories] = await Promise.all([listTaxonomy("brands"), listTaxonomy("categories")]);
+  const [brands, categories] = await Promise.all([
+    listTaxonomy("brands"),
+    listTaxonomy("categories"),
+  ]);
 
   return (
     <>
       <PageHeader
-        crumbs={[{ label: "Catalogue" }, { label: "Products", href: "/products" }, { label: "New" }]}
+        crumbs={[
+          { label: "Catalogue" },
+          { label: "Products", href: "/products" },
+          { label: "New" },
+        ]}
         title="New product"
         description="Save the details first; variants and images come next."
       />

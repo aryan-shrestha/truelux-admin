@@ -69,7 +69,9 @@ export function describeError(error: unknown): string {
   if (message) {
     return message;
   }
-  return error.requestId ? `Something went wrong (ref ${error.requestId}).` : "Something went wrong.";
+  return error.requestId
+    ? `Something went wrong (ref ${error.requestId}).`
+    : "Something went wrong.";
 }
 
 export function fieldErrors(error: ApiError): Record<string, string> {

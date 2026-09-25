@@ -25,7 +25,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${sans.variable} ${heading.variable} ${mono.variable} antialiased`}
     >
       <body>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
           <TooltipProvider>{children}</TooltipProvider>
           <Toaster position="bottom-right" />
         </ThemeProvider>

@@ -19,7 +19,9 @@ describe("OrderActions", () => {
   });
 
   it("renders nothing for a finished order", () => {
-    const { container } = render(<OrderActions orderId="o1" orderNumber="TL-000123" allowed={[]} />);
+    const { container } = render(
+      <OrderActions orderId="o1" orderNumber="TL-000123" allowed={[]} />,
+    );
 
     expect(container).toBeEmptyDOMElement();
   });
@@ -32,7 +34,9 @@ describe("OrderActions", () => {
       fieldErrors: {},
       details: {},
     });
-    render(<OrderActions orderId="o1" orderNumber="TL-000123" allowed={["confirmed", "cancelled"]} />);
+    render(
+      <OrderActions orderId="o1" orderNumber="TL-000123" allowed={["confirmed", "cancelled"]} />,
+    );
 
     await userEvent.click(screen.getByRole("button", { name: "Cancel order" }));
     const dialog = await screen.findByRole("alertdialog");
@@ -46,8 +50,16 @@ describe("OrderActions", () => {
   });
 
   it("confirms a pending order in one click", async () => {
-    vi.mocked(moveOrder).mockResolvedValueOnce({ ok: false, code: "invalid_status_transition", message: "x", fieldErrors: {}, details: {} });
-    render(<OrderActions orderId="o1" orderNumber="TL-000123" allowed={["confirmed", "cancelled"]} />);
+    vi.mocked(moveOrder).mockResolvedValueOnce({
+      ok: false,
+      code: "invalid_status_transition",
+      message: "x",
+      fieldErrors: {},
+      details: {},
+    });
+    render(
+      <OrderActions orderId="o1" orderNumber="TL-000123" allowed={["confirmed", "cancelled"]} />,
+    );
 
     await userEvent.click(screen.getByRole("button", { name: "Confirm order" }));
 

@@ -171,11 +171,11 @@ Do not create additional layers unless the existing architecture requires them.
 
 ## State
 
-| Tier | Holds |
-| --- | --- |
-| URL search params | Filters, search, page, tab |
-| Cookies | The token pair (httpOnly), the sidebar state |
-| React state | Dialogs, form values, pending transitions |
+| Tier              | Holds                                        |
+| ----------------- | -------------------------------------------- |
+| URL search params | Filters, search, page, tab                   |
+| Cookies           | The token pair (httpOnly), the sidebar state |
+| React state       | Dialogs, form values, pending transitions    |
 
 No global store, no client cache, no `useEffect` to fetch.
 
@@ -285,15 +285,15 @@ choice.
 
 ## Skills
 
-| Situation | Skill |
-| --- | --- |
-| Adding or theming a component | `shadcn` |
+| Situation                                  | Skill                                             |
+| ------------------------------------------ | ------------------------------------------------- |
+| Adding or theming a component              | `shadcn`                                          |
 | App Router, server actions, proxy, caching | `nextjs-developer`, `vercel-react-best-practices` |
-| Component APIs | `vercel-composition-patterns` |
-| Types at the API boundary | `typescript-best-practices` |
-| Visual direction | `frontend-design` |
-| Reviewing a UI | `web-design-guidelines` |
-| Final review | `code-reviewer`, `simplify` |
+| Component APIs                             | `vercel-composition-patterns`                     |
+| Types at the API boundary                  | `typescript-best-practices`                       |
+| Visual direction                           | `frontend-design`                                 |
+| Reviewing a UI                             | `web-design-guidelines`                           |
+| Final review                               | `code-reviewer`, `simplify`                       |
 
 ---
 

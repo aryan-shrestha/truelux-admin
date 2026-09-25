@@ -11,9 +11,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { next, expired } = await searchParams;
 
   return (
-    <main className="flex min-h-svh items-center justify-center bg-muted/40 px-4">
+    <main className="bg-muted/40 flex min-h-svh items-center justify-center px-4">
       <div className="flex w-full max-w-sm flex-col gap-6">
-        <p className="text-center font-heading text-3xl tracking-tight">{env.brandName}</p>
+        <p className="font-heading text-center text-3xl tracking-tight">{env.brandName}</p>
         <Card>
           <CardHeader>
             <CardTitle>Sign in to the back office</CardTitle>

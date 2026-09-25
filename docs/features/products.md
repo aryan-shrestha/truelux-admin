@@ -164,13 +164,13 @@ DELETE /api/v1/admin/images/{id}/                server action
 
 ### Errors handled
 
-| `code` | Treatment |
-| --- | --- |
-| `product_has_no_variants` | Inline on the Published switch |
-| `conflict` (product delete) | Toast with **Unpublish instead** |
-| `conflict` (variant delete) | "…has been ordered… Set its stock to 0 instead." |
-| `validation_error` | Field messages from `details`, the rest as a form alert |
-| `not_found` (read) | `notFound()` |
+| `code`                      | Treatment                                               |
+| --------------------------- | ------------------------------------------------------- |
+| `product_has_no_variants`   | Inline on the Published switch                          |
+| `conflict` (product delete) | Toast with **Unpublish instead**                        |
+| `conflict` (variant delete) | "…has been ordered… Set its stock to 0 instead."        |
+| `validation_error`          | Field messages from `details`, the rest as a form alert |
+| `not_found` (read)          | `notFound()`                                            |
 
 ---
 
@@ -218,4 +218,3 @@ components/products/
 lib/products/
 lib/api/products.ts
 ```
-

@@ -36,6 +36,7 @@ yarn build
    - `NEXT_PUBLIC_BRAND_NAME` — `TrueLux`.
 
    The build fails if either is missing or malformed (`lib/env.ts`).
+
 3. **Deploy**, then open the `*.vercel.app` URL and sign in with a staff account.
 4. **Add the domain**: Project → Settings → Domains → `admin.truelux.com`.
 5. **Create the DNS record** at the domain's DNS host:

@@ -4,7 +4,9 @@ import { requireLiveApi, signIn } from "@/tests/e2e/session";
 
 requireLiveApi();
 
-test("an anonymous visit is sent to sign in and returns to where it was going", async ({ page }) => {
+test("an anonymous visit is sent to sign in and returns to where it was going", async ({
+  page,
+}) => {
   await page.goto("/orders?status=pending");
   await expect(page).toHaveURL(/\/login\?next=%2Forders%3Fstatus%3Dpending/);
 });
@@ -14,7 +16,10 @@ test("staff sign in, work the order queue and sign out", async ({ page, context 
 
   const cookies = await context.cookies();
   for (const name of ["tl_access", "tl_refresh"]) {
-    expect(cookies.find((cookie) => cookie.name === name)).toMatchObject({ httpOnly: true, sameSite: "Lax" });
+    expect(cookies.find((cookie) => cookie.name === name)).toMatchObject({
+      httpOnly: true,
+      sameSite: "Lax",
+    });
   }
 
   await page.getByRole("link", { name: "Orders" }).first().click();

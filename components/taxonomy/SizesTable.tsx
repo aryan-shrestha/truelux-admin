@@ -9,8 +9,18 @@ import { TaxonomyEmpty } from "@/components/taxonomy/TaxonomyEmpty";
 import type { Size } from "@/lib/api/types";
 
 const COLUMNS: ColumnDef<Size>[] = [
-  { accessorKey: "name", header: "Name", cell: ({ row }) => <span className="font-medium">{row.original.name}</span> },
-  { accessorKey: "slug", header: "Slug", cell: ({ row }) => <span className="font-mono text-xs text-muted-foreground">{row.original.slug}</span> },
+  {
+    accessorKey: "name",
+    header: "Name",
+    cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+  },
+  {
+    accessorKey: "slug",
+    header: "Slug",
+    cell: ({ row }) => (
+      <span className="text-muted-foreground font-mono text-xs">{row.original.slug}</span>
+    ),
+  },
   { accessorKey: "sort_order", header: "Order", meta: { className: "w-20 text-right" } },
   { accessorKey: "variant_count", header: "Variants", meta: { className: "w-24 text-right" } },
   {

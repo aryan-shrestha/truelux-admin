@@ -4,7 +4,11 @@ const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export const HEX_PATTERN = /^#[0-9A-Fa-f]{6}$/;
 
-export const nameField = z.string().trim().min(1, "Enter a name.").max(200, "Keep it under 200 characters.");
+export const nameField = z
+  .string()
+  .trim()
+  .min(1, "Enter a name.")
+  .max(200, "Keep it under 200 characters.");
 
 export const slugField = z
   .string()

@@ -44,7 +44,7 @@ these up first, in the sidebar under **Catalogue**:
 - **Sizes** — every size you sell: 30 ml, 5 g.
 - **Shades** — every colour you sell, with its hex colour. A variant may have none.
 
-The *sort order* number controls the order things appear in; smaller comes first.
+The _sort order_ number controls the order things appear in; smaller comes first.
 
 ### 3. Add your products
 
@@ -52,7 +52,7 @@ The *sort order* number controls the order things appear in; smaller comes first
 the **Variants** tab:
 
 1. **Add variant** for each size-and-shade combination you sell, with its SKU and
-   stock. Leave *Price override* blank to use the base price. Press the save icon on
+   stock. Leave _Price override_ blank to use the base price. Press the save icon on
    each row.
 2. On **Images**, upload photos (JPEG, PNG or WebP, up to 5 MB — see the limit
    below). The first becomes the primary image; write alt text for each.

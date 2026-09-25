@@ -11,5 +11,11 @@ export const variant: Variant = {
 };
 
 export function image(id: string, sort_order: number, is_primary = false): ProductImage {
-  return { id, url: `https://res.cloudinary.com/demo/${id}.jpg`, alt_text: "", sort_order, is_primary };
+  return {
+    id,
+    url: `https://res.cloudinary.com/demo/${id}.jpg`,
+    alt_text: "",
+    sort_order,
+    is_primary,
+  };
 }

@@ -25,7 +25,11 @@ export function SizeDialog({ size, ...dialog }: SizeDialogProps) {
       submitLabel={size ? "Save size" : "Create size"}
       successMessage={size ? "Size saved" : "Size created"}
       schema={sizeSchema}
-      defaultValues={{ name: size?.name ?? "", slug: size?.slug ?? "", sort_order: size?.sort_order ?? 0 }}
+      defaultValues={{
+        name: size?.name ?? "",
+        slug: size?.slug ?? "",
+        sort_order: size?.sort_order ?? 0,
+      }}
       action={(values) => saveSize(size?.id ?? null, values)}
     >
       <NameSlugFields namePlaceholder="30 ml" />

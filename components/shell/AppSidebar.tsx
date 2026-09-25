@@ -72,12 +72,12 @@ export function AppSidebar({ brandName, user }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg" tooltip={brandName}>
               <Link href="/" onClick={() => setOpenMobile(false)}>
-                <span className="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary font-heading text-lg text-sidebar-primary-foreground">
+                <span className="bg-sidebar-primary font-heading text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-md text-lg">
                   {brandName.charAt(0)}
                 </span>
                 <span className="flex flex-col leading-tight">
                   <span className="font-heading text-base">{brandName}</span>
-                  <span className="text-xs text-muted-foreground">Back office</span>
+                  <span className="text-muted-foreground text-xs">Back office</span>
                 </span>
               </Link>
             </SidebarMenuButton>

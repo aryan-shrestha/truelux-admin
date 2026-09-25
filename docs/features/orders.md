@@ -128,12 +128,12 @@ POST /api/v1/admin/orders/{id}/transition/  server action
 
 ### Errors handled
 
-| `code` | Treatment |
-| --- | --- |
+| `code`                      | Treatment                                                           |
+| --------------------------- | ------------------------------------------------------------------- |
 | `invalid_status_transition` | Toast: "The order cannot move to that status from where it is now." |
-| `order_already_shipped` | Toast: "The order has already shipped…" |
-| `order_not_cancellable` | Toast: "Only pending or confirmed orders can be cancelled." |
-| `not_found` (read) | `notFound()` |
+| `order_already_shipped`     | Toast: "The order has already shipped…"                             |
+| `order_not_cancellable`     | Toast: "Only pending or confirmed orders can be cancelled."         |
+| `not_found` (read)          | `notFound()`                                                        |
 
 ---
 
@@ -174,4 +174,3 @@ components/orders/
 lib/orders/
 lib/api/orders.ts
 ```
-

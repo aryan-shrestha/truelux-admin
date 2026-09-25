@@ -63,7 +63,9 @@ function LogoField({ currentUrl, name }: { currentUrl: string | null; name: stri
           <FieldLabel htmlFor="field-logo">Logo</FieldLabel>
           <div className="flex items-center gap-3">
             <Avatar className="size-12 rounded-md">
-              {previewUrl ? <AvatarImage src={previewUrl} alt="" className="object-contain" /> : null}
+              {previewUrl ? (
+                <AvatarImage src={previewUrl} alt="" className="object-contain" />
+              ) : null}
               <AvatarFallback className="rounded-md">{name.charAt(0)}</AvatarFallback>
             </Avatar>
             <Input

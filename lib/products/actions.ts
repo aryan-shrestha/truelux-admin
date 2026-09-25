@@ -52,7 +52,10 @@ export async function updateProductAction(
   return result;
 }
 
-export async function setPublished(id: string, isPublished: boolean): Promise<ActionResult<Product>> {
+export async function setPublished(
+  id: string,
+  isPublished: boolean,
+): Promise<ActionResult<Product>> {
   const result = await attempt(() => updateProduct({ id, is_published: Boolean(isPublished) }));
   if (result.ok) revalidateProduct(id);
   return result;

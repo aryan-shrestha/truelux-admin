@@ -18,7 +18,7 @@ function columns(roots: SelectOption[]): ColumnDef<CategoryRow>[] {
       cell: ({ row }) =>
         row.original.depth === 1 ? (
           <span className="flex items-center gap-2 pl-4">
-            <CornerDownRightIcon aria-hidden className="size-3.5 text-muted-foreground" />
+            <CornerDownRightIcon aria-hidden className="text-muted-foreground size-3.5" />
             {row.original.name}
           </span>
         ) : (
@@ -28,9 +28,16 @@ function columns(roots: SelectOption[]): ColumnDef<CategoryRow>[] {
     {
       accessorKey: "parentName",
       header: "Parent",
-      cell: ({ row }) => row.original.parentName ?? <span className="text-muted-foreground">Top level</span>,
+      cell: ({ row }) =>
+        row.original.parentName ?? <span className="text-muted-foreground">Top level</span>,
     },
-    { accessorKey: "slug", header: "Slug", cell: ({ row }) => <span className="font-mono text-xs text-muted-foreground">{row.original.slug}</span> },
+    {
+      accessorKey: "slug",
+      header: "Slug",
+      cell: ({ row }) => (
+        <span className="text-muted-foreground font-mono text-xs">{row.original.slug}</span>
+      ),
+    },
     { accessorKey: "sort_order", header: "Order", meta: { className: "w-20 text-right" } },
     { accessorKey: "product_count", header: "Products", meta: { className: "w-24 text-right" } },
     {
@@ -42,7 +49,9 @@ function columns(roots: SelectOption[]): ColumnDef<CategoryRow>[] {
           id={row.original.id}
           name={row.original.name}
           inUseMessage={`In use by ${row.original.product_count} products. Reassign them first.`}
-          editDialog={(state) => <CategoryDialog category={row.original} roots={roots} {...state} />}
+          editDialog={(state) => (
+            <CategoryDialog category={row.original} roots={roots} {...state} />
+          )}
         />
       ),
     },

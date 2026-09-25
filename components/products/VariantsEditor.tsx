@@ -6,8 +6,21 @@ import { useState } from "react";
 import type { SelectOption } from "@/components/form/SelectField";
 import { VariantRow } from "@/components/products/VariantRow";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Shade, Variant } from "@/lib/api/types";
 
@@ -26,7 +39,11 @@ export function VariantsEditor({ productId, variants, sizes, shades }: VariantsE
     label: shade.name,
     adornment: (
       // The swatch colour is API data, so it cannot be a theme class.
-      <span aria-hidden className="size-3 rounded-full ring-1 ring-foreground/15" style={{ backgroundColor: shade.hex_code }} />
+      <span
+        aria-hidden
+        className="ring-foreground/15 size-3 rounded-full ring-1"
+        style={{ backgroundColor: shade.hex_code }}
+      />
     ),
   }));
 
@@ -44,7 +61,8 @@ export function VariantsEditor({ productId, variants, sizes, shades }: VariantsE
       <CardHeader>
         <CardTitle>Variants</CardTitle>
         <CardDescription>
-          Each variant is one SKU with its own stock. Leave the price override blank to use the base price.
+          Each variant is one SKU with its own stock. Leave the price override blank to use the base
+          price.
         </CardDescription>
         <CardAction>
           <Button variant="outline" size="sm" onClick={addDraft}>
@@ -61,7 +79,9 @@ export function VariantsEditor({ productId, variants, sizes, shades }: VariantsE
                 <LayersIcon />
               </EmptyMedia>
               <EmptyTitle>No variants</EmptyTitle>
-              <EmptyDescription>A product needs at least one variant before it can be published.</EmptyDescription>
+              <EmptyDescription>
+                A product needs at least one variant before it can be published.
+              </EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (
@@ -80,7 +100,13 @@ export function VariantsEditor({ productId, variants, sizes, shades }: VariantsE
             </TableHeader>
             <TableBody>
               {variants.map((variant) => (
-                <VariantRow key={variant.id} productId={productId} variant={variant} sizes={sizes} shades={shadeOptions} />
+                <VariantRow
+                  key={variant.id}
+                  productId={productId}
+                  variant={variant}
+                  sizes={sizes}
+                  shades={shadeOptions}
+                />
               ))}
               {drafts.map((key) => (
                 <VariantRow

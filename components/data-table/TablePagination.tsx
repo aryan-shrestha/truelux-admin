@@ -19,10 +19,8 @@ export function TablePagination({ page, pageSize, count, hrefFor }: TablePaginat
   const last = Math.min(page * pageSize, count);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
-      <p aria-live="polite">
-        {count === 0 ? "No results" : `${first}–${last} of ${count}`}
-      </p>
+    <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-2 text-sm">
+      <p aria-live="polite">{count === 0 ? "No results" : `${first}–${last} of ${count}`}</p>
       {pageCount > 1 ? (
         <Pagination className="mx-0 w-auto">
           <PaginationContent>

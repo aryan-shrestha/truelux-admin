@@ -1,6 +1,12 @@
 import { SearchXIcon } from "lucide-react";
 
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 
 export function TaxonomyEmpty({ noun, query }: { noun: string; query: string }) {
   return (

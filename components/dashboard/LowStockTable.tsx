@@ -3,7 +3,13 @@ import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import {
   Table,
   TableBody,
@@ -46,7 +52,10 @@ export function LowStockTable({ variants }: { variants: LowStockVariant[] }) {
               {variants.map((variant) => (
                 <TableRow key={variant.variant_id}>
                   <TableCell>
-                    <Link href={`/products/${variant.product_id}?tab=variants`} className="font-medium hover:underline">
+                    <Link
+                      href={`/products/${variant.product_id}?tab=variants`}
+                      className="font-medium hover:underline"
+                    >
                       {variant.product_name}
                     </Link>
                   </TableCell>

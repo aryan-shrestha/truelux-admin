@@ -19,7 +19,13 @@ export type StaffUser = {
   last_name: string;
 };
 
-export const ORDER_STATUSES = ["pending", "confirmed", "shipped", "delivered", "cancelled"] as const;
+export const ORDER_STATUSES = [
+  "pending",
+  "confirmed",
+  "shipped",
+  "delivered",
+  "cancelled",
+] as const;
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 

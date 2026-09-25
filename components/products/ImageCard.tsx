@@ -11,7 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import type { ProductImage } from "@/lib/api/types";
 import { removeImage, updateImage } from "@/lib/products/actions";
 
@@ -25,7 +30,15 @@ type ImageCardProps = {
   isMoving: boolean;
 };
 
-export function ImageCard({ productId, image, position, isFirst, isLast, onMove, isMoving }: ImageCardProps) {
+export function ImageCard({
+  productId,
+  image,
+  position,
+  isFirst,
+  isLast,
+  onMove,
+  isMoving,
+}: ImageCardProps) {
   const [altText, setAltText] = useState(image.alt_text);
   const [isSaving, startSaving] = useTransition();
   const altId = `alt-${image.id}`;

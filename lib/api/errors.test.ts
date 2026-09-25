@@ -19,7 +19,9 @@ describe("describeError", () => {
   });
 
   it("passes a validation message through, since it is written for users", () => {
-    expect(describeError(apiError("validation_error", "Enter a valid SKU."))).toBe("Enter a valid SKU.");
+    expect(describeError(apiError("validation_error", "Enter a valid SKU."))).toBe(
+      "Enter a valid SKU.",
+    );
   });
 
   it("gives an unknown code the request id to quote", () => {
@@ -27,13 +29,21 @@ describe("describeError", () => {
   });
 
   it("says the API could not be reached for a transport failure", () => {
-    expect(describeError(new ApiUnreachableError(new TypeError("fetch failed")))).toMatch(/could not be reached/);
+    expect(describeError(new ApiUnreachableError(new TypeError("fetch failed")))).toMatch(
+      /could not be reached/,
+    );
   });
 });
 
 describe("fieldErrors", () => {
   it("takes the first message for each field", () => {
-    const error = new ApiError("validation_error", 400, { sku: ["Taken.", "Too long."], slug: "Bad." }, null, "x");
+    const error = new ApiError(
+      "validation_error",
+      400,
+      { sku: ["Taken.", "Too long."], slug: "Bad." },
+      null,
+      "x",
+    );
 
     expect(fieldErrors(error)).toEqual({ sku: "Taken.", slug: "Bad." });
   });

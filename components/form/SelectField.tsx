@@ -43,7 +43,12 @@ export function SelectField({ name, label, options, placeholder, noneLabel }: Se
             value={field.value ?? (noneLabel ? NONE : "")}
             onValueChange={(value) => field.onChange(value === NONE ? null : value)}
           >
-            <SelectTrigger id={id} ref={field.ref} onBlur={field.onBlur} aria-invalid={fieldState.invalid}>
+            <SelectTrigger
+              id={id}
+              ref={field.ref}
+              onBlur={field.onBlur}
+              aria-invalid={fieldState.invalid}
+            >
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectContent>

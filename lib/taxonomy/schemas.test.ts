@@ -29,13 +29,16 @@ describe("shared taxonomy fields", () => {
   });
 
   it("requires a name", () => {
-    expect(categorySchema.safeParse({ name: "  ", slug: "", parent_id: null, sort_order: 0 }).success).toBe(
-      false,
-    );
+    expect(
+      categorySchema.safeParse({ name: "  ", slug: "", parent_id: null, sort_order: 0 }).success,
+    ).toBe(false);
   });
 
   it("drops a blank slug from the request body and keeps a real one", () => {
     expect(withoutBlankSlug({ name: "Face", slug: "" })).toEqual({ name: "Face" });
-    expect(withoutBlankSlug({ name: "Face", slug: "face" })).toEqual({ name: "Face", slug: "face" });
+    expect(withoutBlankSlug({ name: "Face", slug: "face" })).toEqual({
+      name: "Face",
+      slug: "face",
+    });
   });
 });

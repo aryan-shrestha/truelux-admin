@@ -140,7 +140,9 @@ describe("apiWrite", () => {
 
 describe("apiRead", () => {
   it("repeats array values and drops empty ones in the query", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse({ count: 0, next: null, previous: null, results: [] }));
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ count: 0, next: null, previous: null, results: [] }),
+    );
 
     await apiRead("/admin/orders/", { status: ["pending", "confirmed"], search: "", limit: 25 });
 

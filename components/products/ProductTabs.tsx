@@ -15,11 +15,21 @@ type ProductTabsProps = {
   imageCount: number;
 };
 
-export function ProductTabs({ tab, details, variants, images, variantCount, imageCount }: ProductTabsProps) {
+export function ProductTabs({
+  tab,
+  details,
+  variants,
+  images,
+  variantCount,
+  imageCount,
+}: ProductTabsProps) {
   const { update } = useUrlParams();
 
   return (
-    <Tabs value={tab} onValueChange={(value) => update({ tab: value === "details" ? null : value })}>
+    <Tabs
+      value={tab}
+      onValueChange={(value) => update({ tab: value === "details" ? null : value })}
+    >
       <TabsList>
         <TabsTrigger value="details">Details</TabsTrigger>
         <TabsTrigger value="variants">Variants ({variantCount})</TabsTrigger>

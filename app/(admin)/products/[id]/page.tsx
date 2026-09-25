@@ -37,11 +37,19 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
   return (
     <>
       <PageHeader
-        crumbs={[{ label: "Catalogue" }, { label: "Products", href: "/products" }, { label: product.name }]}
+        crumbs={[
+          { label: "Catalogue" },
+          { label: "Products", href: "/products" },
+          { label: product.name },
+        ]}
         title={product.name}
         description={`by ${product.brand.name} in ${product.category.name}`}
       >
-        {product.is_published ? <Badge variant="success">Published</Badge> : <Badge variant="outline">Draft</Badge>}
+        {product.is_published ? (
+          <Badge variant="success">Published</Badge>
+        ) : (
+          <Badge variant="outline">Draft</Badge>
+        )}
       </PageHeader>
       <div className="p-4 md:p-6">
         <ProductTabs
@@ -52,7 +60,10 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
             <ProductDetailsForm
               product={product}
               brands={brands.map((brand) => ({ value: brand.id, label: brand.name }))}
-              categories={categories.map((category) => ({ value: category.id, label: category.name }))}
+              categories={categories.map((category) => ({
+                value: category.id,
+                label: category.name,
+              }))}
             />
           }
           variants={

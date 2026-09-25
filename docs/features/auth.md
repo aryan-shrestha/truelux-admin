@@ -176,13 +176,13 @@ GET  /api/v1/auth/me/              server (admin layout)
 
 ### Errors handled
 
-| `code` | Treatment |
-| --- | --- |
-| `authentication_failed` (login) | "Email or password is incorrect." |
-| `throttled` (login) | "Too many requests. Wait a moment and try again." |
-| `authentication_failed` (refresh) | proxy: `/login?expired=1`; `apiWrite`: clear cookies, `/login` |
-| `authentication_failed` / `permission_denied` (any read) | `/login?expired=1` |
-| `invalid_refresh_token` (logout) | ignored; the cookies are cleared anyway |
+| `code`                                                   | Treatment                                                      |
+| -------------------------------------------------------- | -------------------------------------------------------------- |
+| `authentication_failed` (login)                          | "Email or password is incorrect."                              |
+| `throttled` (login)                                      | "Too many requests. Wait a moment and try again."              |
+| `authentication_failed` (refresh)                        | proxy: `/login?expired=1`; `apiWrite`: clear cookies, `/login` |
+| `authentication_failed` / `permission_denied` (any read) | `/login?expired=1`                                             |
+| `invalid_refresh_token` (logout)                         | ignored; the cookies are cleared anyway                        |
 
 ---
 

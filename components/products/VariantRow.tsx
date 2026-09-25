@@ -36,7 +36,14 @@ type VariantRowProps = {
   onCreated?: () => void;
 };
 
-export function VariantRow({ productId, variant, sizes, shades, onDiscard, onCreated }: VariantRowProps) {
+export function VariantRow({
+  productId,
+  variant,
+  sizes,
+  shades,
+  onDiscard,
+  onCreated,
+}: VariantRowProps) {
   const [deleting, setDeleting] = useState(false);
   const label = variant?.sku ?? "new variant";
   const { form, submit, isPending, rootError } = useActionForm({
@@ -66,7 +73,13 @@ export function VariantRow({ productId, variant, sizes, shades, onDiscard, onCre
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <Input {...field} aria-label={`SKU of ${label}`} aria-invalid={fieldState.invalid} className="font-mono" spellCheck={false} />
+              <Input
+                {...field}
+                aria-label={`SKU of ${label}`}
+                aria-invalid={fieldState.invalid}
+                className="font-mono"
+                spellCheck={false}
+              />
               <FieldError errors={[fieldState.error]} />
             </Field>
           )}
@@ -79,7 +92,11 @@ export function VariantRow({ productId, variant, sizes, shades, onDiscard, onCre
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger aria-label={`Size of ${label}`} aria-invalid={fieldState.invalid} className="w-full">
+                <SelectTrigger
+                  aria-label={`Size of ${label}`}
+                  aria-invalid={fieldState.invalid}
+                  className="w-full"
+                >
                   <SelectValue placeholder="Size" />
                 </SelectTrigger>
                 <SelectContent>
@@ -203,12 +220,21 @@ export function VariantRow({ productId, variant, sizes, shades, onDiscard, onCre
               }
             />
           ) : (
-            <Button size="icon-sm" variant="ghost" aria-label="Discard this variant" onClick={onDiscard}>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              aria-label="Discard this variant"
+              onClick={onDiscard}
+            >
               <XIcon />
             </Button>
           )}
         </div>
-        {rootError ? <p role="alert" className="mt-1 text-xs text-destructive">{rootError}</p> : null}
+        {rootError ? (
+          <p role="alert" className="text-destructive mt-1 text-xs">
+            {rootError}
+          </p>
+        ) : null}
       </TableCell>
     </TableRow>
   );

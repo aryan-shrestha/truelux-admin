@@ -57,7 +57,7 @@ export function UserMenu({ user }: UserMenuProps) {
               </Avatar>
               <span className="grid flex-1 text-left leading-tight">
                 <span className="truncate font-medium">{name}</span>
-                <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                <span className="text-muted-foreground truncate text-xs">{user.email}</span>
               </span>
               <ChevronsUpDownIcon className="ml-auto" />
             </SidebarMenuButton>
@@ -71,7 +71,7 @@ export function UserMenu({ user }: UserMenuProps) {
             <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuLabel className="text-xs text-muted-foreground">Theme</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-muted-foreground text-xs">Theme</DropdownMenuLabel>
               <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
                 {THEMES.map((option) => (
                   <DropdownMenuRadioItem key={option.value} value={option.value}>

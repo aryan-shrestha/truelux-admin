@@ -6,7 +6,13 @@ import { toast } from "sonner";
 
 import { ImageCard } from "@/components/products/ImageCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
@@ -27,7 +33,9 @@ export function orderAfterMove(
   order[index] = displaced;
   order[target] = moved;
   return order.flatMap((id, position) =>
-    images.find((image) => image.id === id)?.sort_order === position ? [] : [{ id, sort_order: position }],
+    images.find((image) => image.id === id)?.sort_order === position
+      ? []
+      : [{ id, sort_order: position }],
   );
 }
 
@@ -48,7 +56,9 @@ export function ImagesManager({ productId, images }: ImagesManagerProps) {
         const values = { file, alt_text: "", is_primary: !hasPrimary };
         const checked = imageUploadSchema.safeParse(values);
         if (!checked.success) {
-          toast.error(`${file.name}: ${checked.error.issues[0]?.message ?? "not an allowed image."}`);
+          toast.error(
+            `${file.name}: ${checked.error.issues[0]?.message ?? "not an allowed image."}`,
+          );
           continue;
         }
         const result = await uploadImage(productId, values);
@@ -73,7 +83,9 @@ export function ImagesManager({ productId, images }: ImagesManagerProps) {
     <Card>
       <CardHeader>
         <CardTitle>Images</CardTitle>
-        <CardDescription>The primary image leads the product page and the listings.</CardDescription>
+        <CardDescription>
+          The primary image leads the product page and the listings.
+        </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         <Field>
@@ -102,7 +114,9 @@ export function ImagesManager({ productId, images }: ImagesManagerProps) {
                 <ImagesIcon />
               </EmptyMedia>
               <EmptyTitle>No images</EmptyTitle>
-              <EmptyDescription>The first image you upload becomes the primary one.</EmptyDescription>
+              <EmptyDescription>
+                The first image you upload becomes the primary one.
+              </EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (

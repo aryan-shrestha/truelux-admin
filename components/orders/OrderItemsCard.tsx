@@ -33,8 +33,10 @@ export function OrderItemsCard({ order }: { order: OrderDetail }) {
               <TableRow key={`${item.sku}-${index}`}>
                 <TableCell>
                   <div className="font-medium">{item.product_name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {item.variant_shade ? `${item.variant_size}, ${item.variant_shade}` : item.variant_size}
+                  <div className="text-muted-foreground text-xs">
+                    {item.variant_shade
+                      ? `${item.variant_size}, ${item.variant_shade}`
+                      : item.variant_size}
                   </div>
                 </TableCell>
                 <TableCell className="font-mono text-xs">{item.sku}</TableCell>

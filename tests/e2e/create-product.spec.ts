@@ -15,7 +15,9 @@ async function chooseFirst(page: import("@playwright/test").Page, label: string)
   await page.getByRole("option").first().click();
 }
 
-test("create a product, add a variant and an image, publish it, find it in the list", async ({ page }) => {
+test("create a product, add a variant and an image, publish it, find it in the list", async ({
+  page,
+}) => {
   const name = `E2E Serum ${Date.now()}`;
   const sku = `E2E-${Date.now()}`;
   await signIn(page);
@@ -36,7 +38,9 @@ test("create a product, add a variant and an image, publish it, find it in the l
   await expect(page.getByText(`${sku} added`)).toBeVisible();
 
   await page.getByRole("tab", { name: /Images/ }).click();
-  await page.getByLabel("Upload images").setInputFiles({ name: "swatch.png", mimeType: "image/png", buffer: PNG });
+  await page
+    .getByLabel("Upload images")
+    .setInputFiles({ name: "swatch.png", mimeType: "image/png", buffer: PNG });
   await expect(page.getByText("swatch.png uploaded")).toBeVisible();
   await expect(page.getByText("Primary", { exact: true })).toBeVisible();
 

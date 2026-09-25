@@ -10,9 +10,23 @@ import { TaxonomyEmpty } from "@/components/taxonomy/TaxonomyEmpty";
 import type { Shade } from "@/lib/api/types";
 
 const COLUMNS: ColumnDef<Shade>[] = [
-  { accessorKey: "name", header: "Shade", cell: ({ row }) => <ShadeSwatch name={row.original.name} hex={row.original.hex_code} /> },
-  { accessorKey: "hex_code", header: "Hex", cell: ({ row }) => <span className="font-mono text-xs">{row.original.hex_code}</span> },
-  { accessorKey: "slug", header: "Slug", cell: ({ row }) => <span className="font-mono text-xs text-muted-foreground">{row.original.slug}</span> },
+  {
+    accessorKey: "name",
+    header: "Shade",
+    cell: ({ row }) => <ShadeSwatch name={row.original.name} hex={row.original.hex_code} />,
+  },
+  {
+    accessorKey: "hex_code",
+    header: "Hex",
+    cell: ({ row }) => <span className="font-mono text-xs">{row.original.hex_code}</span>,
+  },
+  {
+    accessorKey: "slug",
+    header: "Slug",
+    cell: ({ row }) => (
+      <span className="text-muted-foreground font-mono text-xs">{row.original.slug}</span>
+    ),
+  },
   { accessorKey: "sort_order", header: "Order", meta: { className: "w-20 text-right" } },
   { accessorKey: "variant_count", header: "Variants", meta: { className: "w-24 text-right" } },
   {

@@ -1,13 +1,7 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Dashboard } from "@/lib/api/types";
 import { formatMoney } from "@/lib/format/money";
 import { daysAgo } from "@/lib/format/date";

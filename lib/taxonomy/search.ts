@@ -1,4 +1,7 @@
-export function matchingName<T extends { name: string; slug: string }>(items: T[], query: string): T[] {
+export function matchingName<T extends { name: string; slug: string }>(
+  items: T[],
+  query: string,
+): T[] {
   const needle = query.toLowerCase();
   if (!needle) {
     return items;

@@ -152,10 +152,10 @@ DELETE /api/v1/admin/{kind}/{id}/     server action
 
 ### Errors handled
 
-| `code` | Treatment |
-| --- | --- |
-| `validation_error` | Field messages from `details` on the matching field, the rest as a form alert |
-| `conflict` (delete) | The in-use message above |
+| `code`              | Treatment                                                                     |
+| ------------------- | ----------------------------------------------------------------------------- |
+| `validation_error`  | Field messages from `details` on the matching field, the rest as a form alert |
+| `conflict` (delete) | The in-use message above                                                      |
 
 ---
 
@@ -197,4 +197,3 @@ lib/taxonomy/
 lib/catalog/fields.ts
 lib/api/taxonomy.ts
 ```
-

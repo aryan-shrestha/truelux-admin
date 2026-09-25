@@ -4,7 +4,13 @@ import Link from "next/link";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import {
   Table,
   TableBody,
@@ -53,10 +59,13 @@ export function RecentOrders({ orders }: { orders: OrderListItem[] }) {
               {orders.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell>
-                    <Link href={`/orders/${order.id}`} className="font-mono font-medium hover:underline">
+                    <Link
+                      href={`/orders/${order.id}`}
+                      className="font-mono font-medium hover:underline"
+                    >
                       {order.order_number}
                     </Link>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-muted-foreground text-xs">
                       {formatDateTime(order.created_at)}
                     </div>
                   </TableCell>

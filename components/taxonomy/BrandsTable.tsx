@@ -26,12 +26,22 @@ const COLUMNS: ColumnDef<Brand>[] = [
       </span>
     ),
   },
-  { accessorKey: "slug", header: "Slug", cell: ({ row }) => <span className="font-mono text-xs text-muted-foreground">{row.original.slug}</span> },
+  {
+    accessorKey: "slug",
+    header: "Slug",
+    cell: ({ row }) => (
+      <span className="text-muted-foreground font-mono text-xs">{row.original.slug}</span>
+    ),
+  },
   {
     accessorKey: "is_active",
     header: "Status",
     cell: ({ row }) =>
-      row.original.is_active ? <Badge variant="success">Active</Badge> : <Badge variant="outline">Inactive</Badge>,
+      row.original.is_active ? (
+        <Badge variant="success">Active</Badge>
+      ) : (
+        <Badge variant="outline">Inactive</Badge>
+      ),
   },
   { accessorKey: "sort_order", header: "Order", meta: { className: "w-20 text-right" } },
   { accessorKey: "product_count", header: "Products", meta: { className: "w-24 text-right" } },

@@ -42,18 +42,19 @@ Load detailed guidance based on context:
 
 <!-- Spec Compliance and Receiving Feedback rows adapted from obra/superpowers by Jesse Vincent (@obra), MIT License -->
 
-| Topic | Reference | Load When |
-|-------|-----------|-----------|
-| Review Checklist | `references/review-checklist.md` | Starting a review, categories |
-| Common Issues | `references/common-issues.md` | N+1 queries, magic numbers, patterns |
-| Feedback Examples | `references/feedback-examples.md` | Writing good feedback |
-| Report Template | `references/report-template.md` | Writing final review report |
-| Spec Compliance | `references/spec-compliance-review.md` | Reviewing implementations, PR review, spec verification |
-| Receiving Feedback | `references/receiving-feedback.md` | Responding to review comments, handling feedback |
+| Topic              | Reference                              | Load When                                               |
+| ------------------ | -------------------------------------- | ------------------------------------------------------- |
+| Review Checklist   | `references/review-checklist.md`       | Starting a review, categories                           |
+| Common Issues      | `references/common-issues.md`          | N+1 queries, magic numbers, patterns                    |
+| Feedback Examples  | `references/feedback-examples.md`      | Writing good feedback                                   |
+| Report Template    | `references/report-template.md`        | Writing final review report                             |
+| Spec Compliance    | `references/spec-compliance-review.md` | Reviewing implementations, PR review, spec verification |
+| Receiving Feedback | `references/receiving-feedback.md`     | Responding to review comments, handling feedback        |
 
 ## Review Patterns (Quick Reference)
 
 ### N+1 Query — Bad vs Good
+
 ```python
 # BAD: query inside loop
 for user in users:
@@ -64,6 +65,7 @@ users = User.objects.prefetch_related('orders').all()
 ```
 
 ### Magic Number — Bad vs Good
+
 ```python
 # BAD
 if status == 3:
@@ -76,6 +78,7 @@ if status == ORDER_STATUS_SHIPPED:
 ```
 
 ### Security: SQL Injection — Bad vs Good
+
 ```python
 # BAD: string interpolation in query
 cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")
@@ -87,6 +90,7 @@ cursor.execute("SELECT * FROM users WHERE id = %s", [user_id])
 ## Constraints
 
 ### MUST DO
+
 - Summarize PR intent before reviewing (see Workflow step 1)
 - Provide specific, actionable feedback
 - Include code examples in suggestions
@@ -96,6 +100,7 @@ cursor.execute("SELECT * FROM users WHERE id = %s", [user_id])
 - Check for security issues (OWASP Top 10 as baseline)
 
 ### MUST NOT DO
+
 - Be condescending or rude
 - Nitpick style when linters exist
 - Block on personal preferences
@@ -106,6 +111,7 @@ cursor.execute("SELECT * FROM users WHERE id = %s", [user_id])
 ## Output Template
 
 Code review report must include:
+
 1. **Summary** — One-sentence intent recap + overall assessment
 2. **Critical issues** — Must fix before merge (bugs, security, data loss)
 3. **Major issues** — Should fix (performance, design, maintainability)
