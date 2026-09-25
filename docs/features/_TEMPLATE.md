@@ -149,8 +149,8 @@ POST /api/v1/...       browser, no-store
 ### Errors handled
 
 | `code` | Treatment |
-| ------ | --------- |
-| ...    | ...       |
+| --- | --- |
+| ... | ... |
 
 Do not duplicate [integrations/backend-api.md](../integrations/backend-api.md);
 link to it. Do not duplicate the code table in
