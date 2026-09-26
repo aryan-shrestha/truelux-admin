@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Geist_Mono, Manrope } from "next/font/google";
+import { Belleza, Noto_Sans, Noto_Sans_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 
 import { Toaster } from "@/components/ui/sonner";
@@ -8,9 +8,9 @@ import { env } from "@/lib/env";
 
 import "./globals.css";
 
-const sans = Manrope({ variable: "--font-sans", subsets: ["latin"] });
-const heading = Fraunces({ variable: "--font-fraunces", subsets: ["latin"], axes: ["opsz"] });
-const mono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const sans = Noto_Sans({ variable: "--font-noto-sans", subsets: ["latin"] });
+const heading = Belleza({ variable: "--font-belleza", subsets: ["latin"], weight: "400" });
+const mono = Noto_Sans_Mono({ variable: "--font-noto-sans-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: { template: `%s | ${env.brandName} admin`, default: `${env.brandName} admin` },

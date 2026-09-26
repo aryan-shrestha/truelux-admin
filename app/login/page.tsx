@@ -13,7 +13,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
     <main className="bg-muted/40 flex min-h-svh items-center justify-center px-4">
       <div className="flex w-full max-w-sm flex-col gap-6">
-        <p className="font-heading text-center text-3xl tracking-tight">{env.brandName}</p>
+        <p translate="no" className="wordmark text-center text-2xl">
+          {env.brandName}
+        </p>
         <Card>
           <CardHeader>
             <CardTitle>Sign in to the back office</CardTitle>

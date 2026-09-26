@@ -41,7 +41,7 @@ export function LowStockTable({ variants }: { variants: LowStockVariant[] }) {
             <TableBody>
               {variants.map((variant) => (
                 <TableRow key={variant.variant_id}>
-                  <TableCell>
+                  <TableCell className="whitespace-normal">
                     <Link
                       href={`/products/${variant.product_id}?tab=variants`}
                       className="font-medium hover:underline"

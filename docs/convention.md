@@ -167,8 +167,11 @@ Tailwind v4, theme in `app/globals.css` as shadcn variables for light and `.dark
   colour is API data and is set with an inline `style`.
 - `className` at a call site is for layout (grid, gap, width). Visual variants are
   added inside `components/ui/*` (the badge's status variants).
-- Headings and the wordmark use `font-heading` (Fraunces); UI text is Manrope; SKUs
-  and order numbers are `font-mono`. Figures are tabular everywhere.
+- Page, card and dialog titles use `font-heading` (Belleza); UI text is Noto Sans;
+  the wordmark is the `wordmark` utility (bold, tracked, uppercase Noto Sans); SKUs
+  and order numbers are `font-mono` (Noto Sans Mono). Belleza has no tabular figures,
+  so a title that is a number (the KPI cards) sets `font-sans`. Figures are tabular
+  everywhere else.
 - Class lists are ordered by Prettier's Tailwind plugin. `components/ui/` is excluded
   from Prettier so shadcn updates diff cleanly.
 

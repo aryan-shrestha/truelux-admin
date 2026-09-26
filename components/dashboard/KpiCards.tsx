@@ -49,7 +49,7 @@ export function KpiCards({ revenue, ordersByStatus }: KpiCardsProps) {
         <Card key={card.label}>
           <CardHeader>
             <CardDescription>{card.label}</CardDescription>
-            <CardTitle className="text-2xl tabular-nums">{card.value}</CardTitle>
+            <CardTitle className="font-sans text-2xl tabular-nums">{card.value}</CardTitle>
           </CardHeader>
           <CardFooter className="border-t">
             <Button asChild variant="link" size="xs" className="px-0">
