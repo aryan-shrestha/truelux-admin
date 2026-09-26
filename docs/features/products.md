@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-09-25
+Last updated: 2026-09-26
 
 ---
 
@@ -25,7 +25,9 @@ What is included in this implementation?
 - `/products/new` and `/products/[id]`: `tabs` for **Details**, **Variants** and
   **Images**.
   - Details: name, slug, description (`textarea`), brand (`select`), category
-    (`select`), base price, sort order, and a published `switch`.
+    (`select`), base price, sort order, skin types (a multi-select of `popover` +
+    `command` with `checkbox`es, the choice shown as `badge`s), skin feel
+    (`input`), key ingredients (`textarea`), and a published `switch`.
   - Variants: an editable `table` of SKU, size (`select`), shade (`select` with
     swatches, or "No shade"), stock (`input` number), and price override. Adds and
     removes rows with a confirm.
@@ -38,7 +40,7 @@ What is included in this implementation?
 
 ## Context
 
-Backend `admin-api.md` § Products. Uploads go browser → admin server action
+Backend `admin-api.md` § Products and `skin-types.md` § Admin. Uploads go browser → admin server action
 (`FormData`) → API multipart. The browser never calls the API directly.
 
 ---
@@ -57,12 +59,18 @@ Backend `admin-api.md` § Products. Uploads go browser → admin server action
   ordered…" with an **Unpublish instead** action when it is published.
 - `app/(admin)/products/new/page.tsx` — the details form alone; on success the action
   redirects to `/products/{id}?tab=variants`.
-- `app/(admin)/products/[id]/page.tsx` — reads the product and the four taxonomy
+- `app/(admin)/products/[id]/page.tsx` — reads the product and the five taxonomy
   arrays in parallel; `not_found` becomes `notFound()`. `ProductTabs` keeps the tab in
   `?tab=`.
 - `components/products/ProductDetailsForm.tsx` — name, slug, description, brand and
   category `select`s, base price (`Rs` input group, decimal string), sort order,
-  published `switch`. A `422 product_has_no_variants` is set on the Published field.
+  skin types, skin feel, key ingredients, published `switch`. A
+  `422 product_has_no_variants` is set on the Published field. Skin types are sent as
+  `skin_type_ids`, the whole set on every save.
+- `components/form/MultiSelectField.tsx` — the skin types control: an outline
+  `button` (`role="combobox"`) showing the chosen options as `badge`s, opening a
+  `popover` with a searchable `command` list whose items carry a `checkbox`. The
+  form value is an array of ids.
 - `components/products/VariantsEditor.tsx`, `VariantRow.tsx` — a `table` in which each
   row is its own react-hook-form form: SKU, size, shade (swatch options or "No
   shade"), stock, price override (blank = base price, sent as `null`). **Add variant**
@@ -76,12 +84,16 @@ Backend `admin-api.md` § Products. Uploads go browser → admin server action
   re-validating with zod and revalidating `/products` and the product page.
 - `lib/products/schemas.ts`, `lib/products/query.ts` — the schemas and the URL ↔ API
   query mapping.
+- `lib/api/media.ts` — `mediaUrl` resolves a relative `/media/…` URL against
+  `API_BASE_URL`; `lib/api/products.ts` applies it to `images[].url` and
+  `primary_image_url` on every read and write response.
+- `next.config.ts` — `images.remotePatterns` for `https://res.cloudinary.com/**` and
+  the API origin's `/media/**`, so `next/image` optimises product images.
 
 ---
 
 ## Remaining
 
-- Not yet exercised against the live API; verified with stubs only.
 - `ordering` is fixed to `name`; the table has no sortable headers.
 - Vercel limits a function request body to 4.5 MB, below the API's 5 MB image limit,
   so an image between 4.5 and 5 MB fails on Vercel with a platform error.
@@ -129,8 +141,17 @@ A move is one to N PATCH calls, run in sequence.
   can parse the client's output again.
 - The stock `input` stores `valueAsNumber`; an empty box is `NaN`, which the schema
   rejects with "Enter a whole number."
-- Thumbnails and the grid use the API's URLs as given (`next/image` with
-  `unoptimized`, `avatar`), so no `remotePatterns` are configured.
+- Image URLs are relative (`/media/…`) when the API stores files locally and
+  absolute on Cloudinary. Only `lib/api` resolves them; components always get an
+  absolute URL.
+- Next 16 refuses to optimise an image from a private address, so
+  `images.dangerouslyAllowLocalIP` is on only when `API_BASE_URL` is localhost.
+- The list endpoint carries no `skin_types`, `skin_feel` or `key_ingredients`; only
+  the detail does. `skin_type_ids: []` clears the set.
+- The combobox's `checkbox` is `tabIndex={-1}` with no pointer events: the
+  `command` item is what the keyboard and the mouse toggle.
+- A `409 conflict` on save means a taken slug, SKU, or a second variant with the
+  same size and shade; it shows as "This duplicates an existing record…".
 
 ---
 
@@ -170,6 +191,7 @@ DELETE /api/v1/admin/images/{id}/                server action
 | `conflict` (product delete) | Toast with **Unpublish instead**                        |
 | `conflict` (variant delete) | "…has been ordered… Set its stock to 0 instead."        |
 | `validation_error`          | Field messages from `details`, the rest as a form alert |
+| `conflict` (save)           | "This duplicates an existing record…" as a form alert   |
 | `not_found` (read)          | `notFound()`                                            |
 
 ---
@@ -192,7 +214,8 @@ DELETE /api/v1/admin/images/{id}/                server action
 
 ## Tests
 
-- `lib/products/schemas.test.ts` — prices as decimal strings; bad prices rejected;
+- `lib/products/schemas.test.ts` — skin type ids kept and care details trimmed, skin
+  feel capped at 200; prices as decimal strings; bad prices rejected;
   brand and category required; a blank override becomes `null`; zero and negative
   overrides rejected; stock must be a non-negative integer; the schema re-parses its
   own output; image type and 5 MB limits.
@@ -203,10 +226,16 @@ DELETE /api/v1/admin/images/{id}/                server action
 - `components/products/VariantsEditor.test.tsx` — adds and discards a draft row; a
   draft is validated before the server is called; a saved variant is deleted only
   after the confirm.
+- `components/products/ProductDetailsForm.test.tsx` — the product's skin types show
+  as badges; toggling options in the list changes them; search filters the list; the
+  saved values reach the action.
+- `lib/api/media.test.ts` — relative image and thumbnail URLs are resolved against
+  the API origin; Cloudinary URLs and `null` pass through.
 - `components/products/orderAfterMove.test.ts` — swaps and patches only changed
   images, renumbers colliding orders.
 - `tests/e2e/create-product.spec.ts` — Playwright: create, add a variant, upload an
-  image, publish, find it in the list (needs `E2E_API`).
+  image (and check it loads through `next/image`), choose skin types and care
+  details, publish, reload, find it in the list, then delete it (needs `E2E_API`).
 
 ---
 
@@ -217,4 +246,6 @@ app/(admin)/products/
 components/products/
 lib/products/
 lib/api/products.ts
+lib/api/media.ts
+components/form/MultiSelectField.tsx
 ```

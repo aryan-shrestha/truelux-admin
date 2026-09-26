@@ -58,7 +58,6 @@ export function ImageCard({
           src={image.url}
           alt={image.alt_text}
           fill
-          unoptimized
           sizes="(min-width: 1280px) 20vw, (min-width: 768px) 33vw, 50vw"
           className="object-cover"
         />

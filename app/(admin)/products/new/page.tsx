@@ -7,9 +7,10 @@ import { listTaxonomy } from "@/lib/api/taxonomy";
 export const metadata: Metadata = { title: "New product" };
 
 export default async function NewProductPage() {
-  const [brands, categories] = await Promise.all([
+  const [brands, categories, skinTypes] = await Promise.all([
     listTaxonomy("brands"),
     listTaxonomy("categories"),
+    listTaxonomy("skin-types"),
   ]);
 
   return (
@@ -27,6 +28,7 @@ export default async function NewProductPage() {
         <ProductDetailsForm
           brands={brands.map((brand) => ({ value: brand.id, label: brand.name }))}
           categories={categories.map((category) => ({ value: category.id, label: category.name }))}
+          skinTypes={skinTypes.map((skinType) => ({ value: skinType.id, label: skinType.name }))}
         />
       </div>
     </>

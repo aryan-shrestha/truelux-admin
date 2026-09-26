@@ -46,7 +46,8 @@ const MESSAGES: Record<string, string> = {
   authentication_failed: "Your session has ended. Sign in again.",
   permission_denied: "Your account does not have access to this.",
   not_found: "That record no longer exists.",
-  conflict: "This is still in use, so it cannot be removed.",
+  conflict:
+    "This duplicates an existing record. Check the name, slug or SKU, or the variant’s size and shade.",
   throttled: "Too many requests. Wait a moment and try again.",
   invalid_refresh_token: "Your session had already ended.",
   product_has_no_variants: "Add at least one variant before publishing.",

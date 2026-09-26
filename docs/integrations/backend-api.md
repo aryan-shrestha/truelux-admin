@@ -2,7 +2,7 @@
 
 Status: Reference
 
-Last updated: 2026-09-25
+Last updated: 2026-09-26
 
 ---
 
@@ -23,14 +23,16 @@ This document records **what the API does**. What the admin does about it belong
 Transcribed from:
 
 ```text
-back-end/docs/features/staff-auth.md     Implemented
-back-end/docs/features/admin-api.md      Planned (being built)
-back-end/docs/architecture.md            error envelope
+back-end/docs/features/staff-auth.md         Implemented
+back-end/docs/features/admin-api.md          Implemented
+back-end/docs/features/skin-types.md         the admin part of it
+back-end/docs/architecture.md                error envelope
 back-end/docs/features/catalog-browsing.md   pagination envelope
+back-end/apps/backoffice/serializers.py      field names the docs leave implicit
 ```
 
-`admin-api.md` is still a plan. Where it leaves a field name open, the admin's
-assumption is listed under [Open questions](#open-questions).
+Checked against the running API on 2026-09-26 (`yarn e2e`, and the responses read
+directly).
 
 ---
 
@@ -178,6 +180,9 @@ Product:
   "base_price": "3200.00",
   "is_published": true,
   "sort_order": 0,
+  "skin_types": [{ "id": "uuid", "name": "Combination", "slug": "combination" }],
+  "skin_feel": "Soothed, balanced, refreshed",
+  "key_ingredients": "Water (Aqua), Niacinamide",
   "variants": [
     {
       "id": "uuid",
@@ -203,42 +208,56 @@ Product:
 }
 ```
 
-List items omit `description`, `variants` and `images` and add `variant_count`,
-`total_stock` and `primary_image_url`. `shade` is `null` for a shadeless variant;
-`price` is the resolved price.
+List items omit `description`, `skin_types`, `skin_feel`, `key_ingredients`,
+`variants` and `images` and add `variant_count`, `total_stock` and
+`primary_image_url`. `shade` is `null` for a shadeless variant; `price` is the
+resolved price. `skin_types` is `[]` and the two strings `""` when unset.
 
 Write bodies:
 
 ```text
 product  name, slug (optional; derived and made unique), description, brand_id,
-         category_id, base_price, is_published, sort_order
+         category_id, base_price, is_published, sort_order, skin_type_ids (uuid[];
+         replaces the whole set, [] clears it), skin_feel (<= 200), key_ingredients
 variant  sku, size_id, shade_id (nullable), stock_quantity (>= 0),
          price_override (nullable, > 0)
 ```
 
-Publishing a product with no variants: `422 product_has_no_variants`.
+Publishing a product with no variants: `422 product_has_no_variants`. Creating one
+with `is_published: false` is accepted.
 
-### Taxonomy: brands, categories, shades, sizes
+### Media URLs
 
-| Method        | Path                                                              |
-| ------------- | ----------------------------------------------------------------- |
-| GET, POST     | `brands/`, `categories/`, `shades/`, `sizes/`                     |
-| PATCH, DELETE | `brands/{id}/`, `categories/{id}/`, `shades/{id}/`, `sizes/{id}/` |
+Image `url`, `primary_image_url` and brand `logo_url` are **relative** (`/media/…`)
+when the API stores files locally, and **absolute** (`https://res.cloudinary.com/…`)
+on Cloudinary. `lib/api/media.ts#mediaUrl` resolves both against `API_BASE_URL`; the
+product and taxonomy readers apply it, so nothing outside `lib/api` sees a relative
+URL.
+
+### Taxonomy: brands, categories, shades, sizes, skin types
+
+| Method        | Path                                                                                  |
+| ------------- | ------------------------------------------------------------------------------------- |
+| GET, POST     | `brands/`, `categories/`, `shades/`, `sizes/`, `skin-types/`                          |
+| PATCH, DELETE | `brands/{id}/`, `categories/{id}/`, `shades/{id}/`, `sizes/{id}/`, `skin-types/{id}/` |
 
 GETs return bare arrays and include inactive brands. Each item has `id`, its model
-fields, and `product_count` (brands, categories) or `variant_count` (shades, sizes).
-`slug` is optional on write. Deleting a referenced row: `409 conflict`.
+fields, and `product_count` (brands, categories, skin types) or `variant_count`
+(shades, sizes). `slug` is optional on write. Deleting a referenced brand,
+category, shade or size: `409 conflict`. Deleting a skin type **detaches it from
+its products** and is always `204`.
 
-| Kind     | Model fields                                                             |
-| -------- | ------------------------------------------------------------------------ |
-| brand    | `name`, `slug`, `description`, `logo` (image), `is_active`, `sort_order` |
-| category | `name`, `slug`, `parent` (one level), `sort_order`                       |
-| shade    | `name`, `slug`, `hex_code` (`^#[0-9A-Fa-f]{6}$`), `sort_order`           |
-| size     | `name`, `slug`, `sort_order`                                             |
+| Kind      | Read fields                                                                      |
+| --------- | -------------------------------------------------------------------------------- |
+| brand     | `name`, `slug`, `description`, `logo_url` (or `null`), `is_active`, `sort_order` |
+| category  | `name`, `slug`, `parent_id` (uuid or `null`; one level), `sort_order`            |
+| shade     | `name`, `slug`, `hex_code` (`^#[0-9A-Fa-f]{6}$`), `sort_order`                   |
+| size      | `name`, `slug`, `sort_order`                                                     |
+| skin type | `name` (≤ 50, unique), `slug`, `sort_order`                                      |
 
 A brand `logo` is uploaded as `multipart/form-data` on POST or PATCH. Category
-writes take `parent_id`; a category cannot be its own ancestor
-(`400 validation_error`).
+writes take `parent_id`; a cycle is `400 validation_error` with
+`details.parent_id`.
 
 ### Orders
 
@@ -253,7 +272,7 @@ List item:
 ```json
 {
   "id": "uuid",
-  "order_number": "TL-000123",
+  "order_number": "TL-2026-000123",
   "status": "pending",
   "full_name": "Sita Sharma",
   "phone": "98XXXXXXXX",
@@ -267,6 +286,12 @@ Detail adds `email`, `address_line`, `city`, `district`, `note`, `subtotal`,
 `shipping_fee`, `payment_method`, `allowed_transitions` (statuses), and `items`
 (`product_name`, `sku`, `variant_size`, `variant_shade`, `quantity`, `unit_price`,
 `line_total`). `variant_shade` is `""` for a shadeless line.
+
+- `order_number` is `TL-<year>-<6 digits>`; the sequence has gaps.
+- `item_count` is the number of **units** (the sum of line quantities), not lines.
+- `created_after` and `created_before` are inclusive and compare the **UTC date**
+  of `created_at` (`created_at__date`, `TIME_ZONE = "UTC"`).
+- `payment_method` is only ever `"cod"` (`PaymentMethod.COD`).
 
 Flow (cash on delivery): `pending → confirmed → shipped → delivered`, `cancelled`
 from `pending` or `confirmed`. Cancelling restores stock.
@@ -299,6 +324,11 @@ Every failure, including a 500:
 
 **`code` is the contract**; `message` may be reworded at any time. Every response
 carries `X-Request-ID`.
+
+A `409 conflict` always has `details: {}`: it is any database integrity error,
+both a protected delete (a referenced brand, category, shade, size, or an ordered
+product or variant) and a unique violation on a create or update (a taken name,
+slug or SKU, or a second variant with the same size and shade).
 
 | Condition                             | Status    | `code`                   |
 | ------------------------------------- | --------- | ------------------------ |
@@ -337,15 +367,9 @@ and implicit. See [ADR 0003](../decisions/0003-money-is-a-decimal-string-end-to-
 
 ## Open questions
 
-Assumptions the admin makes where `admin-api.md` is not yet specific. Each is a
-single field or behaviour to confirm with the backend.
+Everything the admin assumed while `admin-api.md` was a plan has been confirmed
+against the implemented backend. One behaviour is worth raising with it:
 
-| Question                                                               | Assumed                                                    | Where it matters                       |
-| ---------------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------- |
-| Brand logo field on read                                               | `logo_url` (string or `null`), as in the public brands API | `BrandsTable`, `BrandDialog`           |
-| Category parent field on read                                          | `parent_id` (uuid or `null`), matching the write field     | categories hierarchy, parent select    |
-| Is `created_before` inclusive of its date?                             | Yes                                                        | dashboard KPI links, order date filter |
-| Image and logo URLs                                                    | absolute (Cloudinary), not relative `/media/…` paths       | thumbnails, image grid                 |
-| `payment_method` values                                                | `"cod"`                                                    | order detail label                     |
-| `409 conflict` `details` on delete                                     | none relied upon; the row's own count is shown             | taxonomy delete message                |
-| Can `is_published` be sent with `false` on a product with no variants? | Yes; only publishing is rejected                           | new-product form                       |
+| Question                                                                                                                  | Current behaviour                                                                            | Where it matters                        |
+| ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------- |
+| Should `created_after`/`created_before` compare the `Asia/Kathmandu` date, as the dashboard's revenue buckets already do? | UTC date, so a date-filtered list misses orders placed 00:00–05:45 in Nepal on its first day | dashboard KPI links, orders date filter |

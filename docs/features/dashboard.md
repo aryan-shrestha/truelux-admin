@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-09-25
+Last updated: 2026-09-26
 
 ---
 
@@ -55,7 +55,9 @@ permitted parse into a number is `money.ts`'s `toChartNumber`.
 
 ## Remaining
 
-- Not yet exercised against the live API; verified with fixtures only.
+- Exercised live only by signing in and landing here (`tests/e2e/auth-orders.spec.ts`);
+  the cards and chart are verified with fixtures.
+- The KPI links' lists and the cards can disagree near midnight; see Decisions.
 
 ---
 
@@ -75,8 +77,10 @@ links to covers the same days as the number on the card.
 
 **Consequence**
 
-It assumes `created_before` is inclusive of the day it names (see
-[backend-api.md](../integrations/backend-api.md#open-questions)).
+`created_before` is inclusive, but the API compares the **UTC** date of
+`created_at`, so the linked list is shifted 5 h 45 m from the card's days: it
+misses orders placed 00:00–05:45 Nepal time on the first day. Raised with the
+backend in [backend-api.md](../integrations/backend-api.md#open-questions).
 
 ---
 

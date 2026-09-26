@@ -21,7 +21,24 @@ const CSP = [
   "frame-ancestors 'none'",
 ].join("; ");
 
+const apiOrigin = new URL(env.apiBaseUrl);
+
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**", search: "" },
+      {
+        protocol: apiOrigin.protocol === "https:" ? "https" : "http",
+        hostname: apiOrigin.hostname,
+        port: apiOrigin.port,
+        pathname: "/media/**",
+        search: "",
+      },
+    ],
+    // Next refuses to optimise images from private addresses; locally the API's
+    // media is served from localhost.
+    dangerouslyAllowLocalIP: ["localhost", "127.0.0.1", "[::1]"].includes(apiOrigin.hostname),
+  },
   experimental: {
     // One product image or brand logo per action; the API caps images at 5 MB.
     serverActions: { bodySizeLimit: "6mb" },

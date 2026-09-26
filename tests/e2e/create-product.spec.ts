@@ -1,8 +1,15 @@
 import { expect, test } from "@playwright/test";
 
+import { deleteListed } from "@/tests/e2e/cleanup";
 import { requireLiveApi, signIn } from "@/tests/e2e/session";
 
 requireLiveApi();
+
+const name = `E2E Serum ${Date.now()}`;
+
+test.afterEach(async ({ page }) => {
+  await deleteListed(page, { path: "/products", name, confirm: "Delete product" });
+});
 
 // A 1×1 transparent PNG, so the spec needs no fixture file on disk.
 const PNG = Buffer.from(
@@ -18,7 +25,6 @@ async function chooseFirst(page: import("@playwright/test").Page, label: string)
 test("create a product, add a variant and an image, publish it, find it in the list", async ({
   page,
 }) => {
-  const name = `E2E Serum ${Date.now()}`;
   const sku = `E2E-${Date.now()}`;
   await signIn(page);
 
@@ -43,11 +49,26 @@ test("create a product, add a variant and an image, publish it, find it in the l
     .setInputFiles({ name: "swatch.png", mimeType: "image/png", buffer: PNG });
   await expect(page.getByText("swatch.png uploaded")).toBeVisible();
   await expect(page.getByText("Primary", { exact: true })).toBeVisible();
+  const uploaded = page.getByRole("tabpanel").locator("img");
+  await expect(uploaded).toHaveJSProperty("complete", true);
+  expect(await uploaded.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 
   await page.getByRole("tab", { name: "Details" }).click();
+  const skinTypes = page.getByRole("combobox", { name: "Skin types" });
+  await skinTypes.click();
+  await page.getByRole("option", { name: "Dry" }).click();
+  await page.getByRole("option", { name: "Sensitive" }).click();
+  await page.keyboard.press("Escape");
+  await page.getByLabel("Skin feel").fill("Soothed, balanced");
+  await page.getByLabel("Key ingredients").fill("Water (Aqua), Niacinamide");
   await page.getByRole("switch", { name: "Published" }).click();
   await page.getByRole("button", { name: "Save details" }).click();
   await expect(page.getByText("Product saved")).toBeVisible();
+
+  await page.reload();
+  await expect(skinTypes).toContainText("Dry");
+  await expect(skinTypes).toContainText("Sensitive");
+  await expect(page.getByLabel("Skin feel")).toHaveValue("Soothed, balanced");
 
   await page.goto(`/products?q=${encodeURIComponent(name)}`);
   const row = page.getByRole("row", { name: new RegExp(name) });

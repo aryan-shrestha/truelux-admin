@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-09-25
+Last updated: 2026-09-26
 
 ---
 
@@ -18,7 +18,7 @@ and error handling.
 What is included in this implementation?
 
 - shadcn `sidebar` layout: TrueLux wordmark; nav items Dashboard, Orders, Products,
-  Brands, Categories, Shades, Sizes; the signed-in user's email and **Sign out** in
+  Brands, Categories, Shades, Sizes, Skin types; the signed-in user's email and **Sign out** in
   the footer (`dropdown-menu`). The sidebar collapses to an icon rail on desktop and
   to a `sheet` on mobile.
 - Page header with a `breadcrumb` and a primary action slot
@@ -47,7 +47,7 @@ What is explicitly outside the scope?
   `SidebarInset`.
 - `components/shell/AppSidebar.tsx` — the shadcn `sidebar` with `collapsible="icon"`:
   wordmark, two groups (Shop: Dashboard, Orders; Catalogue: Products, Brands,
-  Categories, Shades, Sizes), `aria-current="page"` on the active item, a rail, and
+  Categories, Shades, Sizes, Skin types), `aria-current="page"` on the active item, a rail, and
   the user menu in the footer. On mobile the same component renders as a `sheet`
   and closes when a link is followed.
 - `components/shell/UserMenu.tsx` — `dropdown-menu` with the staff email, a

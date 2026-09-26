@@ -79,9 +79,9 @@ Backend `docs/features/staff-auth.md`. [ADR 0001](../decisions/0001-auth-is-a-ba
 
 ## Remaining
 
-- Not yet exercised against the live API. The backend's staff-auth is implemented;
-  the calls here are verified against its documented behaviour with a stubbed
-  `fetch` only.
+- Token refresh and rotation are verified with a stubbed `fetch` only; the live run
+  (`tests/e2e/auth-orders.spec.ts`) covers sign in, the httpOnly cookies, a wrong
+  password and sign out, not a 15-minute expiry.
 
 ---
 

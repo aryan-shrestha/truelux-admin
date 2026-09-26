@@ -32,7 +32,7 @@ const COLUMNS: ColumnDef<OrderListItem>[] = [
     header: "Phone",
     cell: ({ row }) => <span className="font-mono text-xs">{row.original.phone}</span>,
   },
-  { accessorKey: "item_count", header: "Items", meta: { className: "text-right" } },
+  { accessorKey: "item_count", header: "Units", meta: { className: "text-right" } },
   {
     accessorKey: "total",
     header: "Total",

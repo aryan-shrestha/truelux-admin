@@ -4,6 +4,7 @@ import { FormProvider } from "react-hook-form";
 import { toast } from "sonner";
 
 import { FormRootError } from "@/components/form/FormRootError";
+import { MultiSelectField } from "@/components/form/MultiSelectField";
 import { NumberField } from "@/components/form/NumberField";
 import { type SelectOption, SelectField } from "@/components/form/SelectField";
 import { SwitchField } from "@/components/form/SwitchField";
@@ -22,9 +23,15 @@ type ProductDetailsFormProps = {
   product?: Product;
   brands: SelectOption[];
   categories: SelectOption[];
+  skinTypes: SelectOption[];
 };
 
-export function ProductDetailsForm({ product, brands, categories }: ProductDetailsFormProps) {
+export function ProductDetailsForm({
+  product,
+  brands,
+  categories,
+  skinTypes,
+}: ProductDetailsFormProps) {
   const { form, submit, isPending, rootError } = useActionForm({
     schema: productSchema,
     defaultValues: {
@@ -36,6 +43,9 @@ export function ProductDetailsForm({ product, brands, categories }: ProductDetai
       base_price: product?.base_price ?? "",
       is_published: product?.is_published ?? false,
       sort_order: product?.sort_order ?? 0,
+      skin_type_ids: product?.skin_types.map((skinType) => skinType.id) ?? [],
+      skin_feel: product?.skin_feel ?? "",
+      key_ingredients: product?.key_ingredients ?? "",
     },
     action: (values) =>
       product ? updateProductAction(product.id, values) : createProductAction(values),
@@ -93,6 +103,20 @@ export function ProductDetailsForm({ product, brands, categories }: ProductDetai
                   description="Lower numbers come first."
                 />
               </div>
+              <MultiSelectField
+                name="skin_type_ids"
+                label="Skin types"
+                placeholder="Choose skin types"
+                options={skinTypes}
+                description="Shown as “Suited to” and used by the storefront’s skin type filter."
+              />
+              <TextField
+                name="skin_feel"
+                label="Skin feel"
+                placeholder="Soothed, balanced, refreshed"
+                autoComplete="off"
+              />
+              <TextareaField name="key_ingredients" label="Key ingredients" />
               <SwitchField
                 name="is_published"
                 label="Published"

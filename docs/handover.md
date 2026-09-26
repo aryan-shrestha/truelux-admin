@@ -2,7 +2,7 @@
 
 Status: Current
 
-Last updated: 2026-09-25
+Last updated: 2026-09-26
 
 ---
 
@@ -43,6 +43,9 @@ these up first, in the sidebar under **Catalogue**:
   children (Foundation under Face).
 - **Sizes** — every size you sell: 30 ml, 5 g.
 - **Shades** — every colour you sell, with its hex colour. A variant may have none.
+- **Skin types** — Normal, Dry, Oily and so on. Customers shop by them, and each
+  product's **Details** tab lists the ones it suits, with its skin feel and key
+  ingredients.
 
 The _sort order_ number controls the order things appear in; smaller comes first.
 
@@ -96,6 +99,8 @@ Select one to open its product on the Variants tab and change the stock. The
 - A **brand, category, shade or size** that is still in use cannot be deleted. The
   message says how many products or variants use it. Move them first, or for a
   brand, switch it to inactive.
+- A **skin type** can always be deleted; it is simply removed from every product
+  that listed it. The confirmation says how many that is.
 
 ---
 

@@ -11,6 +11,9 @@ const product = {
   base_price: "3200.00",
   is_published: false,
   sort_order: 0,
+  skin_type_ids: [],
+  skin_feel: "",
+  key_ingredients: "",
 };
 
 const variant = {
@@ -35,6 +38,24 @@ describe("productSchema", () => {
     const result = productSchema.safeParse({ ...product, brand_id: "", category_id: "" });
     expect(result.success).toBe(false);
     expect(result.error?.issues.map((issue) => issue.path[0])).toEqual(["brand_id", "category_id"]);
+  });
+
+  it("keeps the chosen skin types and trims the care details", () => {
+    const parsed = productSchema.parse({
+      ...product,
+      skin_type_ids: ["st-dry", "st-oily"],
+      skin_feel: "  Soothed, balanced  ",
+      key_ingredients: " Niacinamide ",
+    });
+    expect(parsed).toMatchObject({
+      skin_type_ids: ["st-dry", "st-oily"],
+      skin_feel: "Soothed, balanced",
+      key_ingredients: "Niacinamide",
+    });
+  });
+
+  it("limits skin feel to the API's 200 characters", () => {
+    expect(productSchema.safeParse({ ...product, skin_feel: "a".repeat(201) }).success).toBe(false);
   });
 });
 

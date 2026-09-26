@@ -11,10 +11,12 @@ import {
   type CategoryValues,
   type ShadeValues,
   type SizeValues,
+  type SkinTypeValues,
   brandSchema,
   categorySchema,
   shadeSchema,
   sizeSchema,
+  skinTypeSchema,
 } from "@/lib/taxonomy/schemas";
 
 type Saved<K extends TaxonomyKind> = Promise<ActionResult<Taxonomy[K]>>;
@@ -68,6 +70,12 @@ export async function saveSize(id: string | null, input: SizeValues): Saved<"siz
   const parsed = sizeSchema.safeParse(input);
   if (!parsed.success) return invalidInput();
   return save("sizes", id, withoutBlankSlug(parsed.data));
+}
+
+export async function saveSkinType(id: string | null, input: SkinTypeValues): Saved<"skin-types"> {
+  const parsed = skinTypeSchema.safeParse(input);
+  if (!parsed.success) return invalidInput();
+  return save("skin-types", id, withoutBlankSlug(parsed.data));
 }
 
 export async function removeTaxonomy(kind: TaxonomyKind, id: string): Promise<ActionResult<null>> {

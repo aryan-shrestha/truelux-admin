@@ -130,13 +130,19 @@ export type Product = {
   base_price: Money;
   is_published: boolean;
   sort_order: number;
+  skin_types: Ref[];
+  skin_feel: string;
+  key_ingredients: string;
   variants: Variant[];
   images: ProductImage[];
   created_at: string;
   updated_at: string;
 };
 
-export type ProductListItem = Omit<Product, "description" | "variants" | "images"> & {
+export type ProductListItem = Omit<
+  Product,
+  "description" | "skin_types" | "skin_feel" | "key_ingredients" | "variants" | "images"
+> & {
   variant_count: number;
   total_stock: number;
   primary_image_url: string | null;
@@ -164,6 +170,9 @@ export type ProductWrite = {
   base_price: Money;
   is_published: boolean;
   sort_order: number;
+  skin_type_ids: string[];
+  skin_feel: string;
+  key_ingredients: string;
 };
 
 export type VariantWrite = {
@@ -213,13 +222,28 @@ export type Size = {
   variant_count: number;
 };
 
+export type SkinType = {
+  id: string;
+  name: string;
+  slug: string;
+  sort_order: number;
+  product_count: number;
+};
+
 export type Taxonomy = {
   brands: Brand;
   categories: Category;
   shades: Shade;
   sizes: Size;
+  "skin-types": SkinType;
 };
 
-export const TAXONOMY_KINDS: TaxonomyKind[] = ["brands", "categories", "shades", "sizes"];
+export const TAXONOMY_KINDS: TaxonomyKind[] = [
+  "brands",
+  "categories",
+  "shades",
+  "sizes",
+  "skin-types",
+];
 
 export type TaxonomyKind = keyof Taxonomy;

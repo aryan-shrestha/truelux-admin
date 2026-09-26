@@ -204,8 +204,8 @@ and the browser agree. `daysAgo(n)` gives the Kathmandu calendar date for links.
 
 ## Testing
 
-Vitest + Testing Library for units and components; Playwright for two flows against
-a live API.
+Vitest + Testing Library for units and components; Playwright for three flows
+against a live API.
 
 ```text
 lib/format/money.test.ts            beside the module
@@ -223,7 +223,10 @@ tests/e2e/*.spec.ts                 Playwright
 - Stub `fetch` with `vi.stubGlobal`; build responses with `tests/fixtures/http.ts`.
 - Assert fields that matter and error codes, not whole objects or API messages.
 - Playwright specs call `requireLiveApi()` and skip without `E2E_API`,
-  `E2E_EMAIL` and `E2E_PASSWORD`.
+  `E2E_EMAIL` and `E2E_PASSWORD`. `E2E_API=1` is a switch; the dev server reads
+  `API_BASE_URL` from `.env.local`.
+- A spec deletes what it creates in `afterEach` (`tests/e2e/cleanup.ts`), so reruns
+  leave the shared database as seeded.
 
 ---
 

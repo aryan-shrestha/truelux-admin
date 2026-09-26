@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-09-25
+Last updated: 2026-09-26
 
 ---
 
@@ -17,7 +17,7 @@ Let the merchant work the COD order queue: confirm, ship, deliver or cancel.
 What is included in this implementation?
 
 - `/orders`: a server-paginated `data-table` of number, date, customer, phone,
-  items, total and a status `badge`.
+  units, total and a status `badge`.
   - Status `tabs` (All, Pending, Confirmed, Shipped, Delivered, Cancelled), search,
     and a date range (`calendar` + `popover`), all in the URL.
 - `/orders/[id]`: customer and address `card`, items `table` with line totals,
@@ -44,7 +44,7 @@ delivered`, with cancel from `pending` or `confirmed`.
   `StatusTabs` (`?status=`, repeatable), `UrlSearch` (`?q=`), `DateRangeFilter`
   (`?from=`/`?to=`, ISO dates) and `TablePagination` (`?page=`).
 - `components/orders/OrdersTable.tsx` — number (linked), placed date and time in
-  Nepal time, customer, phone, items, total and a status `badge`; filtered and
+  Nepal time, customer, phone, units (`item_count`, the sum of quantities), total and a status `badge`; filtered and
   unfiltered empty states.
 - `components/orders/StatusTabs.tsx` — All plus one tab per status. A URL with two or
   more statuses (the dashboard's awaiting-action link) selects no tab.
@@ -69,11 +69,11 @@ delivered`, with cancel from `pending` or `confirmed`.
 
 ## Remaining
 
-- Not yet exercised against the live API; verified with stubs only.
-- `created_before` is assumed inclusive of the day it names; see
+- The date filter and the dashboard's links send Nepal calendar dates, but the API
+  compares the UTC date of `created_at`, so a filtered list misses orders placed
+  00:00–05:45 Nepal time on its first day and includes the same window after its
+  last. Raised with the backend in
   [backend-api.md](../integrations/backend-api.md#open-questions).
-- `payment_method` is shown as "Cash on delivery" when it is `cod`, otherwise as sent;
-  the contract does not list its values.
 
 ---
 
@@ -102,6 +102,9 @@ toasted and the page revalidates on the next action.
 - Totals are displayed, never computed: the footer shows the API's `subtotal`,
   `shipping_fee` and `total`.
 - `variant_shade` is an empty string, not `null`, for a shadeless line.
+- Order numbers are `TL-<year>-<6 digits>`, with gaps.
+- `payment_method` is only ever `cod`, shown as "Cash on delivery".
+- `created_after` and `created_before` are both inclusive.
 - The date filter's days are the picker's local calendar days; the dashboard's links
   use Kathmandu days. They agree for staff in Nepal.
 

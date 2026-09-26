@@ -8,6 +8,7 @@ import {
   PaletteIcon,
   RulerIcon,
   ShoppingBagIcon,
+  SparklesIcon,
   TagIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -48,6 +49,7 @@ const NAV: { label: string; items: NavItem[] }[] = [
       { title: "Categories", href: "/categories", icon: FolderTreeIcon },
       { title: "Shades", href: "/shades", icon: PaletteIcon },
       { title: "Sizes", href: "/sizes", icon: RulerIcon },
+      { title: "Skin types", href: "/skin-types", icon: SparklesIcon },
     ],
   },
 ];

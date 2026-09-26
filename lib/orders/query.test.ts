@@ -31,9 +31,11 @@ describe("order filters in the URL", () => {
   });
 
   it("round-trips through a link", () => {
-    const filters = parseOrderFilters({ status: "pending", q: "TL-0001" });
+    const filters = parseOrderFilters({ status: "pending", q: "TL-2026-0001" });
 
-    expect(ordersHref({ ...filters, page: 3 })).toBe("/orders?status=pending&q=TL-0001&page=3");
+    expect(ordersHref({ ...filters, page: 3 })).toBe(
+      "/orders?status=pending&q=TL-2026-0001&page=3",
+    );
   });
 });
 

@@ -251,6 +251,7 @@ roles.
 | `conflict`                                                                    | taxonomy delete | "In use by N products/variants…"                                 |
 | `conflict`                                                                    | product delete  | "…has been ordered" with **Unpublish instead**                   |
 | `conflict`                                                                    | variant delete  | "…has been ordered… Set its stock to 0 instead."                 |
+| `conflict`                                                                    | any save        | "This duplicates an existing record…" (taken name, slug or SKU)  |
 | `product_has_no_variants`                                                     | product form    | on the Published switch                                          |
 | `invalid_status_transition`, `order_already_shipped`, `order_not_cancellable` | order actions   | toast with the code's sentence                                   |
 | `invalid_refresh_token`                                                       | sign out        | ignored; cookies cleared                                         |
@@ -266,11 +267,11 @@ A read failure during render reaches `app/(admin)/error.tsx` (inside the frame) 
 
 ## External systems
 
-| System          | Purpose                     | Integration point                                     | Important constraint                                                                                                           |
-| --------------- | --------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Django REST API | All data and auth           | `lib/api` over HTTPS; `API_BASE_URL`                  | Server-only. Trailing slashes required. Refresh tokens rotate and blacklist. See [backend-api.md](integrations/backend-api.md) |
-| Cloudinary      | Product images, brand logos | `<img>` via `next/image` (`unoptimized`) and `avatar` | URLs are public; allowed in the CSP `img-src`                                                                                  |
-| Vercel          | Hosting                     | Deploy target                                         | Function request bodies are capped at 4.5 MB                                                                                   |
+| System          | Purpose                     | Integration point                                                                                                  | Important constraint                                                                                                           |
+| --------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Django REST API | All data and auth           | `lib/api` over HTTPS; `API_BASE_URL`                                                                               | Server-only. Trailing slashes required. Refresh tokens rotate and blacklist. See [backend-api.md](integrations/backend-api.md) |
+| Cloudinary      | Product images, brand logos | `next/image` (`remotePatterns`) and `avatar`; `lib/api/media.ts` resolves the local API's relative `/media/…` URLs | URLs are public; allowed in the CSP `img-src`                                                                                  |
+| Vercel          | Hosting                     | Deploy target                                                                                                      | Function request bodies are capped at 4.5 MB                                                                                   |
 
 ---
 

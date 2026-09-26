@@ -1,6 +1,7 @@
 import "server-only";
 
 import { apiRead, apiWrite } from "@/lib/api/client";
+import { mediaUrl } from "@/lib/api/media";
 import type {
   ImageUpdate,
   Page,
@@ -17,23 +18,38 @@ function productPath(id: string): string {
   return `/admin/products/${encodeURIComponent(id)}/`;
 }
 
+function withImageUrl(image: ProductImage): ProductImage {
+  return { ...image, url: mediaUrl(image.url) };
+}
+
+function withImageUrls(product: Product): Product {
+  return { ...product, images: product.images.map(withImageUrl) };
+}
+
 export async function listProducts(query: ProductQuery): Promise<Page<ProductListItem>> {
-  return apiRead<Page<ProductListItem>>("/admin/products/", query);
+  const page = await apiRead<Page<ProductListItem>>("/admin/products/", query);
+  return {
+    ...page,
+    results: page.results.map((product) => ({
+      ...product,
+      primary_image_url: product.primary_image_url && mediaUrl(product.primary_image_url),
+    })),
+  };
 }
 
 export async function getProduct({ id }: { id: string }): Promise<Product> {
-  return apiRead<Product>(productPath(id));
+  return withImageUrls(await apiRead<Product>(productPath(id)));
 }
 
 export async function createProduct(body: ProductWrite): Promise<Product> {
-  return apiWrite<Product>("/admin/products/", { method: "POST", body });
+  return withImageUrls(await apiWrite<Product>("/admin/products/", { method: "POST", body }));
 }
 
 export async function updateProduct({
   id,
   ...body
 }: Partial<ProductWrite> & { id: string }): Promise<Product> {
-  return apiWrite<Product>(productPath(id), { method: "PATCH", body });
+  return withImageUrls(await apiWrite<Product>(productPath(id), { method: "PATCH", body }));
 }
 
 export async function deleteProduct({ id }: { id: string }): Promise<void> {
@@ -68,20 +84,24 @@ export async function uploadProductImage({
   productId: string;
   form: FormData;
 }): Promise<ProductImage> {
-  return apiWrite<ProductImage>(`${productPath(productId)}images/`, {
-    method: "POST",
-    body: form,
-  });
+  return withImageUrl(
+    await apiWrite<ProductImage>(`${productPath(productId)}images/`, {
+      method: "POST",
+      body: form,
+    }),
+  );
 }
 
 export async function updateProductImage({
   id,
   ...body
 }: ImageUpdate & { id: string }): Promise<ProductImage> {
-  return apiWrite<ProductImage>(`/admin/images/${encodeURIComponent(id)}/`, {
-    method: "PATCH",
-    body,
-  });
+  return withImageUrl(
+    await apiWrite<ProductImage>(`/admin/images/${encodeURIComponent(id)}/`, {
+      method: "PATCH",
+      body,
+    }),
+  );
 }
 
 export async function deleteProductImage({ id }: { id: string }): Promise<void> {

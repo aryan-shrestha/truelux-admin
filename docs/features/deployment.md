@@ -41,7 +41,9 @@ What is included in this implementation?
   `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
   `Referrer-Policy: same-origin`, `X-Robots-Tag: noindex, nofollow` and a
   `Permissions-Policy`; `poweredByHeader: false`;
-  `serverActions.bodySizeLimit: "6mb"` for image uploads.
+  `serverActions.bodySizeLimit: "6mb"` for image uploads; `images.remotePatterns`
+  for Cloudinary and the API origin's `/media/**`, with `dangerouslyAllowLocalIP`
+  only when `API_BASE_URL` is localhost.
 - `app/robots.ts` — disallows everything; `app/layout.tsx` sets
   `robots: { index: false, follow: false }`.
 - `README.md` — local setup, the checks, and the Vercel steps: import, env vars,

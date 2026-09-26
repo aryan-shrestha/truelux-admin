@@ -14,6 +14,9 @@ export const productSchema = z.object({
   base_price: z.string().trim().regex(MONEY_PATTERN, PRICE_MESSAGE),
   is_published: z.boolean(),
   sort_order: sortOrderField,
+  skin_type_ids: z.array(z.string().min(1)),
+  skin_feel: z.string().trim().max(200, "Keep it under 200 characters."),
+  key_ingredients: z.string().trim(),
 });
 
 export const variantSchema = z.object({

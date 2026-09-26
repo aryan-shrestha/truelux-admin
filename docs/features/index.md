@@ -10,20 +10,22 @@ every UI element with shadcn/ui ([ADR 0002](../decisions/0002-shadcn-ui-is-the-c
 
 | #   | Feature    | Status      | Documentation            | Depends on | Last updated |
 | --- | ---------- | ----------- | ------------------------ | ---------- | ------------ |
-| 1   | app-shell  | Implemented | `features/app-shell.md`  | —          | 2026-09-25   |
+| 1   | app-shell  | Implemented | `features/app-shell.md`  | —          | 2026-09-26   |
 | 2   | auth       | Implemented | `features/auth.md`       | 1          | 2026-09-25   |
-| 3   | dashboard  | Implemented | `features/dashboard.md`  | 2          | 2026-09-25   |
-| 4   | taxonomy   | Implemented | `features/taxonomy.md`   | 2          | 2026-09-25   |
-| 5   | products   | Implemented | `features/products.md`   | 4          | 2026-09-25   |
-| 6   | orders     | Implemented | `features/orders.md`     | 2          | 2026-09-25   |
-| 7   | deployment | Implemented | `features/deployment.md` | all        | 2026-09-25   |
+| 3   | dashboard  | Implemented | `features/dashboard.md`  | 2          | 2026-09-26   |
+| 4   | taxonomy   | Implemented | `features/taxonomy.md`   | 2          | 2026-09-26   |
+| 5   | products   | Implemented | `features/products.md`   | 4          | 2026-09-26   |
+| 6   | orders     | Implemented | `features/orders.md`     | 2          | 2026-09-26   |
+| 7   | deployment | Implemented | `features/deployment.md` | all        | 2026-09-26   |
 
 `Depends on` refers to the `#` column of this table.
 
 Every feature is verified with unit and component tests against stubbed `fetch` and
-Next mocks. None has yet run against the live API; the Playwright specs in
-`tests/e2e/` are written for that and skip until `E2E_API` is set. Contract
-assumptions are listed in
+Next mocks. The Playwright specs in `tests/e2e/` ran green against the live, seeded
+API on 2026-09-26 (sign in and out, the order queue, creating and publishing a
+product with skin types, and skin type CRUD); they skip until `E2E_API` is set and
+delete what they create. Every earlier contract assumption has been checked against
+the implemented backend; what is still open is in
 [backend-api.md](../integrations/backend-api.md#open-questions).
 
 ## Implementation order

@@ -34,7 +34,14 @@ export const sizeSchema = z.object({
   sort_order: sortOrderField,
 });
 
+export const skinTypeSchema = z.object({
+  name: nameField,
+  slug: slugField,
+  sort_order: sortOrderField,
+});
+
 export type BrandValues = z.infer<typeof brandSchema>;
 export type CategoryValues = z.infer<typeof categorySchema>;
 export type ShadeValues = z.infer<typeof shadeSchema>;
 export type SizeValues = z.infer<typeof sizeSchema>;
+export type SkinTypeValues = z.infer<typeof skinTypeSchema>;

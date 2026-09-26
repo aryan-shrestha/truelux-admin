@@ -26,11 +26,19 @@ type RowActionsProps = {
   kind: TaxonomyKind;
   id: string;
   name: string;
-  inUseMessage: string;
+  inUseMessage?: string;
+  deleteDescription?: string;
   editDialog: EditDialogRenderer;
 };
 
-export function RowActions({ kind, id, name, inUseMessage, editDialog }: RowActionsProps) {
+export function RowActions({
+  kind,
+  id,
+  name,
+  inUseMessage,
+  deleteDescription = "This cannot be undone.",
+  editDialog,
+}: RowActionsProps) {
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -61,12 +69,12 @@ export function RowActions({ kind, id, name, inUseMessage, editDialog }: RowActi
         open={deleting}
         onOpenChange={setDeleting}
         title={`Delete ${name}?`}
-        description="This cannot be undone."
+        description={deleteDescription}
         confirmLabel="Delete"
         successMessage={`${name} deleted`}
         action={() => removeTaxonomy(kind, id)}
         onFailure={(failure) =>
-          toast.error(failure.code === "conflict" ? inUseMessage : failure.message)
+          toast.error(failure.code === "conflict" && inUseMessage ? inUseMessage : failure.message)
         }
       />
     </>

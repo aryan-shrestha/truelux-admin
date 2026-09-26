@@ -14,13 +14,13 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   // The admin calls the API only from its server, where page.route cannot reach, so
-  // the specs need a live backend and are skipped unless E2E_API is set.
+  // the specs need a live backend (API_BASE_URL from .env.local) and are skipped
+  // unless E2E_API is set.
   webServer: process.env.E2E_API
     ? {
         command: "yarn dev",
         url: `http://localhost:${PORT}/login`,
         reuseExistingServer: !process.env.CI,
-        env: { API_BASE_URL: process.env.E2E_API },
       }
     : undefined,
 });

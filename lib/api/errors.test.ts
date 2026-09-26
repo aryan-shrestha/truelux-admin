@@ -12,7 +12,7 @@ describe("describeError", () => {
     ["order_already_shipped", /already shipped/],
     ["order_not_cancellable", /Only pending or confirmed/],
     ["product_has_no_variants", /at least one variant/],
-    ["conflict", /still in use/],
+    ["conflict", /duplicates an existing record/],
     ["throttled", /Too many requests/],
   ])("branches on %s, not on the server's wording", (code, expected) => {
     expect(describeError(apiError(code))).toMatch(expected);

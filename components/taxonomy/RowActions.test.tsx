@@ -14,7 +14,7 @@ describe("RowActions", () => {
     vi.mocked(removeTaxonomy).mockResolvedValueOnce({
       ok: false,
       code: "conflict",
-      message: "This is still in use, so it cannot be removed.",
+      message: "This duplicates an existing record.",
       fieldErrors: {},
       details: {},
     });

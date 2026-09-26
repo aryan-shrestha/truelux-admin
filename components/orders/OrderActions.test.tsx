@@ -11,7 +11,7 @@ vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 describe("OrderActions", () => {
   it("renders only the transitions the API allows", () => {
-    render(<OrderActions orderId="o1" orderNumber="TL-000123" allowed={["shipped"]} />);
+    render(<OrderActions orderId="o1" orderNumber="TL-2026-000123" allowed={["shipped"]} />);
 
     expect(screen.getByRole("button", { name: "Mark as shipped" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Confirm order" })).not.toBeInTheDocument();
@@ -20,7 +20,7 @@ describe("OrderActions", () => {
 
   it("renders nothing for a finished order", () => {
     const { container } = render(
-      <OrderActions orderId="o1" orderNumber="TL-000123" allowed={[]} />,
+      <OrderActions orderId="o1" orderNumber="TL-2026-000123" allowed={[]} />,
     );
 
     expect(container).toBeEmptyDOMElement();
@@ -35,7 +35,11 @@ describe("OrderActions", () => {
       details: {},
     });
     render(
-      <OrderActions orderId="o1" orderNumber="TL-000123" allowed={["confirmed", "cancelled"]} />,
+      <OrderActions
+        orderId="o1"
+        orderNumber="TL-2026-000123"
+        allowed={["confirmed", "cancelled"]}
+      />,
     );
 
     await userEvent.click(screen.getByRole("button", { name: "Cancel order" }));
@@ -58,7 +62,11 @@ describe("OrderActions", () => {
       details: {},
     });
     render(
-      <OrderActions orderId="o1" orderNumber="TL-000123" allowed={["confirmed", "cancelled"]} />,
+      <OrderActions
+        orderId="o1"
+        orderNumber="TL-2026-000123"
+        allowed={["confirmed", "cancelled"]}
+      />,
     );
 
     await userEvent.click(screen.getByRole("button", { name: "Confirm order" }));

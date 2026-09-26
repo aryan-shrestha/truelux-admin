@@ -26,12 +26,13 @@ async function findProduct(id: string): Promise<Product> {
 
 export default async function ProductPage({ params, searchParams }: PageProps<"/products/[id]">) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
-  const [product, brands, categories, sizes, shades] = await Promise.all([
+  const [product, brands, categories, sizes, shades, skinTypes] = await Promise.all([
     findProduct(id),
     listTaxonomy("brands"),
     listTaxonomy("categories"),
     listTaxonomy("sizes"),
     listTaxonomy("shades"),
+    listTaxonomy("skin-types"),
   ]);
 
   return (
@@ -63,6 +64,10 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
               categories={categories.map((category) => ({
                 value: category.id,
                 label: category.name,
+              }))}
+              skinTypes={skinTypes.map((skinType) => ({
+                value: skinType.id,
+                label: skinType.name,
               }))}
             />
           }

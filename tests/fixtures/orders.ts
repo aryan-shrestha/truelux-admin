@@ -2,7 +2,7 @@ import type { Dashboard, OrderDetail, OrderListItem } from "@/lib/api/types";
 
 export const pendingOrder: OrderListItem = {
   id: "0d4c7c2e-4a3c-4f6a-9d8e-1a2b3c4d5e6f",
-  order_number: "TL-000123",
+  order_number: "TL-2026-000123",
   status: "pending",
   full_name: "Sita Sharma",
   phone: "9800000000",

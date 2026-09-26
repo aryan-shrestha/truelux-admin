@@ -2,13 +2,13 @@
 
 Status: Implemented
 
-Last updated: 2026-09-25
+Last updated: 2026-09-26
 
 ---
 
 ## Goal
 
-Let the merchant manage brands, categories, shades and sizes.
+Let the merchant manage brands, categories, shades, sizes and skin types.
 
 ---
 
@@ -16,7 +16,7 @@ Let the merchant manage brands, categories, shades and sizes.
 
 What is included in this implementation?
 
-- `/brands`, `/categories`, `/shades`, `/sizes`: each is a `data-table` (TanStack)
+- `/brands`, `/categories`, `/shades`, `/sizes`, `/skin-types`: each is a `data-table` (TanStack)
   with search, and create/edit in a `dialog` or `sheet` form (react-hook-form + zod).
   Delete sits behind an `alert-dialog`; a `409 conflict` shows "In use by N
   products. Deactivate or reassign first."
@@ -27,19 +27,21 @@ What is included in this implementation?
 - Shade: name, slug, hex (a native colour input paired with a hex text `input`,
   validated `#RRGGBB`), sort order, and a swatch preview in the table
 - Size: name, slug, sort order
+- Skin type: name, slug, sort order. Deleting one detaches it from its products,
+  and the confirmation says how many.
 - Mutations are server actions that `revalidatePath` and toast the result
 
 ---
 
 ## Context
 
-Backend `admin-api.md` § Taxonomy.
+Backend `admin-api.md` § Taxonomy and `skin-types.md` § Admin.
 
 ---
 
 ## Implemented
 
-- `app/(admin)/{brands,categories,shades,sizes}/page.tsx` — each reads its bare array
+- `app/(admin)/{brands,categories,shades,sizes,skin-types}/page.tsx` — each reads its bare array
   once, filters it by `?q=` (name or slug, case-insensitive) on the server, and renders
   the header's **New …** dialog, a `UrlSearch` and the table.
 - `components/data-table/DataTable.tsx` — the shadcn `data-table` pattern over
@@ -57,15 +59,20 @@ Backend `admin-api.md` § Taxonomy.
   - Shade: name, slug, a colour input and a hex text input bound to the same field,
     validated `#RRGGBB` and sent uppercase, sort order.
   - Size: name, slug, sort order.
+  - Skin type: name, slug, sort order.
 - `components/taxonomy/*Table.tsx` — columns per kind; brands show logo and
   Active/Inactive; categories show the hierarchy (children indented under their
-  parent, with a Parent column); shades show a swatch `badge`.
+  parent, with a Parent column); shades show a swatch `badge`; skin types show their
+  product count.
 - `components/taxonomy/RowActions.tsx` — `dropdown-menu` with Edit (opens the same
   dialog) and Delete (`alert-dialog` via `ConfirmAction`). A `409 conflict` toasts
   "In use by N products. Deactivate or reassign first." for brands, "…Reassign them
   first." for categories, and "In use by N variants…" for shades and sizes, with N
-  from the row's count.
+  from the row's count. A skin type's confirmation says instead that it "will be
+  removed from the N products that list it" (just "This cannot be undone." at 0),
+  since the API detaches rather than refuses.
 - `lib/taxonomy/actions.ts` — `saveBrand`, `saveCategory`, `saveShade`, `saveSize`,
+  `saveSkinType`,
   `removeTaxonomy`: re-validate with the same zod schema, omit a blank slug, call the
   API, `revalidatePath` the list and return an `ActionResult`.
 - `lib/taxonomy/schemas.ts`, `lib/catalog/fields.ts` — the schemas and the shared
@@ -76,10 +83,9 @@ Backend `admin-api.md` § Taxonomy.
 
 ## Remaining
 
-- Not yet exercised against the live API; verified with stubs only.
-- The field names of the admin taxonomy items are assumed (see
-  [backend-api.md](../integrations/backend-api.md#open-questions)): `logo_url` on
-  brands and `parent_id` on categories.
+- Brands, categories, shades and sizes have no Playwright spec; they are verified
+  with stubs, and their field names (`logo_url`, `parent_id`) against the backend's
+  serializers.
 
 ---
 
@@ -110,7 +116,7 @@ The in-use message takes N from the row's `product_count` or `variant_count`.
 
 **Reason**
 
-The contract gives the 409 no documented `details`.
+The API's 409 always has `details: {}`.
 
 **Consequence**
 
@@ -128,13 +134,17 @@ N can be stale by the time of the click; the API remains the authority.
   request at 4.5 MB.
 - The dialog form mounts only while the dialog is open, so an edit always starts
   from the row's current values.
+- A `409 conflict` also answers a create or edit whose name or slug is taken. The
+  dialog shows the generic "duplicates an existing record" message as a form alert.
+- Brand `logo_url` is relative (`/media/…`) when the API stores files locally;
+  `lib/api/taxonomy.ts` resolves it with `mediaUrl` before a component sees it.
 
 ---
 
 ## Routes
 
 ```text
-/brands  /categories  /shades  /sizes    dynamic; ?q= filters
+/brands  /categories  /shades  /sizes  /skin-types    dynamic; ?q= filters
 ```
 
 ---
@@ -155,7 +165,8 @@ DELETE /api/v1/admin/{kind}/{id}/     server action
 | `code`              | Treatment                                                                     |
 | ------------------- | ----------------------------------------------------------------------------- |
 | `validation_error`  | Field messages from `details` on the matching field, the rest as a form alert |
-| `conflict` (delete) | The in-use message above                                                      |
+| `conflict` (delete) | The in-use message above; never raised for a skin type                        |
+| `conflict` (save)   | "This duplicates an existing record…" as a form alert                         |
 
 ---
 
@@ -183,6 +194,11 @@ DELETE /api/v1/admin/{kind}/{id}/     server action
   sort order; an orphan shows as top level.
 - `components/taxonomy/RowActions.test.tsx` — a 409 on delete shows the in-use
   message and keeps the dialog open.
+- `components/taxonomy/SkinTypesTable.test.tsx` — the delete confirmation names the
+  products the skin type is removed from, and says only "cannot be undone" at 0.
+- `lib/api/media.test.ts` — a relative brand logo is resolved against the API origin.
+- `tests/e2e/skin-types.spec.ts` — Playwright: create, rename, delete a skin type
+  (needs `E2E_API`).
 
 ---
 
@@ -196,4 +212,5 @@ components/form/
 lib/taxonomy/
 lib/catalog/fields.ts
 lib/api/taxonomy.ts
+lib/api/media.ts
 ```
