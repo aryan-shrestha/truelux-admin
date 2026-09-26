@@ -1,4 +1,4 @@
-# TrueLux admin
+# TrueLux admin (testing dev deployment)
 
 The merchant back office for the TrueLux cosmetics store, served at
 `admin.truelux.com`. It owns no data: its Next.js server calls the Django API's
