@@ -42,7 +42,6 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  /* Controls are near-square; surfaces take the storefront's card radius. */
   --radius-sm: 0.125rem;
   --radius-md: 0.125rem;
   --radius-lg: 0.125rem;
@@ -130,7 +129,6 @@
   --sidebar-ring: #ecebe6;
 }
 
-/* The storefront's wordmark: Noto Sans, bold, tracked, uppercase. */
 @utility wordmark {
   font-weight: 700;
   letter-spacing: 0.2em;
