@@ -41,7 +41,7 @@ export default async function OrderPage({ params }: PageProps<"/orders/[id]">) {
           allowed={order.allowed_transitions}
         />
       </PageHeader>
-      <div className="grid gap-4 p-4 md:p-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 p-4 md:p-6 xl:grid-cols-3">
         <div className="xl:col-span-2">
           <OrderItemsCard order={order} />
         </div>

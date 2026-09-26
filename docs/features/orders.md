@@ -47,14 +47,17 @@ delivered`, with cancel from `pending` or `confirmed`.
   Nepal time, customer, phone, units (`item_count`, the sum of quantities), total and a status `badge`; filtered and
   unfiltered empty states.
 - `components/orders/StatusTabs.tsx` — All plus one tab per status. A URL with two or
-  more statuses (the dashboard's awaiting-action link) selects no tab.
+  more statuses (the dashboard's awaiting-action link) selects no tab. On a narrow
+  screen the tab list keeps its full width and scrolls inside a wrapper.
 - `components/orders/DateRangeFilter.tsx` — `popover` + two-month `calendar` in range
   mode; writes the URL once both ends are chosen; a clear button; future days
   disabled.
 - `app/(admin)/orders/[id]/page.tsx` — header with the status and the actions,
   `OrderItemsCard` (lines with unit price, quantity and line total; subtotal,
   shipping and total from the API) and `CustomerCard` (name, `tel:` phone, email,
-  address, placed, payment method, note). `not_found` becomes `notFound()`.
+  address, placed, payment method, note). `not_found` becomes `notFound()`. The
+  grid is `grid-cols-1` below `xl`, so on a phone the items table scrolls inside its
+  card instead of widening the page.
 - `components/orders/OrderActions.tsx` — one button per entry in
   `allowed_transitions`: Confirm order, Mark as shipped, Mark as delivered; Cancel
   order sits behind an `alert-dialog` that says the items go back into stock.
