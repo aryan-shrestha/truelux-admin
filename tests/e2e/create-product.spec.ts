@@ -7,8 +7,8 @@ requireLiveApi();
 
 const name = `E2E Serum ${Date.now()}`;
 
-test.afterEach(async ({ page }) => {
-  await deleteListed(page, { path: "/products", name, confirm: "Delete product" });
+test.afterAll(async ({ browser }) => {
+  await deleteListed(browser, { path: "/products", prefix: name, confirm: "Delete product" });
 });
 
 // A 1×1 transparent PNG, so the spec needs no fixture file on disk.

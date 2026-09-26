@@ -7,10 +7,8 @@ requireLiveApi();
 
 const name = `E2E Skin ${Date.now()}`;
 
-test.afterEach(async ({ page }) => {
-  for (const leftover of [name, `${name} renamed`]) {
-    await deleteListed(page, { path: "/skin-types", name: leftover, confirm: "Delete" });
-  }
+test.afterAll(async ({ browser }) => {
+  await deleteListed(browser, { path: "/skin-types", prefix: name, confirm: "Delete" });
 });
 
 test("create, rename and delete a skin type", async ({ page }) => {

@@ -228,8 +228,10 @@ tests/e2e/*.spec.ts                 Playwright
 - Playwright specs call `requireLiveApi()` and skip without `E2E_API`,
   `E2E_EMAIL` and `E2E_PASSWORD`. `E2E_API=1` is a switch; the dev server reads
   `API_BASE_URL` from `.env.local`.
-- A spec deletes what it creates in `afterEach` (`tests/e2e/cleanup.ts`), so reruns
-  leave the shared database as seeded.
+- A spec names what it creates with a per-run prefix (`E2E Serum <timestamp>`) and
+  deletes every row carrying it in `test.afterAll` (`tests/e2e/cleanup.ts`), from a
+  fresh signed-in page, so a spec that fails midway still leaves the shared database
+  as seeded.
 
 ---
 
