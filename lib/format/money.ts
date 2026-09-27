@@ -2,6 +2,10 @@ import type { Money } from "@/lib/api/types";
 
 export const MONEY_PATTERN = /^\d+(\.\d{1,2})?$/;
 
+export function isPositiveAmount(amount: string): boolean {
+  return MONEY_PATTERN.test(amount) && /[1-9]/.test(amount);
+}
+
 const GROUPER = new Intl.NumberFormat("en-IN");
 
 function split(amount: Money): { rupees: string; paisa: string } | null {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MONEY_PATTERN, formatMoney, toChartNumber } from "@/lib/format/money";
+import { MONEY_PATTERN, formatMoney, isPositiveAmount, toChartNumber } from "@/lib/format/money";
 
 describe("formatMoney", () => {
   it("groups rupees the Indian way and keeps two places", () => {
@@ -36,5 +36,16 @@ describe("MONEY_PATTERN", () => {
 
   it.each(["-1", "3200.001", "1e3", " 12", "12,00", ""])("rejects %s", (value) => {
     expect(MONEY_PATTERN.test(value)).toBe(false);
+  });
+});
+
+describe("isPositiveAmount", () => {
+  it("accepts an amount above zero and rejects zero or a malformed one", () => {
+    expect(isPositiveAmount("0.01")).toBe(true);
+    expect(isPositiveAmount("5000")).toBe(true);
+    expect(isPositiveAmount("0")).toBe(false);
+    expect(isPositiveAmount("0.00")).toBe(false);
+    expect(isPositiveAmount("-5")).toBe(false);
+    expect(isPositiveAmount("1,000")).toBe(false);
   });
 });

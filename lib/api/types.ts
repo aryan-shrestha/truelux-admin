@@ -247,3 +247,12 @@ export const TAXONOMY_KINDS: TaxonomyKind[] = [
 ];
 
 export type TaxonomyKind = keyof Taxonomy;
+
+export type ShippingSettings = {
+  inside_valley_fee: Money;
+  outside_valley_fee: Money;
+  free_shipping_threshold: Money | null;
+  updated_at: string;
+};
+
+export type ShippingSettingsUpdate = Omit<ShippingSettings, "updated_at">;

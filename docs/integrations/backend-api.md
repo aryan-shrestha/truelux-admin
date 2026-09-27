@@ -2,7 +2,7 @@
 
 Status: Reference
 
-Last updated: 2026-09-26
+Last updated: 2026-09-27
 
 ---
 
@@ -29,10 +29,12 @@ back-end/docs/features/skin-types.md         the admin part of it
 back-end/docs/architecture.md                error envelope
 back-end/docs/features/catalog-browsing.md   pagination envelope
 back-end/apps/backoffice/serializers.py      field names the docs leave implicit
+back-end/docs/features/checkout-quote-and-shipping.md   shipping settings
 ```
 
 Checked against the running API on 2026-09-26 (`yarn e2e`, and the responses read
-directly).
+directly); shipping settings on 2026-09-27 (`ShippingSettingsWriteSerializer`, and
+`yarn e2e`).
 
 ---
 
@@ -298,6 +300,34 @@ from `pending` or `confirmed`. Cancelling restores stock.
 
 Transition errors: `422 invalid_status_transition`, `order_already_shipped`,
 `order_not_cancellable`.
+
+### Shipping settings
+
+| Method     | Path                 |
+| ---------- | -------------------- |
+| GET, PATCH | `settings/shipping/` |
+
+A singleton; there is no id and no create or delete.
+
+```json
+{
+  "inside_valley_fee": "150.00",
+  "outside_valley_fee": "250.00",
+  "free_shipping_threshold": "8000.00",
+  "updated_at": "…"
+}
+```
+
+- `free_shipping_threshold` is `null` when there is no free shipping. PATCH takes the
+  three amounts (not `updated_at`) and returns the whole object.
+- PATCH is partial. Both fees must be ≥ 0 and the threshold ≥ 0.01 or `null`, each
+  at most 10 digits with 2 decimals (`DecimalField`), otherwise
+  `400 validation_error` with `details` keyed by field. No domain code.
+- The inside-valley fee applies to the districts Kathmandu, Lalitpur and Bhaktapur
+  (`KATHMANDU_VALLEY_DISTRICTS`, fixed in the backend's code).
+- A change applies to the next order; placed orders keep their stored
+  `shipping_fee`. The storefront reads the public `GET /api/v1/shipping/`
+  (cacheable), so its copy can lag a save.
 
 ---
 
