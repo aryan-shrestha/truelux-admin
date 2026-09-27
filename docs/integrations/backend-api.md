@@ -29,11 +29,12 @@ back-end/docs/features/skin-types.md         the admin part of it
 back-end/docs/architecture.md                error envelope
 back-end/docs/features/catalog-browsing.md   pagination envelope
 back-end/apps/backoffice/serializers.py      field names the docs leave implicit
-back-end/docs/features/checkout-quote-and-shipping.md   shipping settings (Planned there)
+back-end/docs/features/checkout-quote-and-shipping.md   shipping settings
 ```
 
 Checked against the running API on 2026-09-26 (`yarn e2e`, and the responses read
-directly).
+directly); shipping settings on 2026-09-27 (`ShippingSettingsWriteSerializer`, and
+`yarn e2e`).
 
 ---
 
@@ -319,7 +320,8 @@ A singleton; there is no id and no create or delete.
 
 - `free_shipping_threshold` is `null` when there is no free shipping. PATCH takes the
   three amounts (not `updated_at`) and returns the whole object.
-- Both fees must be ≥ 0 and the threshold > 0 or `null`, otherwise
+- PATCH is partial. Both fees must be ≥ 0 and the threshold ≥ 0.01 or `null`, each
+  at most 10 digits with 2 decimals (`DecimalField`), otherwise
   `400 validation_error` with `details` keyed by field. No domain code.
 - The inside-valley fee applies to the districts Kathmandu, Lalitpur and Bhaktapur
   (`KATHMANDU_VALLEY_DISTRICTS`, fixed in the backend's code).
@@ -398,8 +400,7 @@ and implicit. See [ADR 0003](../decisions/0003-money-is-a-decimal-string-end-to-
 Everything the admin assumed while `admin-api.md` was a plan has been confirmed
 against the implemented backend. Two behaviours are worth raising with it:
 
-| Question                                                                                                                                                                            | Current behaviour                                                                            | Where it matters                                                        |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Should `created_after`/`created_before` compare the `Asia/Kathmandu` date, as the dashboard's revenue buckets already do?                                                           | UTC date, so a date-filtered list misses orders placed 00:00–05:45 in Nepal on its first day | dashboard KPI links, orders date filter                                 |
-| Could a just-rotated refresh token be accepted again for a few seconds (a reuse grace period)?                                                                                      | Reuse is a 401 at once, so two tabs refreshing together sign one out                         | two tabs, or a page and a hover prefetch, refreshing at the same moment |
-| The shipping settings contract is written from the backend's plan, built in parallel. Confirm the field names and error codes once `checkout-quote-and-shipping.md` is Implemented. | See [Shipping settings](#shipping-settings)                                                  | `/settings/shipping`                                                    |
+| Question                                                                                                                  | Current behaviour                                                                            | Where it matters                                                        |
+| ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Should `created_after`/`created_before` compare the `Asia/Kathmandu` date, as the dashboard's revenue buckets already do? | UTC date, so a date-filtered list misses orders placed 00:00–05:45 in Nepal on its first day | dashboard KPI links, orders date filter                                 |
+| Could a just-rotated refresh token be accepted again for a few seconds (a reuse grace period)?                            | Reuse is a 401 at once, so two tabs refreshing together sign one out                         | two tabs, or a page and a hover prefetch, refreshing at the same moment |

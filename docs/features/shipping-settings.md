@@ -68,7 +68,7 @@ API: `GET, PATCH /api/v1/admin/settings/shipping/`, transcribed in
 
 ## Remaining
 
-- The backend endpoint was being built in parallel; see the e2e note under Tests.
+None.
 
 ---
 
@@ -160,7 +160,8 @@ PATCH /api/v1/admin/settings/shipping/    server action
   threshold; API field errors land on the field; `throttled` shows as a form alert.
 - `tests/e2e/shipping-settings.spec.ts` — against the live API: change the
   threshold, reload, see it kept; turn free shipping off and see it kept; a negative
-  fee is refused. `afterAll` restores the original fees and threshold.
+  fee is refused. `afterAll` restores the original fees and threshold. Ran green
+  against the live API (backend `f77d7a6`) on 2026-09-27, with the other five specs.
 
 ---
 
