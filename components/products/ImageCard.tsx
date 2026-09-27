@@ -1,11 +1,13 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { ArrowDownIcon, ArrowUpIcon, StarIcon, Trash2Icon } from "lucide-react";
 import Image from "next/image";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { ConfirmAction } from "@/components/form/ConfirmAction";
+import { useImageMutation } from "@/components/products/use-image-mutation";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +21,8 @@ import {
 } from "@/components/ui/input-group";
 import type { ProductImage } from "@/lib/api/types";
 import { removeImage, updateImage } from "@/lib/products/actions";
+import { productInvalidates } from "@/lib/products/queries";
+import { failureMessage, throwOnFailure } from "@/lib/query/action";
 
 type ImageCardProps = {
   productId: string;
@@ -40,16 +44,30 @@ export function ImageCard({
   isMoving,
 }: ImageCardProps) {
   const [altText, setAltText] = useState(image.alt_text);
-  const [isSaving, startSaving] = useTransition();
   const altId = `alt-${image.id}`;
 
-  function save(patch: { alt_text?: string; is_primary?: true }, message: string) {
-    startSaving(async () => {
-      const result = await updateImage(productId, image.id, patch);
-      if (result.ok) toast.success(message);
-      else toast.error(result.message);
-    });
-  }
+  const saveAlt = useImageMutation({
+    productId,
+    action: (alt_text: string) => updateImage(image.id, { alt_text }),
+    optimistic: (images, alt_text) =>
+      images.map((candidate) =>
+        candidate.id === image.id ? { ...candidate, alt_text } : candidate,
+      ),
+    successMessage: "Alt text saved",
+  });
+
+  // The API clears the old primary itself, so this waits for its answer.
+  const makePrimary = useMutation({
+    mutationFn: async () => throwOnFailure(await updateImage(image.id, { is_primary: true })),
+    meta: { invalidates: productInvalidates(productId) },
+    onSuccess: () => toast.success("Primary image set"),
+    onError: (error) => {
+      const message = failureMessage(error);
+      if (message) toast.error(message);
+    },
+  });
+
+  const isSaving = saveAlt.isPending || makePrimary.isPending;
 
   return (
     <Card size="sm" className="pt-0">
@@ -78,7 +96,7 @@ export function ImageCard({
               <InputGroupButton
                 size="xs"
                 disabled={isSaving || altText.trim() === image.alt_text}
-                onClick={() => save({ alt_text: altText }, "Alt text saved")}
+                onClick={() => saveAlt.mutate(altText.trim())}
               >
                 Save
               </InputGroupButton>
@@ -112,7 +130,7 @@ export function ImageCard({
             size="sm"
             variant="ghost"
             disabled={image.is_primary || isSaving}
-            onClick={() => save({ is_primary: true }, "Primary image set")}
+            onClick={() => makePrimary.mutate()}
           >
             <StarIcon data-icon="inline-start" />
             Make primary
@@ -127,7 +145,8 @@ export function ImageCard({
             description="It is removed from the product. This cannot be undone."
             confirmLabel="Delete image"
             successMessage="Image deleted"
-            action={() => removeImage(productId, image.id)}
+            action={() => removeImage(image.id)}
+            invalidates={productInvalidates(productId)}
           />
         </div>
       </CardFooter>

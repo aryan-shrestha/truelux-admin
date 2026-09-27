@@ -20,6 +20,7 @@ data of its own.
 - shadcn/ui (Radix base, Nova style) — the only component library
 - react-hook-form + zod for forms, TanStack Table v8 for tables, Recharts via
   shadcn `chart`
+- TanStack Query v5 for server data in the browser (ADR 0005)
 - Yarn 4, `nodeLinker: node-modules`
 
 `yarn` is the package manager. shadcn components are added with
@@ -27,7 +28,8 @@ data of its own.
 
 **Do not switch the linker to Plug'n'Play.** Turbopack and Vitest both fail under it.
 
-There is **no client data-fetching library** and **no global state store**.
+TanStack Query is the only client data layer, and there is **no global state
+store**.
 
 ---
 
@@ -115,7 +117,8 @@ app/
     (admin)/          the signed-in frame: layout, loading, error
         page.tsx      dashboard
         orders/  products/  brands/  categories/  shades/  sizes/
-proxy.ts              auth guard and token refresh before every render
+    api/              read-only Route Handlers for the browser's queries; /api/session
+proxy.ts              auth guard; token refresh before every page render
 
 components/
     ui/               shadcn components, themed here and nowhere else
@@ -125,28 +128,36 @@ components/
 lib/
     api/              server-only: the only module that calls the backend
     auth/             cookies, session, sign-in and sign-out actions, next-path guard
-    <domain>/         schemas, URL query mapping and server actions per area
+    <domain>/         schemas, URL query mapping, query keys and server actions per area
+    query/            query client defaults, the browser fetcher, action adapters
     format/           money and dates
     env.ts            every environment variable
 ```
 
 ### Layer boundaries
 
-**Routes** (`app/**`) — read `params` and `searchParams`, call `lib/api`, compose
-components. No `fetch`, no formatting, no business rules.
+**Routes** (`app/**`) — read `params` and `searchParams`, prefetch with `lib/api`
+into `getServerQueryClient()`, render `HydrationBoundary` around a client view. No
+`fetch`, no formatting, no business rules.
+
+**Route Handlers** (`app/api/**`) — GET only, one `lib/api` read each, through
+`respond()` with `apiGet`. They exist so a browser query can reach `lib/api`.
 
 **Server Components** — the default. Turn data into markup.
 
-**Client Components** (`"use client"`) — interaction only: forms, dialogs, tables
-with row actions, URL-driven filters. **Never import `lib/api`.** A client component
-calls a server action from `lib/<domain>/actions.ts`.
+**Client Components** (`"use client"`) — views that read queries, forms, dialogs,
+tables, URL-driven filters. **Never import `lib/api`.** Read with `useSuspenseQuery`
+and the `queryOptions` in `lib/<domain>/queries.ts`; write with `useMutation` over a
+server action from `lib/<domain>/actions.ts`, naming the stale keys in
+`meta.invalidates`.
 
 **Server actions** (`lib/<domain>/actions.ts`, `"use server"`) — every mutation.
-Re-validate input with the same zod schema, call `lib/api` inside `attempt()`,
-`revalidatePath`, return an `ActionResult`.
+Re-validate input with the same zod schema, call `lib/api` inside `attempt()`, return
+an `ActionResult`. No `revalidatePath`; the client invalidates its queries.
 
-**`lib/api`** — imports `server-only`. `apiRead` for Server Components, `apiWrite`
-for server actions. Returns typed data or throws `ApiError`.
+**`lib/api`** — imports `server-only`. `apiRead` for Server Components, `apiGet` for
+Route Handlers, `apiWrite` for server actions. Returns typed data or throws
+`ApiError`.
 
 **`components/ui`** — shadcn only. Brand the look here and in `app/globals.css`, not
 with class strings at call sites.
@@ -158,9 +169,12 @@ Do not create additional layers unless the existing architecture requires them.
 ## Auth (ADR 0001)
 
 - The browser never calls the API. Tokens live in httpOnly cookies on the admin's
-  origin.
-- `proxy.ts` redirects anonymous requests to `/login?next=…` and refreshes the
+  origin. The browser calls the admin's own `/api/*` handlers.
+- `proxy.ts` redirects anonymous page requests to `/login?next=…` and refreshes the
   access token before any render. Server Components cannot set cookies.
+- `/api/*` is never refreshed on the server (refresh tokens rotate; parallel
+  refetches would race). `proxy.ts` answers `session_refresh_required` and
+  `getJson` refreshes once per tab through `POST /api/session`.
 - `apiRead` never refreshes; a 401/403 sends the user to `/login?expired=1`.
   `apiWrite` refreshes once on a 401 and retries.
 - `next` passes through `safeNextPath` and nothing else.
@@ -171,13 +185,15 @@ Do not create additional layers unless the existing architecture requires them.
 
 ## State
 
-| Tier              | Holds                                        |
-| ----------------- | -------------------------------------------- |
-| URL search params | Filters, search, page, tab                   |
-| Cookies           | The token pair (httpOnly), the sidebar state |
-| React state       | Dialogs, form values, pending transitions    |
+| Tier              | Holds                                           |
+| ----------------- | ----------------------------------------------- |
+| URL search params | Filters, search, page, tab                      |
+| Query cache       | Server data, keyed in `lib/<domain>/queries.ts` |
+| Cookies           | The token pair (httpOnly), the sidebar state    |
+| React state       | Dialogs, form values, drafts                    |
 
-No global store, no client cache, no `useEffect` to fetch.
+No global store, no `useEffect` to fetch. List state is written with the History API
+(`useUrlParams`), not `router.replace`.
 
 ---
 
@@ -206,7 +222,8 @@ No global store, no client cache, no `useEffect` to fetch.
   where a shadcn one exists, and no other UI kit.
 - Forms: `Field` + `Controller` over react-hook-form with `zodResolver`; the field
   components in `components/form/` bind them.
-- Tables: `components/data-table/DataTable.tsx` (TanStack) with state in the URL.
+- Tables: `components/data-table/DataTable.tsx` (TanStack Table) with state in the
+  URL.
 - Status colours come from badge variants (`success`, `warning`, `info`), mapped in
   `lib/orders/status.ts`. No hex values in feature components.
 - Load the `shadcn` skill before adding or customising a component.
@@ -233,7 +250,10 @@ Do not introduce:
 - defensive checks for impossible states
 - a `useEffect` that could be a derived value or an event handler
 - a client component that could have been a server component
-- broad `try`/`catch` — `attempt()` is the one place API failures become results
+- broad `try`/`catch` — `attempt()` (server actions) and `respond()` (Route
+  Handlers) are the places API failures become results
+- an optimistic update of anything the API derives (prices, stock, totals,
+  transitions)
 
 ---
 
@@ -262,11 +282,12 @@ choice.
 
 ## Tests
 
-- **`lib/` logic always**: schemas, money, dates, URL query mapping, the API client's
-  refresh and retry, the `next` guard.
+- **`lib/` logic always**: schemas, money, dates, URL query mapping, query keys, the
+  API client's refresh and retry, the browser fetcher's refresh, the `next` guard.
 - **Components with behaviour**: forms, editors, confirm flows, URL controls.
 - **No test reaches the network.** Stub `fetch`; mock `next/headers` and
-  `next/navigation` with `tests/fixtures/`.
+  `next/navigation` with `tests/fixtures/`. Render query consumers with
+  `renderWithQuery` and seed data with `setQueryData`.
 - Assert the error `code`, never the message from the API.
 - Playwright specs run against a live, seeded API only, because the admin's API
   calls happen on the server where `page.route` cannot see them.

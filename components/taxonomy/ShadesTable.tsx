@@ -8,6 +8,7 @@ import { RowActions } from "@/components/taxonomy/RowActions";
 import { ShadeDialog } from "@/components/taxonomy/ShadeDialog";
 import { ShadeSwatch } from "@/components/taxonomy/ShadeSwatch";
 import { TaxonomyEmpty } from "@/components/taxonomy/TaxonomyEmpty";
+import { useTaxonomySearch } from "@/components/taxonomy/use-taxonomy-search";
 import type { Shade } from "@/lib/api/types";
 
 const COLUMNS: ColumnDef<Shade>[] = [
@@ -39,7 +40,8 @@ const COLUMNS: ColumnDef<Shade>[] = [
   },
 ];
 
-export function ShadesTable({ shades, query }: { shades: Shade[]; query: string }) {
+export function ShadesTable() {
+  const { items: shades, query } = useTaxonomySearch("shades");
   return (
     <DataTable
       columns={COLUMNS}

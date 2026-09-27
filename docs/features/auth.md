@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-09-25
+Last updated: 2026-09-27
 
 ---
 
@@ -68,7 +68,12 @@ Backend `docs/features/staff-auth.md`. [ADR 0001](../decisions/0001-auth-is-a-ba
   `/login`: redirect to `next` (or `/`), except with `?expired=1`. Access cookie
   missing or within 60 s of expiry: refresh through the API, set the new pair on the
   response **and** on the forwarded request, or redirect to `/login?expired=1&next=…`
-  if the refresh is refused.
+  if the refresh is refused. Under `/api/*` it answers JSON instead and never
+  refreshes: 401 `authentication_failed` without a session, 401
+  `session_refresh_required` for an expiring access token.
+- `app/api/session/route.ts` — the browser's refresh: same-origin `POST`, rotate,
+  write both cookies. `lib/query/fetch-json.ts` calls it once per tab however many
+  queries are waiting ([tanstack-query.md](tanstack-query.md)).
 - `lib/api/client.ts` (`server-only`) — `apiRead` for Server Components, `apiWrite` for
   server actions. `apiWrite` refreshes once on a 401, rewrites both cookies and retries;
   if the refresh fails it clears the cookies and redirects to `/login`. `apiRead`
@@ -169,7 +174,7 @@ next server action.
 
 ```text
 POST /api/v1/auth/token/           server action (signIn), no-store
-POST /api/v1/auth/token/refresh/   proxy.ts, and apiWrite on a 401
+POST /api/v1/auth/token/refresh/   proxy.ts (pages), /api/session (browser queries), and apiWrite on a 401
 POST /api/v1/auth/logout/          server action (signOut)
 GET  /api/v1/auth/me/              server (admin layout)
 ```

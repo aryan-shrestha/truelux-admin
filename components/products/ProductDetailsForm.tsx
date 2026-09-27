@@ -1,5 +1,7 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { FormProvider } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -17,6 +19,7 @@ import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import type { Product } from "@/lib/api/types";
 import { createProductAction, updateProductAction } from "@/lib/products/actions";
+import { productKeys, productQueries } from "@/lib/products/queries";
 import { productSchema } from "@/lib/products/schemas";
 
 type ProductDetailsFormProps = {
@@ -32,6 +35,8 @@ export function ProductDetailsForm({
   categories,
   skinTypes,
 }: ProductDetailsFormProps) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const { form, submit, isPending, rootError } = useActionForm({
     schema: productSchema,
     defaultValues: {
@@ -49,8 +54,15 @@ export function ProductDetailsForm({
     },
     action: (values) =>
       product ? updateProductAction(product.id, values) : createProductAction(values),
+    invalidates: [productKeys.lists()],
     onSuccess: (saved) => {
-      toast.success(product ? "Product saved" : "Product created");
+      queryClient.setQueryData(productQueries.detail(saved.id).queryKey, saved);
+      if (!product) {
+        toast.success("Product created");
+        router.push(`/products/${saved.id}?tab=variants`);
+        return;
+      }
+      toast.success("Product saved");
       form.reset({ ...form.getValues(), slug: saved.slug, is_published: saved.is_published });
     },
     fieldForCode: { product_has_no_variants: "is_published" },

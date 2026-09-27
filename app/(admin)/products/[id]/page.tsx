@@ -1,17 +1,14 @@
+import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ImagesManager } from "@/components/products/ImagesManager";
-import { ProductDetailsForm } from "@/components/products/ProductDetailsForm";
-import { ProductTabs } from "@/components/products/ProductTabs";
-import { VariantsEditor } from "@/components/products/VariantsEditor";
-import { PageHeader } from "@/components/shell/PageHeader";
-import { Badge } from "@/components/ui/badge";
+import { ProductView } from "@/components/products/ProductView";
 import { hasCode } from "@/lib/api/errors";
 import { getProduct } from "@/lib/api/products";
-import { listTaxonomy } from "@/lib/api/taxonomy";
 import type { Product } from "@/lib/api/types";
-import { parseProductTab } from "@/lib/products/query";
+import { productQueries } from "@/lib/products/queries";
+import { getServerQueryClient } from "@/lib/query/server";
+import { prefetchTaxonomy } from "@/lib/taxonomy/prefetch";
 
 export const metadata: Metadata = { title: "Edit product" };
 
@@ -24,64 +21,18 @@ async function findProduct(id: string): Promise<Product> {
   }
 }
 
-export default async function ProductPage({ params, searchParams }: PageProps<"/products/[id]">) {
-  const [{ id }, query] = await Promise.all([params, searchParams]);
-  const [product, brands, categories, sizes, shades, skinTypes] = await Promise.all([
+export default async function ProductPage({ params }: PageProps<"/products/[id]">) {
+  const { id } = await params;
+  const queryClient = getServerQueryClient();
+  const [product] = await Promise.all([
     findProduct(id),
-    listTaxonomy("brands"),
-    listTaxonomy("categories"),
-    listTaxonomy("sizes"),
-    listTaxonomy("shades"),
-    listTaxonomy("skin-types"),
+    prefetchTaxonomy("brands", "categories", "sizes", "shades", "skin-types"),
   ]);
+  queryClient.setQueryData(productQueries.detail(id).queryKey, product);
 
   return (
-    <>
-      <PageHeader
-        crumbs={[
-          { label: "Catalogue" },
-          { label: "Products", href: "/products" },
-          { label: product.name },
-        ]}
-        title={product.name}
-        description={`by ${product.brand.name} in ${product.category.name}`}
-      >
-        {product.is_published ? (
-          <Badge variant="success">Published</Badge>
-        ) : (
-          <Badge variant="outline">Draft</Badge>
-        )}
-      </PageHeader>
-      <div className="p-4 md:p-6">
-        <ProductTabs
-          tab={parseProductTab(query)}
-          variantCount={product.variants.length}
-          imageCount={product.images.length}
-          details={
-            <ProductDetailsForm
-              product={product}
-              brands={brands.map((brand) => ({ value: brand.id, label: brand.name }))}
-              categories={categories.map((category) => ({
-                value: category.id,
-                label: category.name,
-              }))}
-              skinTypes={skinTypes.map((skinType) => ({
-                value: skinType.id,
-                label: skinType.name,
-              }))}
-            />
-          }
-          variants={
-            <VariantsEditor
-              productId={product.id}
-              variants={product.variants}
-              sizes={sizes.map((size) => ({ value: size.id, label: size.name }))}
-              shades={shades}
-            />
-          }
-          images={<ImagesManager productId={product.id} images={product.images} />}
-        />
-      </div>
-    </>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <ProductView id={id} />
+    </HydrationBoundary>
   );
 }

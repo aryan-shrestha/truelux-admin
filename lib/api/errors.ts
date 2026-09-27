@@ -49,6 +49,7 @@ const MESSAGES: Record<string, string> = {
   conflict:
     "This duplicates an existing record. Check the name, slug or SKU, or the variant’s size and shade.",
   throttled: "Too many requests. Wait a moment and try again.",
+  api_unreachable: "The API could not be reached. Try again in a moment.",
   invalid_refresh_token: "Your session had already ended.",
   product_has_no_variants: "Add at least one variant before publishing.",
   invalid_status_transition: "The order cannot move to that status from where it is now.",

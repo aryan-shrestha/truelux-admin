@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-09-26
+Last updated: 2026-09-27
 
 ---
 
@@ -40,7 +40,9 @@ delivered`, with cancel from `pending` or `confirmed`.
 
 ## Implemented
 
-- `app/(admin)/orders/page.tsx` — the paginated list (25 a page) from URL state:
+- `app/(admin)/orders/page.tsx` — prefetches the list for the URL's filters and
+  renders `OrdersView`, which reads `orderQueries.list(filters)` (polls every 60 s)
+  and is the paginated list (25 a page) from URL state:
   `StatusTabs` (`?status=`, repeatable), `UrlSearch` (`?q=`), `DateRangeFilter`
   (`?from=`/`?to=`, ISO dates) and `TablePagination` (`?page=`).
 - `components/orders/OrdersTable.tsx` — number (linked), placed date and time in
@@ -52,7 +54,9 @@ delivered`, with cancel from `pending` or `confirmed`.
 - `components/orders/DateRangeFilter.tsx` — `popover` + two-month `calendar` in range
   mode; writes the URL once both ends are chosen; a clear button; future days
   disabled.
-- `app/(admin)/orders/[id]/page.tsx` — header with the status and the actions,
+- `app/(admin)/orders/[id]/page.tsx` — `findOrder` (`not_found` → `notFound()`),
+  seeds `orderQueries.detail(id)`, renders `OrderView`: header with the status and
+  the actions,
   `OrderItemsCard` (lines with unit price, quantity and line total; subtotal,
   shipping and total from the API) and `CustomerCard` (name, `tel:` phone, email,
   address, placed, payment method, note). `not_found` becomes `notFound()`. The
@@ -61,8 +65,12 @@ delivered`, with cancel from `pending` or `confirmed`.
 - `components/orders/OrderActions.tsx` — one button per entry in
   `allowed_transitions`: Confirm order, Mark as shipped, Mark as delivered; Cancel
   order sits behind an `alert-dialog` that says the items go back into stock.
-- `lib/orders/actions.ts` — `moveOrder` validates the target, posts the transition
-  and revalidates the order, the list and the dashboard.
+- `lib/orders/actions.ts` — `moveOrder` validates the target and posts the
+  transition.
+- `components/orders/OrderActions.tsx` runs it in `useMutation`: the returned order is
+  written into its detail key, and order lists and the dashboard are invalidated.
+- `lib/orders/queries.ts` — `orderKeys`, `orderQueries`; `app/api/orders/route.ts`
+  and `app/api/orders/[id]/route.ts` serve the browser's refetches.
 - `lib/orders/status.ts` — the one map of status → label and badge variant, and the
   transition button labels. `OrderStatusBadge` is the only renderer.
 - `lib/orders/query.ts` — URL ↔ API query mapping for the list and the dashboard's
@@ -96,7 +104,7 @@ The services own the state machine; a second copy here would drift.
 **Consequence**
 
 A stale page can still send a transition the API has since refused; the 422 code is
-toasted and the page revalidates on the next action.
+toasted. The detail refetches on focus once stale.
 
 ---
 
@@ -127,8 +135,8 @@ toasted and the page revalidates on the next action.
 ### Calls
 
 ```text
-GET  /api/v1/admin/orders/                  server, no-store
-GET  /api/v1/admin/orders/{id}/             server, no-store
+GET  /api/v1/admin/orders/                  server render; browser via /api/orders, polls 60 s
+GET  /api/v1/admin/orders/{id}/             server render; browser via /api/orders/[id]
 POST /api/v1/admin/orders/{id}/transition/  server action
 ```
 
@@ -145,8 +153,9 @@ POST /api/v1/admin/orders/{id}/transition/  server action
 
 ## State and data
 
-- URL: status, search, date range, page.
-- React state: the date picker's in-progress range, pending transitions.
+- URL: status, search, date range, page (History API).
+- Query cache: `["orders","list",filters]`, `["orders","detail",id]`.
+- React state: the date picker's in-progress range.
 
 ---
 

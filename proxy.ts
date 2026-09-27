@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { refreshTokens } from "@/lib/api/client";
+import { errorResponse } from "@/lib/api/route";
 import { safeNextPath } from "@/lib/auth/next-path";
+import { SESSION_PATH } from "@/lib/query/fetch-json";
 import {
   ACCESS_COOKIE,
   REFRESH_COOKIE,
@@ -25,9 +27,14 @@ function redirectToLogin(request: NextRequest, reason?: "expired"): NextResponse
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const refresh = request.cookies.get(REFRESH_COOKIE)?.value;
-  const isLogin = request.nextUrl.pathname === "/login";
+  const { pathname } = request.nextUrl;
+  const isLogin = pathname === "/login";
+  const isApi = pathname.startsWith("/api/");
 
   if (!refresh) {
+    if (isApi) {
+      return errorResponse(401, "authentication_failed", "Sign in again.");
+    }
     return isLogin ? NextResponse.next() : redirectToLogin(request);
   }
 
@@ -42,8 +49,16 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   const access = request.cookies.get(ACCESS_COOKIE)?.value;
-  if (access && secondsUntilExpiry(access) > REFRESH_MARGIN_SECONDS) {
+  const isFresh = access !== undefined && secondsUntilExpiry(access) > REFRESH_MARGIN_SECONDS;
+  if (isFresh || pathname === SESSION_PATH) {
     return NextResponse.next();
+  }
+
+  // Refresh tokens rotate and are blacklisted, so parallel background fetches that each
+  // refreshed here would race and sign the user out. The browser refreshes once
+  // through SESSION_PATH and retries.
+  if (isApi) {
+    return errorResponse(401, "session_refresh_required", "The session needs refreshing.");
   }
 
   // Server Components cannot set cookies, so the renewal happens here, before the

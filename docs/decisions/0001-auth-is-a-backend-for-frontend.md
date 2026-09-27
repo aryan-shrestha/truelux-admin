@@ -35,8 +35,10 @@ and works on any domains. It mirrors the backend's ADR 0012.
 
 ### Constraints introduced
 
-- Mutations are server actions. Interactive tables re-render through URL search
-  params, not client fetches.
+- Mutations are server actions. Browser reads go through the admin's own Route
+  Handlers, never to the API. [ADR 0005](0005-client-data-uses-tanstack-query.md)
+  replaced "interactive tables re-render through URL search params, not client
+  fetches".
 - `lib/api/*` must never be imported by a `"use client"` module.
 
 ---

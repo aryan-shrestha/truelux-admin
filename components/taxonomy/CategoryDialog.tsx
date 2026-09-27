@@ -1,24 +1,33 @@
 "use client";
 
+import { useSuspenseQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
 import { NumberField } from "@/components/form/NumberField";
 import { RecordDialog } from "@/components/form/RecordDialog";
-import { type SelectOption, SelectField } from "@/components/form/SelectField";
+import { SelectField } from "@/components/form/SelectField";
 import { NameSlugFields } from "@/components/taxonomy/NameSlugFields";
 import type { Category } from "@/lib/api/types";
 import { saveCategory } from "@/lib/taxonomy/actions";
 import { categorySchema } from "@/lib/taxonomy/schemas";
+import { taxonomyInvalidates, taxonomyQuery } from "@/lib/taxonomy/queries";
 
 type CategoryDialogProps = {
   category?: Category;
-  roots: SelectOption[];
   trigger?: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 };
 
-export function CategoryDialog({ category, roots, ...dialog }: CategoryDialogProps) {
+export function CategoryDialog({ category, ...dialog }: CategoryDialogProps) {
+  const { data: roots } = useSuspenseQuery({
+    ...taxonomyQuery("categories"),
+    select: (categories) =>
+      categories
+        .filter((root) => root.parent_id === null && root.id !== category?.id)
+        .map((root) => ({ value: root.id, label: root.name })),
+  });
+
   return (
     <RecordDialog
       {...dialog}
@@ -34,14 +43,10 @@ export function CategoryDialog({ category, roots, ...dialog }: CategoryDialogPro
         sort_order: category?.sort_order ?? 0,
       }}
       action={(values) => saveCategory(category?.id ?? null, values)}
+      invalidates={taxonomyInvalidates("categories")}
     >
       <NameSlugFields namePlaceholder="Face" />
-      <SelectField
-        name="parent_id"
-        label="Parent"
-        noneLabel="None (top level)"
-        options={roots.filter((root) => root.value !== category?.id)}
-      />
+      <SelectField name="parent_id" label="Parent" noneLabel="None (top level)" options={roots} />
       <NumberField name="sort_order" label="Sort order" description="Lower numbers come first." />
     </RecordDialog>
   );

@@ -1,20 +1,22 @@
+import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import type { Metadata } from "next";
 
-import { TablePagination } from "@/components/data-table/TablePagination";
-import { UrlSearch } from "@/components/data-table/UrlSearch";
-import { DateRangeFilter } from "@/components/orders/DateRangeFilter";
-import { OrdersTable } from "@/components/orders/OrdersTable";
-import { StatusTabs } from "@/components/orders/StatusTabs";
+import { OrdersView } from "@/components/orders/OrdersView";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { listOrders } from "@/lib/api/orders";
-import { ORDERS_PAGE_SIZE, ordersHref, parseOrderFilters, toOrderQuery } from "@/lib/orders/query";
+import { orderQueries } from "@/lib/orders/queries";
+import { parseOrderFilters, toOrderQuery } from "@/lib/orders/query";
+import { getServerQueryClient } from "@/lib/query/server";
 
 export const metadata: Metadata = { title: "Orders" };
 
 export default async function OrdersPage({ searchParams }: PageProps<"/orders">) {
   const filters = parseOrderFilters(await searchParams);
-  const page = await listOrders(toOrderQuery(filters));
-  const filtered = Boolean(filters.status.length || filters.q || filters.from || filters.to);
+  const queryClient = getServerQueryClient();
+  await queryClient.fetchQuery({
+    ...orderQueries.list(filters),
+    queryFn: () => listOrders(toOrderQuery(filters)),
+  });
 
   return (
     <>
@@ -23,20 +25,9 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
         title="Orders"
         description="Cash on delivery: confirm by phone, ship, then mark delivered once paid."
       />
-      <div className="flex flex-col gap-4 p-4 md:p-6">
-        <StatusTabs selected={filters.status} />
-        <div className="flex flex-wrap items-center gap-2">
-          <UrlSearch label="Search number, name, email or phone" />
-          <DateRangeFilter from={filters.from} to={filters.to} />
-        </div>
-        <OrdersTable orders={page.results} filtered={filtered} />
-        <TablePagination
-          page={filters.page}
-          pageSize={ORDERS_PAGE_SIZE}
-          count={page.count}
-          hrefFor={(target) => ordersHref({ ...filters, page: target })}
-        />
-      </div>
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <OrdersView />
+      </HydrationBoundary>
     </>
   );
 }

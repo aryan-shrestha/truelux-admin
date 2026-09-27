@@ -1,10 +1,11 @@
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { VariantsEditor } from "@/components/products/VariantsEditor";
 import { addVariant, removeVariant } from "@/lib/products/actions";
 import { variant } from "@/tests/fixtures/products";
+import { renderWithQuery } from "@/tests/fixtures/query";
 
 vi.mock("@/lib/products/actions", () => ({
   addVariant: vi.fn(),
@@ -22,7 +23,9 @@ function rows() {
 
 describe("VariantsEditor", () => {
   it("adds a draft row and discards it again", async () => {
-    render(<VariantsEditor productId="p1" variants={[variant]} sizes={sizes} shades={shades} />);
+    renderWithQuery(
+      <VariantsEditor productId="p1" variants={[variant]} sizes={sizes} shades={shades} />,
+    );
     expect(rows()).toHaveLength(1);
 
     await userEvent.click(screen.getByRole("button", { name: "Add variant" }));
@@ -33,7 +36,7 @@ describe("VariantsEditor", () => {
   });
 
   it("validates a draft before calling the server", async () => {
-    render(<VariantsEditor productId="p1" variants={[]} sizes={sizes} shades={shades} />);
+    renderWithQuery(<VariantsEditor productId="p1" variants={[]} sizes={sizes} shades={shades} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Add this variant" }));
 
@@ -44,13 +47,15 @@ describe("VariantsEditor", () => {
 
   it("asks before deleting a saved variant, then calls the server", async () => {
     vi.mocked(removeVariant).mockResolvedValueOnce({ ok: true, data: null });
-    render(<VariantsEditor productId="p1" variants={[variant]} sizes={sizes} shades={shades} />);
+    renderWithQuery(
+      <VariantsEditor productId="p1" variants={[variant]} sizes={sizes} shades={shades} />,
+    );
 
     await userEvent.click(screen.getByRole("button", { name: `Delete ${variant.sku}` }));
     const dialog = await screen.findByRole("alertdialog");
     expect(removeVariant).not.toHaveBeenCalled();
 
     await userEvent.click(within(dialog).getByRole("button", { name: "Delete variant" }));
-    expect(removeVariant).toHaveBeenCalledWith("p1", variant.id);
+    expect(removeVariant).toHaveBeenCalledWith(variant.id);
   });
 });

@@ -7,6 +7,7 @@ import { slugColumn, sortOrderColumn, usageColumn } from "@/components/taxonomy/
 import { BrandDialog } from "@/components/taxonomy/BrandDialog";
 import { RowActions } from "@/components/taxonomy/RowActions";
 import { TaxonomyEmpty } from "@/components/taxonomy/TaxonomyEmpty";
+import { useTaxonomySearch } from "@/components/taxonomy/use-taxonomy-search";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { Brand } from "@/lib/api/types";
@@ -55,7 +56,8 @@ const COLUMNS: ColumnDef<Brand>[] = [
   },
 ];
 
-export function BrandsTable({ brands, query }: { brands: Brand[]; query: string }) {
+export function BrandsTable() {
+  const { items: brands, query } = useTaxonomySearch("brands");
   return (
     <DataTable
       columns={COLUMNS}

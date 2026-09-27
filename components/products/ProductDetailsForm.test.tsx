@@ -1,10 +1,13 @@
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { ProductDetailsForm } from "@/components/products/ProductDetailsForm";
 import { updateProductAction } from "@/lib/products/actions";
 import { product } from "@/tests/fixtures/products";
+import { renderWithQuery } from "@/tests/fixtures/query";
+
+vi.mock("next/navigation", async () => (await import("@/tests/fixtures/router")).navigationModule);
 
 vi.mock("@/lib/products/actions", () => ({
   createProductAction: vi.fn(),
@@ -19,7 +22,7 @@ const skinTypes = [
 ];
 
 function renderForm() {
-  render(
+  renderWithQuery(
     <ProductDetailsForm
       product={product}
       brands={[{ value: "b1", label: "Lumière" }]}

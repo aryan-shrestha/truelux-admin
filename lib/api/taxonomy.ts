@@ -1,6 +1,6 @@
 import "server-only";
 
-import { apiRead, apiWrite } from "@/lib/api/client";
+import { type Reader, apiRead, apiWrite } from "@/lib/api/client";
 import { mediaUrl } from "@/lib/api/media";
 import type { Taxonomy, TaxonomyKind } from "@/lib/api/types";
 
@@ -14,8 +14,11 @@ function withLogoUrl<T extends object>(item: T): T {
     : item;
 }
 
-export async function listTaxonomy<K extends TaxonomyKind>(kind: K): Promise<Taxonomy[K][]> {
-  const items = await apiRead<Taxonomy[K][]>(`/admin/${kind}/`);
+export async function listTaxonomy<K extends TaxonomyKind>(
+  kind: K,
+  read: Reader = apiRead,
+): Promise<Taxonomy[K][]> {
+  const items = await read<Taxonomy[K][]>(`/admin/${kind}/`);
   return items.map(withLogoUrl);
 }
 

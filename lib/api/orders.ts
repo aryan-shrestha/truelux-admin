@@ -1,14 +1,20 @@
 import "server-only";
 
-import { apiRead, apiWrite } from "@/lib/api/client";
+import { type Reader, apiRead, apiWrite } from "@/lib/api/client";
 import type { OrderDetail, OrderListItem, OrderQuery, OrderStatus, Page } from "@/lib/api/types";
 
-export async function listOrders(query: OrderQuery): Promise<Page<OrderListItem>> {
-  return apiRead<Page<OrderListItem>>("/admin/orders/", query);
+export async function listOrders(
+  query: OrderQuery,
+  read: Reader = apiRead,
+): Promise<Page<OrderListItem>> {
+  return read<Page<OrderListItem>>("/admin/orders/", query);
 }
 
-export async function getOrder({ id }: { id: string }): Promise<OrderDetail> {
-  return apiRead<OrderDetail>(`/admin/orders/${encodeURIComponent(id)}/`);
+export async function getOrder(
+  { id }: { id: string },
+  read: Reader = apiRead,
+): Promise<OrderDetail> {
+  return read<OrderDetail>(`/admin/orders/${encodeURIComponent(id)}/`);
 }
 
 export async function transitionOrder({

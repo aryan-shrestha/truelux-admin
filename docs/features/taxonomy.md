@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-09-26
+Last updated: 2026-09-27
 
 ---
 
@@ -29,7 +29,8 @@ What is included in this implementation?
 - Size: name, slug, sort order
 - Skin type: name, slug, sort order. Deleting one detaches it from its products,
   and the confirmation says how many.
-- Mutations are server actions that `revalidatePath` and toast the result
+- Mutations are server actions run in `useMutation`; they invalidate the list (and
+  products, which show taxonomy names) and toast the result
 
 ---
 
@@ -41,14 +42,16 @@ Backend `admin-api.md` § Taxonomy and `skin-types.md` § Admin.
 
 ## Implemented
 
-- `app/(admin)/{brands,categories,shades,sizes,skin-types}/page.tsx` — each reads its bare array
-  once, filters it by `?q=` (name or slug, case-insensitive) on the server, and renders
-  the header's **New …** dialog, a `UrlSearch` and the table.
+- `app/(admin)/{brands,categories,shades,sizes,skin-types}/page.tsx` — each prefetches its bare
+  array into `["taxonomy",kind]` and renders the header's **New …** dialog, a
+  `UrlSearch` and the table inside one `HydrationBoundary`. Each table reads its rows
+  through `useTaxonomySearch(kind)`, which filters the cached array by `?q=` (name or
+  slug, case-insensitive) with `select`, so a search makes no request.
 - `components/data-table/DataTable.tsx` — the shadcn `data-table` pattern over
   TanStack Table v8, with manual filtering, sorting and paging: the server hands it
   the rows to show. `ColumnMeta.className` aligns and sizes cells.
 - `components/data-table/UrlSearch.tsx`, `use-url-params.ts` — a debounced search
-  `input-group` that writes `?q=` with `router.replace` and drops `page`.
+  `input-group` that writes `?q=` with `history.replaceState` and drops `page`.
 - `components/taxonomy/*Dialog.tsx` — one `dialog` form per kind on `RecordDialog`
   (react-hook-form + zod, `FormProvider`, field components in `components/form/`).
   - Brand: name, slug, description, logo file with an `avatar` preview, active
@@ -74,7 +77,10 @@ Backend `admin-api.md` § Taxonomy and `skin-types.md` § Admin.
 - `lib/taxonomy/actions.ts` — `saveBrand`, `saveCategory`, `saveShade`, `saveSize`,
   `saveSkinType`,
   `removeTaxonomy`: re-validate with the same zod schema, omit a blank slug, call the
-  API, `revalidatePath` the list and return an `ActionResult`.
+  API and return an `ActionResult`. Dialogs and `RowActions` pass
+  `taxonomyInvalidates(kind)` (the list and `["products"]`).
+- `components/taxonomy/CategoryDialog.tsx` derives its parent options from the cached
+  categories, so a new top-level category is offered at once.
 - `lib/taxonomy/schemas.ts`, `lib/catalog/fields.ts` — the schemas and the shared
   name, slug, sort-order and hex rules.
 - `lib/taxonomy/category-tree.ts` — orders categories as parent, then its children.
@@ -91,22 +97,21 @@ Backend `admin-api.md` § Taxonomy and `skin-types.md` § Admin.
 
 ## Decisions
 
-### Decision: search is filtered on the server, not by TanStack
+### Decision: search filters the cached array
 
 **Decision**
 
-The taxonomy lists are bare arrays, so the page filters them by `?q=` before
-rendering. TanStack runs with `manualFiltering`.
+The taxonomy lists are bare arrays. The query holds the whole array and `select`
+filters it by `?q=`; TanStack Table still runs with `manualFiltering`.
 
 **Reason**
 
-Table state lives in the URL (ADR 0001), and one mechanism serves the paginated
-lists too.
+The query stays in the URL, and the array is already in the browser.
 
 **Consequence**
 
-Each keystroke (debounced 300 ms) re-renders the page on the server and refetches
-the array.
+A keystroke (debounced 300 ms) makes no request
+([ADR 0005](../decisions/0005-client-data-uses-tanstack-query.md)).
 
 ### Decision: the 409 message names the count the table already shows
 
@@ -154,7 +159,7 @@ N can be stale by the time of the click; the API remains the authority.
 ### Calls
 
 ```text
-GET    /api/v1/admin/{kind}/          server, no-store
+GET    /api/v1/admin/{kind}/          server render; browser via /api/taxonomy/[kind]
 POST   /api/v1/admin/{kind}/          server action
 PATCH  /api/v1/admin/{kind}/{id}/     server action
 DELETE /api/v1/admin/{kind}/{id}/     server action
@@ -173,6 +178,7 @@ DELETE /api/v1/admin/{kind}/{id}/     server action
 ## State and data
 
 - URL: `?q=`.
+- Query cache: `["taxonomy",kind]`, stale after 5 minutes.
 - React state: dialog open, form values, logo preview object URL.
 
 ---
@@ -195,7 +201,8 @@ DELETE /api/v1/admin/{kind}/{id}/     server action
 - `components/taxonomy/RowActions.test.tsx` — a 409 on delete shows the in-use
   message and keeps the dialog open.
 - `components/taxonomy/SkinTypesTable.test.tsx` — the delete confirmation names the
-  products the skin type is removed from, and says only "cannot be undone" at 0.
+  products the skin type is removed from, and says only "cannot be undone" at 0;
+  search filters the cache without a request; a delete refetches the list.
 - `lib/api/media.test.ts` — a relative brand logo is resolved against the API origin.
 - `tests/e2e/skin-types.spec.ts` — Playwright: create, rename, delete a skin type
   (needs `E2E_API`).

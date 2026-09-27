@@ -1,10 +1,11 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { ImagesIcon, UploadIcon } from "lucide-react";
-import { useTransition } from "react";
 import { toast } from "sonner";
 
 import { ImageCard } from "@/components/products/ImageCard";
+import { useImageMutation } from "@/components/products/use-image-mutation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Empty,
@@ -18,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import type { ProductImage } from "@/lib/api/types";
 import { reorderImages, uploadImage } from "@/lib/products/actions";
+import { productInvalidates } from "@/lib/products/queries";
 import { IMAGE_TYPES, imageUploadSchema } from "@/lib/products/schemas";
 
 export function orderAfterMove(
@@ -44,13 +46,22 @@ type ImagesManagerProps = {
   images: ProductImage[];
 };
 
+type ImageOrder = { id: string; sort_order: number }[];
+
+function withOrder(images: ProductImage[], order: ImageOrder): ProductImage[] {
+  return images.map((image) => {
+    const moved = order.find((entry) => entry.id === image.id);
+    return moved ? { ...image, sort_order: moved.sort_order } : image;
+  });
+}
+
 export function ImagesManager({ productId, images }: ImagesManagerProps) {
-  const [isUploading, startUpload] = useTransition();
-  const [isMoving, startMove] = useTransition();
   const sorted = images.toSorted((a, b) => a.sort_order - b.sort_order);
 
-  function upload(files: File[]) {
-    startUpload(async () => {
+  // Files go up one at a time, each with its own toast; a file that fails does not stop
+  // the rest.
+  const { mutate: upload, isPending: isUploading } = useMutation({
+    mutationFn: async (files: File[]) => {
       let hasPrimary = images.some((image) => image.is_primary);
       for (const file of files) {
         const values = { file, alt_text: "", is_primary: !hasPrimary };
@@ -69,14 +80,18 @@ export function ImagesManager({ productId, images }: ImagesManagerProps) {
           toast.error(`${file.name}: ${result.message}`);
         }
       }
-    });
-  }
+    },
+    meta: { invalidates: productInvalidates(productId) },
+  });
+
+  const { mutate: reorder, isPending: isMoving } = useImageMutation({
+    productId,
+    action: reorderImages,
+    optimistic: withOrder,
+  });
 
   function move(index: number, direction: -1 | 1) {
-    startMove(async () => {
-      const result = await reorderImages(productId, orderAfterMove(sorted, index, direction));
-      if (!result.ok) toast.error(result.message);
-    });
+    reorder(orderAfterMove(sorted, index, direction));
   }
 
   return (

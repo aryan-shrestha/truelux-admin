@@ -7,6 +7,7 @@ import { slugColumn, sortOrderColumn, usageColumn } from "@/components/taxonomy/
 import { RowActions } from "@/components/taxonomy/RowActions";
 import { SizeDialog } from "@/components/taxonomy/SizeDialog";
 import { TaxonomyEmpty } from "@/components/taxonomy/TaxonomyEmpty";
+import { useTaxonomySearch } from "@/components/taxonomy/use-taxonomy-search";
 import type { Size } from "@/lib/api/types";
 
 const COLUMNS: ColumnDef<Size>[] = [
@@ -33,7 +34,8 @@ const COLUMNS: ColumnDef<Size>[] = [
   },
 ];
 
-export function SizesTable({ sizes, query }: { sizes: Size[]; query: string }) {
+export function SizesTable() {
+  const { items: sizes, query } = useTaxonomySearch("sizes");
   return (
     <DataTable
       columns={COLUMNS}

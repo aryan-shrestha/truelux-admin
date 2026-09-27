@@ -11,10 +11,6 @@ export const ORDERS_PAGE_SIZE = 25;
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-function isOrderStatus(value: string): value is OrderStatus {
-  return ORDER_STATUSES.some((status) => status === value);
-}
-
 export type OrderFilters = {
   status: OrderStatus[];
   q: string;
@@ -26,8 +22,10 @@ export type OrderFilters = {
 export function parseOrderFilters(params: SearchParams): OrderFilters {
   const from = firstParam(params.from);
   const to = firstParam(params.to);
+  const statuses = allParams(params.status);
   return {
-    status: allParams(params.status).filter(isOrderStatus),
+    // In the API's order and once each, so equal filters make one query key.
+    status: ORDER_STATUSES.filter((status) => statuses.includes(status)),
     q: queryParam(params),
     from: from && ISO_DATE.test(from) ? from : undefined,
     to: to && ISO_DATE.test(to) ? to : undefined,

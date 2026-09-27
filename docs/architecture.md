@@ -1,6 +1,6 @@
 # Architecture
 
-Last updated: 2026-09-25
+Last updated: 2026-09-27
 
 This document describes the current architecture of the admin.
 
@@ -24,7 +24,8 @@ into API writes.
   proxy.ts  ── no session? → /login?next=…                                   │
      │      ── access token missing or < 60 s left? → refresh, set cookies   │
      ↓                                                                       │
-  Server Components (reads)        server actions (writes)                   │
+  Server Components      /api/* Route Handlers      server actions           │
+  (first render)         (browser queries)          (writes)                 │
      └──────────── lib/api (server-only), Authorization: Bearer ─────────────┘
                                    ↓
                          Django REST API /api/v1/auth/, /api/v1/admin/
@@ -37,12 +38,15 @@ Three properties define this architecture:
 - **The browser never talks to the API** ([ADR 0001](decisions/0001-auth-is-a-backend-for-frontend.md)).
   The staff JWTs sit in httpOnly cookies on the admin's origin; only the admin's
   server reads them. The API needs no CORS or CSRF configuration for the admin.
-- **Every page is dynamic.** Each render reads the session cookie and fetches with
-  `cache: "no-store"`. Data is private to a staff user and must be current; nothing
-  is cached between requests.
+- **Every page is dynamic, and the browser owns the data after the first render.**
+  A page prefetches into a per-request `QueryClient` and hands it over with
+  `HydrationBoundary`. From then on TanStack Query refetches through the admin's own
+  `/api/*` Route Handlers ([ADR 0005](decisions/0005-client-data-uses-tanstack-query.md)).
+  The API is always read with `cache: "no-store"`; nothing is cached on the server.
 - **Table state lives in the URL.** Filters, search, page and tab are search params,
-  so a view is linkable, the back button works, and a mutation is followed by a
-  server re-render rather than a client refetch.
+  so a view is linkable and the back button works. They are written with the History
+  API, so a change is a client query and not a server render. A mutation is followed
+  by invalidating the queries it made stale.
 
 ---
 
@@ -55,6 +59,7 @@ app/
     not-found.tsx
     robots.ts
     login/page.tsx
+    api/                    GET handlers for browser queries; POST session refresh
     (admin)/
         layout.tsx          sidebar frame; GET auth/me/
         loading.tsx  error.tsx
@@ -65,13 +70,14 @@ app/
 proxy.ts
 components/
     ui/                     shadcn components
-    shell/                  AppSidebar, UserMenu, PageHeader, LoadFailure
+    shell/                  AppSidebar, UserMenu, PageHeader, LoadFailure, QueryProvider
     data-table/             DataTable, UrlSearch, UrlSelect, TablePagination
     form/                   RHF-bound fields, RecordDialog, ConfirmAction
     auth/  dashboard/  orders/  products/  taxonomy/
 lib/
     api/                    client, errors, types, one module per API area
     actions/attempt.ts      API failure → ActionResult
+    query/                  query defaults, server client, browser fetcher, action adapter
     auth/                   tokens, session, next-path, actions, login schema
     orders/  products/  taxonomy/  catalog/
     format/                 money, date
@@ -83,9 +89,10 @@ tests/
 
 ### `app/`
 
-Routes and nothing else. A page reads `params`/`searchParams`, calls `lib/api` (in
-parallel with `Promise.all` where the calls are independent), and composes
-components. `(admin)` is a route group: it adds the sidebar frame without adding a
+Routes and nothing else. A page reads `params`/`searchParams`, prefetches with
+`lib/api` into `getServerQueryClient()` (in parallel where the calls are
+independent), and renders a client view inside `HydrationBoundary`. `app/api/**`
+holds one GET handler per read, so a browser query can reach `lib/api`. `(admin)` is a route group: it adds the sidebar frame without adding a
 URL segment.
 
 ### `components/`
@@ -104,7 +111,8 @@ types. Types mirror the API's snake_case field names exactly.
 ### `lib/<domain>/`
 
 Per area: zod schemas shared by the form and the server action, URL ↔ API query
-mapping, and the `"use server"` actions.
+mapping, query keys and `queryOptions` (`queries.ts`, client-safe), and the
+`"use server"` actions.
 
 ---
 
@@ -117,21 +125,26 @@ proxy.ts: session present? access token fresh? (refresh here if not)
     ↓
 (admin)/layout.tsx → GET auth/me/
     ↓
-page.tsx → lib/api apiRead (no-store) → typed data, or ApiError
+page.tsx → fetchQuery(lib/api apiRead, no-store) → dehydrate → HydrationBoundary
     ↓
-RSC payload → HTML → hydration of the client islands
+RSC payload → HTML → hydration; the client view reads the same query key
+
+Afterwards (focus, poll, invalidation, a filter change):
+useSuspenseQuery → getJson("/api/…") → proxy.ts → Route Handler → lib/api apiGet
 ```
 
 Mutations:
 
 ```text
-Client component (form, dialog, row action)
+Client component: useMutation (form, dialog, row action)
     ↓ calls
 Server action (lib/<domain>/actions.ts) — POST to the current route, so proxy.ts runs first
     ↓
-zod re-validation → attempt(apiWrite(...)) → revalidatePath(...)
+zod re-validation → attempt(apiWrite(...))
     ↓
-ActionResult → toast, inline field errors, or redirect
+ActionResult → throwOnFailure → onSuccess/onError (toast, field errors)
+    ↓
+meta.invalidates → the MutationCache invalidates and waits for the refetch
 ```
 
 Deviations:
@@ -139,6 +152,9 @@ Deviations:
 - **`/login`** is the only route reachable without a refresh cookie.
 - **`/login?expired=1`** is let through even with a refresh cookie, so an ended
   session does not loop between the login page and the page that sent it.
+- **`/api/*`** gets JSON, never a redirect, and is never refreshed in the proxy: no
+  session → 401 `authentication_failed`; access token missing or expiring → 401
+  `session_refresh_required`. `/api/session` is let through to refresh.
 
 ---
 
@@ -152,6 +168,13 @@ Responsibility: define a URL, its metadata and its boundaries; read params; call
 Restrictions: no `fetch`, no formatting, no rules about what data means. A route may
 turn `not_found` into `notFound()`.
 
+### Route Handlers (`app/api/**`)
+
+Responsibility: one `lib/api` read each (GET), or the session refresh (POST).
+
+Restrictions: `respond()` with `apiGet`; parse query strings with the same
+`parse*Filters` as the page; validate path params.
+
 ### Server Components
 
 Responsibility: turn data into markup. The default.
@@ -162,22 +185,23 @@ helpers a server component needs live in `lib/`, not in a client component file.
 
 ### Client Components
 
-Responsibility: forms, dialogs, row actions, URL-driven controls, the chart, the
-sidebar.
+Responsibility: views that read queries, forms, dialogs, row actions, URL-driven
+controls, the chart, the sidebar.
 
-Restrictions: never import `lib/api`; call server actions. Never read `process.env`.
+Restrictions: never import `lib/api`; read through `lib/<domain>/queries.ts`, write
+through server actions in `useMutation`. Never read `process.env`.
 
 ### Server actions
 
 Responsibility: every write. Validate arguments (they arrive from the network),
-call `lib/api` inside `attempt()`, revalidate, return `ActionResult`.
+call `lib/api` inside `attempt()`, return `ActionResult`. No `revalidatePath`.
 
 Restrictions: no rendering decisions; the component decides how to show a failure.
 
 ### `lib/api`
 
 Responsibility: the wire. One function per endpoint, named for what it returns;
-`apiRead` for renders, `apiWrite` for actions.
+`apiRead` for renders, `apiGet` for Route Handlers, `apiWrite` for actions.
 
 Restrictions: no React, no formatting, no status codes returned.
 
@@ -185,12 +209,22 @@ Restrictions: no React, no formatting, no status codes returned.
 
 ## Data fetching and caching
 
-Every call is `cache: "no-store"`. There is no data cache, no ISR and no
-`revalidate` interval: the data is per-user and operational, and the staff throttle
-(`2000/hour` per user) is generous for one merchant.
+Every API call is `cache: "no-store"`. There is no server data cache, no ISR and no
+`revalidate` interval: the data is per-user and operational. Route Handlers answer
+`private, no-store`.
 
-`revalidatePath` after a mutation refreshes the router so the current page
-re-renders from the API. Independent reads on one page run in parallel.
+The browser cache is TanStack Query's, in memory and per tab:
+
+- `staleTime` 30 s (taxonomy 5 min); refetch on window focus once stale.
+- The dashboard and the orders list poll every 60 s while visible, about 60
+  requests an hour per open tab against the staff throttle of `2000/hour`.
+- Retry once only for an unreachable API or a 5xx; an API code is final.
+- A mutation names the keys it makes stale (`meta.invalidates`).
+- Optimistic updates only for values the API does not derive (image order, alt text,
+  the list's publish toggle), rolled back on failure.
+
+Keys and `queryOptions` live in `lib/<domain>/queries.ts`; see
+[features/tanstack-query.md](features/tanstack-query.md).
 
 ---
 
@@ -199,8 +233,9 @@ re-renders from the API. Independent reads on one page run in parallel.
 | Tier              | Holds                                                 | Lives for     |
 | ----------------- | ----------------------------------------------------- | ------------- |
 | URL search params | Filters, search, page, product tab                    | The link      |
+| Query cache       | Server data, by key                                   | The tab       |
 | Cookies           | `tl_access`, `tl_refresh` (httpOnly); `sidebar_state` | The session   |
-| React state       | Dialog open, form values, drafts, pending transitions | The page view |
+| React state       | Dialog open, form values, drafts                      | The page view |
 
 `next-themes` keeps the colour theme in `localStorage`. There is no other browser
 storage.
@@ -220,7 +255,10 @@ storage.
   refresh: the proxy, or a server action.
 - `apiRead` treats 401 and 403 as an ended session (`/login?expired=1`). A
   de-staffed user's access token still authenticates until it expires and is
-  answered 403.
+  answered 403. In the browser, `getJson` does the same with a full page load.
+- Browser queries refresh once per tab: on `session_refresh_required`, `getJson`
+  shares one `POST /api/session` across every waiting query, then retries. The
+  handler checks `Origin`, and a refused refresh leaves the cookies alone.
 - `apiWrite` refreshes once on a 401 and retries; a failed refresh clears the cookies
   and redirects to `/login`.
 - `signOut` posts `auth/logout/` and clears the cookies whatever the result
@@ -236,7 +274,8 @@ roles.
 
 `lib/api` parses the envelope once and throws `ApiError` (`code`, `status`,
 `details`, `requestId`). A request that never reached the API throws
-`ApiUnreachableError`.
+`ApiUnreachableError`. Route Handlers pass an `ApiError` on in the same envelope
+(`respond()`), so the browser rebuilds it with `toApiError`.
 
 **Branch on `code`.** The backend pins codes and rewords messages.
 
@@ -244,6 +283,8 @@ roles.
 | ----------------------------------------------------------------------------- | --------------- | ---------------------------------------------------------------- |
 | `authentication_failed`                                                       | login           | "Email or password is incorrect." — one message, no field marked |
 | `authentication_failed`, `permission_denied`                                  | any read        | `/login?expired=1`                                               |
+| `session_refresh_required` (admin-local, from `proxy.ts`)                     | browser query   | one shared `POST /api/session`, then retry                       |
+| `api_unreachable` (admin-local, 502 from a Route Handler)                     | browser query   | one retry; then the error boundary or a background toast         |
 | `authentication_failed`                                                       | any write       | refresh once and retry; else clear cookies, `/login`             |
 | `throttled`                                                                   | any             | "Too many requests. Wait a moment and try again."                |
 | `validation_error`                                                            | forms           | `details` onto matching fields; the rest as a form alert         |
@@ -261,7 +302,8 @@ The code → sentence map is `lib/api/errors.ts#describeError`.
 
 A read failure during render reaches `app/(admin)/error.tsx` (inside the frame) or
 `app/error.tsx` (the frame itself failed), which show the error digest and a
-**Try again** that calls Next's `retry()`.
+**Try again** that resets failed queries and calls Next's `retry()`. A failed
+background refetch keeps the data on screen and shows one toast per query.
 
 ---
 
@@ -297,9 +339,11 @@ it so a missing variable fails the build. Security headers and a CSP are set in
 
 ## Important constraints
 
-- **Only `lib/api` calls the backend, and only on the server.**
+- **Only `lib/api` calls the backend, and only on the server.** The browser calls
+  `/api/*` on the admin's origin.
 - **Server Components never write cookies**; the proxy and server actions do.
-- **Every mutation is a server action** that re-validates its input.
+- **Every mutation is a server action** that re-validates its input, called through
+  `useMutation`.
 - **Money is a decimal string** outside `lib/format/money.ts`.
 - **The admin never decides** a price, a total, stock or which transitions are
   allowed.
@@ -310,14 +354,15 @@ it so a missing variable fails the build. Security headers and a CSP are set in
 
 ## Known architectural limitations
 
-- **Concurrent refreshes race.** Two requests with an expired access token (a click
-  and a hover prefetch) both try to rotate the same refresh token; the API
-  blacklists it after the first, so the second lands on `/login?expired=1`. The
-  cookies from the winner survive and a reload recovers. A backend grace period for
-  reused refresh tokens would remove this.
+- **Concurrent refreshes race.** Two page requests with an expired access token (a
+  click and a hover prefetch), or two tabs, both try to rotate the same refresh
+  token; the API blacklists it after the first, so the second lands on
+  `/login?expired=1`. The cookies from the winner survive and a reload recovers.
+  Browser queries within one tab do not race (one shared refresh). A backend grace
+  period for reused refresh tokens would remove the rest.
 - **A throttled refresh looks like an expired session** until the `auth` throttle
   window passes.
 - **Uploads pass through a Vercel function**, capped at 4.5 MB per request.
 - **The CSP allows inline scripts** because Next's bootstrap has no nonce.
-- **Taxonomy search refetches the whole array** on every search change; fine at
-  catalogue sizes of hundreds, not thousands.
+- **Taxonomy lists load whole.** Search filters the cached array in the browser;
+  fine at catalogue sizes of hundreds, not thousands.

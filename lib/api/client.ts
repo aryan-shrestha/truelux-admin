@@ -6,9 +6,7 @@ import { ApiUnreachableError, toApiError } from "@/lib/api/errors";
 import type { TokenPair } from "@/lib/api/types";
 import { clearSession, readSession, writeSession } from "@/lib/auth/session";
 import { env } from "@/lib/env";
-
-type QueryValue = string | number | boolean | string[] | undefined;
-type Query = Record<string, QueryValue>;
+import { type ApiQuery as Query, toSearch } from "@/lib/search-params";
 
 type Body = FormData | object;
 
@@ -23,15 +21,7 @@ export const LOGIN_PATH = "/login";
 const EXPIRED_LOGIN_PATH = "/login?expired=1";
 
 function buildUrl(path: string, query: Query | undefined): string {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(query ?? {})) {
-    if (value === undefined || value === "") continue;
-    for (const item of Array.isArray(value) ? value : [value]) {
-      params.append(key, String(item));
-    }
-  }
-  const search = params.toString();
-  return `${env.apiBaseUrl}/api/v1${path}${search ? `?${search}` : ""}`;
+  return `${env.apiBaseUrl}/api/v1${path}${toSearch(query)}`;
 }
 
 async function send(path: string, options: SendOptions): Promise<Response> {
@@ -90,14 +80,23 @@ export async function refreshTokens(refresh: string): Promise<TokenPair | null> 
 // access token before any render. A 401 here means the session is gone; a 403 means the
 // account lost staff rights, which an access token keeps passing authentication for until
 // it expires.
-export async function apiRead<T>(path: string, query?: Query): Promise<T> {
+export type Reader = <T>(path: string, query?: Query) => Promise<T>;
+
+export const apiRead: Reader = async <T>(path: string, query?: Query): Promise<T> => {
   const { access } = await readSession();
   const response = await send(path, { method: "GET", query, accessToken: access });
   if (response.status === 401 || response.status === 403) {
     redirect(EXPIRED_LOGIN_PATH);
   }
   return parse<T>(response);
-}
+};
+
+// A Route Handler answers a browser fetch, which would follow a redirect to the login
+// page's HTML. It passes a 401 or 403 on as an error for the browser to act on.
+export const apiGet: Reader = async <T>(path: string, query?: Query): Promise<T> => {
+  const { access } = await readSession();
+  return parse<T>(await send(path, { method: "GET", query, accessToken: access }));
+};
 
 export async function apiWrite<T>(
   path: string,

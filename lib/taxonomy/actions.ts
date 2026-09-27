@@ -1,7 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-
 import { type ActionResult, attempt, invalidInput } from "@/lib/actions/attempt";
 import { createTaxonomy, deleteTaxonomy, updateTaxonomy } from "@/lib/api/taxonomy";
 import { TAXONOMY_KINDS, type Taxonomy, type TaxonomyKind } from "@/lib/api/types";
@@ -26,13 +24,7 @@ async function save<K extends TaxonomyKind>(
   id: string | null,
   body: FormData | object,
 ): Saved<K> {
-  const result = await attempt(() =>
-    id === null ? createTaxonomy(kind, body) : updateTaxonomy(kind, id, body),
-  );
-  if (result.ok) {
-    revalidatePath(`/${kind}`);
-  }
-  return result;
+  return attempt(() => (id === null ? createTaxonomy(kind, body) : updateTaxonomy(kind, id, body)));
 }
 
 function toMultipart(values: Record<string, string | number | boolean | undefined>, file: File) {
@@ -81,7 +73,5 @@ export async function saveSkinType(id: string | null, input: SkinTypeValues): Sa
 export async function removeTaxonomy(kind: TaxonomyKind, id: string): Promise<ActionResult<null>> {
   if (!TAXONOMY_KINDS.includes(kind)) return invalidInput();
   const result = await attempt(() => deleteTaxonomy(kind, id));
-  if (!result.ok) return result;
-  revalidatePath(`/${kind}`);
-  return { ok: true, data: null };
+  return result.ok ? { ok: true, data: null } : result;
 }

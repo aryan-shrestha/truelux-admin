@@ -1,17 +1,22 @@
-import { render, screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { toast } from "sonner";
 import { describe, expect, it, vi } from "vitest";
 
 import { OrderActions } from "@/components/orders/OrderActions";
 import { moveOrder } from "@/lib/orders/actions";
+import { orderQueries } from "@/lib/orders/queries";
+import { pendingOrderDetail } from "@/tests/fixtures/orders";
+import { renderWithQuery, testQueryClient } from "@/tests/fixtures/query";
 
 vi.mock("@/lib/orders/actions", () => ({ moveOrder: vi.fn() }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 describe("OrderActions", () => {
   it("renders only the transitions the API allows", () => {
-    render(<OrderActions orderId="o1" orderNumber="TL-2026-000123" allowed={["shipped"]} />);
+    renderWithQuery(
+      <OrderActions orderId="o1" orderNumber="TL-2026-000123" allowed={["shipped"]} />,
+    );
 
     expect(screen.getByRole("button", { name: "Mark as shipped" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Confirm order" })).not.toBeInTheDocument();
@@ -19,7 +24,7 @@ describe("OrderActions", () => {
   });
 
   it("renders nothing for a finished order", () => {
-    const { container } = render(
+    const { container } = renderWithQuery(
       <OrderActions orderId="o1" orderNumber="TL-2026-000123" allowed={[]} />,
     );
 
@@ -34,7 +39,7 @@ describe("OrderActions", () => {
       fieldErrors: {},
       details: {},
     });
-    render(
+    renderWithQuery(
       <OrderActions
         orderId="o1"
         orderNumber="TL-2026-000123"
@@ -61,7 +66,7 @@ describe("OrderActions", () => {
       fieldErrors: {},
       details: {},
     });
-    render(
+    renderWithQuery(
       <OrderActions
         orderId="o1"
         orderNumber="TL-2026-000123"
@@ -72,5 +77,29 @@ describe("OrderActions", () => {
     await userEvent.click(screen.getByRole("button", { name: "Confirm order" }));
 
     expect(moveOrder).toHaveBeenCalledWith("o1", "confirmed");
+  });
+
+  it("shows the order the API returns and refreshes the queue and the dashboard", async () => {
+    const confirmed = {
+      ...pendingOrderDetail,
+      status: "confirmed" as const,
+      allowed_transitions: ["shipped" as const, "cancelled" as const],
+    };
+    vi.mocked(moveOrder).mockResolvedValueOnce({ ok: true, data: confirmed });
+    const client = testQueryClient();
+    const invalidate = vi.spyOn(client, "invalidateQueries");
+    renderWithQuery(
+      <OrderActions orderId="o1" orderNumber="TL-2026-000123" allowed={["confirmed"]} />,
+      client,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Confirm order" }));
+
+    await waitFor(() =>
+      expect(client.getQueryData(orderQueries.detail("o1").queryKey)).toEqual(confirmed),
+    );
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["orders", "list"] });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["dashboard"] });
+    expect(toast.success).toHaveBeenCalledWith("TL-2026-000123 is now confirmed");
   });
 });

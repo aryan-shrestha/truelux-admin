@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { type ActionResult, attempt, invalidInput } from "@/lib/actions/attempt";
@@ -15,11 +14,5 @@ export async function moveOrder(
 ): Promise<ActionResult<OrderDetail>> {
   const parsed = targetSchema.safeParse(to);
   if (!parsed.success) return invalidInput();
-  const result = await attempt(() => transitionOrder({ id, to: parsed.data }));
-  if (result.ok) {
-    revalidatePath("/orders");
-    revalidatePath(`/orders/${id}`);
-    revalidatePath("/");
-  }
-  return result;
+  return attempt(() => transitionOrder({ id, to: parsed.data }));
 }

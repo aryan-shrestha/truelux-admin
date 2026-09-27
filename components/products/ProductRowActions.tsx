@@ -1,8 +1,9 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { EyeIcon, EyeOffIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { ConfirmAction } from "@/components/form/ConfirmAction";
@@ -15,23 +16,48 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { ProductListItem } from "@/lib/api/types";
+import type { Page, ProductListItem } from "@/lib/api/types";
 import { removeProduct, setPublished } from "@/lib/products/actions";
+import { productInvalidates, productKeys, productQueries } from "@/lib/products/queries";
+import { failureMessage, throwOnFailure } from "@/lib/query/action";
 
 export function ProductRowActions({ product }: { product: ProductListItem }) {
   const [deleting, setDeleting] = useState(false);
-  const [, startTransition] = useTransition();
+  const queryClient = useQueryClient();
+  const lists = { queryKey: productKeys.lists() };
 
-  function publish(isPublished: boolean) {
-    startTransition(async () => {
-      const result = await setPublished(product.id, isPublished);
-      if (result.ok) {
-        toast.success(isPublished ? `${product.name} published` : `${product.name} unpublished`);
-      } else {
-        toast.error(result.message);
+  // The flag is the merchant's to set, so the row flips at once and flips back if the API
+  // refuses (a product without variants cannot be published).
+  const { mutate: publish } = useMutation({
+    mutationFn: async (isPublished: boolean) =>
+      throwOnFailure(await setPublished(product.id, isPublished)),
+    meta: { invalidates: productInvalidates(product.id) },
+    onMutate: async (isPublished) => {
+      await queryClient.cancelQueries(lists);
+      const previous = queryClient.getQueriesData<Page<ProductListItem>>(lists);
+      queryClient.setQueriesData<Page<ProductListItem>>(
+        lists,
+        (page) =>
+          page && {
+            ...page,
+            results: page.results.map((row) =>
+              row.id === product.id ? { ...row, is_published: isPublished } : row,
+            ),
+          },
+      );
+      return { previous };
+    },
+    onError: (error, _isPublished, context) => {
+      for (const [queryKey, page] of context?.previous ?? []) {
+        queryClient.setQueryData(queryKey, page);
       }
-    });
-  }
+      const message = failureMessage(error);
+      if (message) toast.error(message);
+    },
+    onSuccess: (_saved, isPublished) => {
+      toast.success(isPublished ? `${product.name} published` : `${product.name} unpublished`);
+    },
+  });
 
   return (
     <>
@@ -69,6 +95,10 @@ export function ProductRowActions({ product }: { product: ProductListItem }) {
         confirmLabel="Delete product"
         successMessage={`${product.name} deleted`}
         action={() => removeProduct(product.id)}
+        invalidates={[productKeys.lists()]}
+        onSuccess={() =>
+          queryClient.removeQueries({ queryKey: productQueries.detail(product.id).queryKey })
+        }
         onFailure={(failure) => {
           if (failure.code !== "conflict") {
             toast.error(failure.message);

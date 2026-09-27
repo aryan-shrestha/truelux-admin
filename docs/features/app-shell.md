@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-09-26
+Last updated: 2026-09-27
 
 ---
 
@@ -56,8 +56,11 @@ What is explicitly outside the scope?
   Light/Dark/System radio group, and **Sign out**.
 - `components/shell/PageHeader.tsx` — sidebar trigger, `breadcrumb`, page title and a
   `children` slot for the primary action.
+- `components/shell/QueryProvider.tsx` — the TanStack Query client for the signed-in
+  frame, rendered by `app/(admin)/layout.tsx`
+  ([tanstack-query.md](tanstack-query.md)).
 - `components/shell/LoadFailure.tsx` — the `empty`-based failure panel with the error
-  digest and a **Try again** that calls Next's `retry()`; re-exported by
+  digest and a **Try again** that resets failed queries and calls Next's `retry()`; re-exported by
   `app/error.tsx` (catches the admin layout) and `app/(admin)/error.tsx` (catches
   pages inside the frame).
 - `app/(admin)/loading.tsx` — `skeleton` placeholders shaped like a page header, a

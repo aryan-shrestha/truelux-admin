@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-09-26
+Last updated: 2026-09-27
 
 ---
 
@@ -47,8 +47,8 @@ Backend `admin-api.md` § Products and `skin-types.md` § Admin. Uploads go brow
 
 ## Implemented
 
-- `app/(admin)/products/page.tsx` — reads the page of products and the brand and
-  category arrays in parallel. The toolbar is `UrlSearch` (`?q=`, name or SKU) and
+- `app/(admin)/products/page.tsx` — prefetches the page of products and the brand and
+  category arrays in parallel; `ProductsView` reads them from the cache. The toolbar is `UrlSearch` (`?q=`, name or SKU) and
   four `UrlSelect`s (`?brand=`, `?category=`, `?published=yes|no`, `?stock=low`);
   `TablePagination` pages with `?page=` over `limit`/`offset` (25 a page).
 - `components/products/ProductsTable.tsx` — thumbnail (`avatar`), name and slug
@@ -57,11 +57,11 @@ Backend `admin-api.md` § Products and `skin-types.md` § Admin. Uploads go brow
 - `components/products/ProductRowActions.tsx` — Edit, Publish/Unpublish, Delete. A
   `409 conflict` on delete closes the dialog and toasts "This product has been
   ordered…" with an **Unpublish instead** action when it is published.
-- `app/(admin)/products/new/page.tsx` — the details form alone; on success the action
-  redirects to `/products/{id}?tab=variants`.
+- `app/(admin)/products/new/page.tsx` — the details form alone (`NewProductView`); on
+  success the form navigates to `/products/{id}?tab=variants`.
 - `app/(admin)/products/[id]/page.tsx` — reads the product and the five taxonomy
-  arrays in parallel; `not_found` becomes `notFound()`. `ProductTabs` keeps the tab in
-  `?tab=`.
+  arrays in parallel; `not_found` becomes `notFound()`. `ProductView` renders the
+  header (name, brand, badge) and `ProductTabs`, which keeps the tab in `?tab=`.
 - `components/products/ProductDetailsForm.tsx` — name, slug, description, brand and
   category `select`s, base price (`Rs` input group, decimal string), sort order,
   skin types, skin feel, key ingredients, published `switch`. A
@@ -79,9 +79,17 @@ Backend `admin-api.md` § Products and `skin-types.md` § Admin. Uploads go brow
 - `components/products/ImagesManager.tsx`, `ImageCard.tsx` — multiple upload
   (validated client- and server-side: JPEG/PNG/WebP, ≤ 5 MB), one server action per
   file in sequence, the first image primary when none is; a grid with alt-text
-  editing, **Make primary**, move earlier/later, and delete behind a confirm.
+  editing, **Make primary**, move earlier/later, and delete behind a confirm. Moving
+  and alt text are optimistic (`use-image-mutation.ts`) and roll back on failure.
+- `components/products/ProductRowActions.tsx` — Publish/Unpublish flips the row at
+  once and back if the API refuses; delete removes the detail from the cache.
 - `lib/products/actions.ts` — every product, variant and image mutation, each
-  re-validating with zod and revalidating `/products` and the product page.
+  re-validating with zod. Callers run them in `useMutation` with
+  `productInvalidates(id)` (the detail and the lists); variant edits also invalidate
+  the dashboard.
+- `lib/products/queries.ts` — `productKeys`, `productQueries`;
+  `app/api/products/route.ts` and `app/api/products/[id]/route.ts` serve the
+  browser.
 - `lib/products/schemas.ts`, `lib/products/query.ts` — the schemas and the URL ↔ API
   query mapping.
 - `lib/api/media.ts` — `mediaUrl` resolves a relative `/media/…` URL against
@@ -170,8 +178,8 @@ A move is one to N PATCH calls, run in sequence.
 ### Calls
 
 ```text
-GET    /api/v1/admin/products/                   server, no-store
-GET    /api/v1/admin/products/{id}/              server, no-store
+GET    /api/v1/admin/products/                   server render; browser via /api/products
+GET    /api/v1/admin/products/{id}/              server render; browser via /api/products/[id]
 POST   /api/v1/admin/products/                   server action
 PATCH  /api/v1/admin/products/{id}/              server action
 DELETE /api/v1/admin/products/{id}/              server action

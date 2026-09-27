@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryErrorResetBoundary } from "@tanstack/react-query";
 import { RotateCcwIcon, TriangleAlertIcon } from "lucide-react";
 import { useEffect } from "react";
 
@@ -19,6 +20,8 @@ type LoadFailureProps = {
 };
 
 export function LoadFailure({ error, retry }: LoadFailureProps) {
+  const { reset } = useQueryErrorResetBoundary();
+
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -37,7 +40,12 @@ export function LoadFailure({ error, retry }: LoadFailureProps) {
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button onClick={retry}>
+        <Button
+          onClick={() => {
+            reset();
+            retry();
+          }}
+        >
           <RotateCcwIcon data-icon="inline-start" />
           Try again
         </Button>
