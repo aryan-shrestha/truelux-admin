@@ -92,6 +92,14 @@ The dashboard lists up to ten variants with five or fewer left, lowest first.
 Select one to open its product on the Variants tab and change the stock. The
 **Products** list can also be filtered to **Low stock**.
 
+### Shipping fees and free shipping
+
+**Settings → Shipping** holds the two delivery fees (inside the Kathmandu valley,
+and everywhere else) and an optional free-shipping threshold: switch on **Free
+shipping** and enter the smallest order subtotal that ships free. **Save settings**
+applies to the next order placed; orders already placed keep the fee they were
+charged. The storefront's free-shipping banner catches up on its next refresh.
+
 ### Removing things
 
 - A **product** that has ever been ordered cannot be deleted. The admin offers

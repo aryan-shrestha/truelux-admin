@@ -66,20 +66,21 @@ app/
         page.tsx            dashboard
         orders/  orders/[id]/
         products/  products/new/  products/[id]/
-        brands/  categories/  shades/  sizes/
+        brands/  categories/  shades/  sizes/  skin-types/
+        settings/shipping/
 proxy.ts
 components/
     ui/                     shadcn components
     shell/                  AppSidebar, UserMenu, PageHeader, LoadFailure, QueryProvider
     data-table/             DataTable, UrlSearch, UrlSelect, TablePagination
     form/                   RHF-bound fields, RecordDialog, ConfirmAction
-    auth/  dashboard/  orders/  products/  taxonomy/
+    auth/  dashboard/  orders/  products/  settings/  taxonomy/
 lib/
     api/                    client, errors, types, one module per API area
     actions/attempt.ts      API failure → ActionResult
     query/                  query defaults, server client, browser fetcher, action adapter
     auth/                   tokens, session, next-path, actions, login schema
-    orders/  products/  taxonomy/  catalog/
+    orders/  products/  settings/  taxonomy/  catalog/
     format/                 money, date
     search-params.ts
     env.ts
