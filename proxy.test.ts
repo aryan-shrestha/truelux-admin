@@ -87,3 +87,38 @@ describe("proxy", () => {
     expect(location.searchParams.get("next")).toBe("/products");
   });
 });
+
+describe("proxy on /api/*", () => {
+  it("answers an anonymous fetch with a JSON 401 instead of a login redirect", async () => {
+    const response = await proxy(request("/api/orders"));
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get("location")).toBeNull();
+    expect((await response.json()).error.code).toBe("authentication_failed");
+  });
+
+  it("asks the browser to refresh an expiring session and does not refresh itself", async () => {
+    const response = await proxy(
+      request("/api/orders", { tl_access: fakeJwt(10), tl_refresh: fakeJwt(900) }),
+    );
+
+    expect(response.status).toBe(401);
+    expect((await response.json()).error.code).toBe("session_refresh_required");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("lets the session endpoint through with an expired access token", async () => {
+    const response = await proxy(request("/api/session", { tl_refresh: fakeJwt(900) }));
+
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("passes a fetch with a fresh access token straight through", async () => {
+    const response = await proxy(
+      request("/api/orders", { tl_access: fakeJwt(600), tl_refresh: fakeJwt(900) }),
+    );
+
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
+});

@@ -1,5 +1,6 @@
 "use client";
 
+import type { QueryKey } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { type DefaultValues, type FieldValues, FormProvider } from "react-hook-form";
 import { toast } from "sonner";
@@ -30,6 +31,7 @@ type RecordDialogProps<TInput extends FieldValues, TOutput extends FieldValues> 
   schema: z.ZodType<TOutput, TInput>;
   defaultValues: DefaultValues<TInput>;
   action: (values: TOutput) => Promise<ActionResult<unknown>>;
+  invalidates: readonly QueryKey[];
   trigger?: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -61,6 +63,7 @@ function RecordForm<TInput extends FieldValues, TOutput extends FieldValues>({
   schema,
   defaultValues,
   action,
+  invalidates,
   successMessage,
   submitLabel,
   children,
@@ -70,6 +73,7 @@ function RecordForm<TInput extends FieldValues, TOutput extends FieldValues>({
     schema,
     defaultValues,
     action,
+    invalidates,
     onSuccess: () => {
       toast.success(successMessage);
       onDone();

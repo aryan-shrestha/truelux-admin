@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import type { Brand } from "@/lib/api/types";
 import { saveBrand } from "@/lib/taxonomy/actions";
 import { brandSchema } from "@/lib/taxonomy/schemas";
+import { taxonomyInvalidates } from "@/lib/taxonomy/queries";
 
 type BrandDialogProps = {
   brand?: Brand;
@@ -40,6 +41,7 @@ export function BrandDialog({ brand, ...dialog }: BrandDialogProps) {
         logo: null,
       }}
       action={(values) => saveBrand(brand?.id ?? null, values)}
+      invalidates={taxonomyInvalidates("brands")}
     >
       <NameSlugFields namePlaceholder="Lumière" />
       <TextareaField name="description" label="Description" />

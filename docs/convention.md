@@ -1,6 +1,6 @@
 # Code Conventions
 
-Last updated: 2026-09-25
+Last updated: 2026-09-27
 
 This document records conventions that apply across the repository.
 
@@ -25,6 +25,7 @@ components/products/VariantsEditor.tsx
 components/form/use-action-form.ts      a hook
 lib/api/products.ts                     the product endpoints
 lib/products/actions.ts                 the product server actions
+lib/products/queries.ts                 the product query keys and queryOptions
 lib/products/schemas.ts
 lib/format/money.ts
 ```
@@ -56,13 +57,40 @@ Arguments are a single object where there are several of them.
 
 **Server by default.** Every `"use client"` names the interaction it enables.
 
-- A server page passes data down; a client component calls server actions.
+- A server page prefetches into `getServerQueryClient()` and renders a client view
+  inside `HydrationBoundary`. The view reads with `useSuspenseQuery` and the same
+  `queryOptions`; the server spreads them and overrides `queryFn` with the
+  `lib/api` call.
+- A client component writes through a server action inside `useMutation`.
 - **Never export a constant or helper from a `"use client"` file for a server
   component to use.** On the server it becomes a client reference, and calling it
   throws at runtime. Put it in `lib/` (see `lib/products/query.ts#parseProductTab`).
 - A server component may pass JSX (a `Button` as a dialog `trigger`) to a client
   component.
 - No `useEffect` to fetch or to mirror props into state.
+
+## Queries
+
+```ts
+export const orderKeys = {
+  all: ["orders"] as const,
+  lists: () => [...orderKeys.all, "list"] as const,
+  list: (filters: OrderFilters) => [...orderKeys.lists(), filters] as const,
+  detail: (id: string) => [...orderKeys.all, "detail", id] as const,
+};
+```
+
+- One `lib/<domain>/queries.ts` per area: a key factory (entity → list/detail →
+  params) and `queryOptions`. It imports types from `lib/api/types.ts`, never
+  `lib/api/*` or `server-only`.
+- A key's params are the parsed filter object (`parse*Filters`), never raw search
+  params.
+- `queryFn` calls `getJson` with the `signal`. List handlers take the admin's own URL
+  filters (`/api${ordersHref(filters)}`).
+- Pages `await fetchQuery` (or `setQueryData` after a `find*` that maps `not_found`
+  to `notFound()`), never `prefetchQuery`, so failures reach `error.tsx`.
+- Wrap everything that reads a prefetched query, a header dialog included, in the
+  `HydrationBoundary`.
 
 ---
 
@@ -78,12 +106,15 @@ export async function deleteProduct({ id }: { id: string }): Promise<void> {
 }
 ```
 
-- **`apiRead` in Server Components, `apiWrite` in server actions.** Only `apiWrite`
-  may refresh tokens.
+- **`apiRead` in Server Components, `apiGet` in Route Handlers, `apiWrite` in server
+  actions.** Only `apiWrite` may refresh tokens. A read takes `read` as its last
+  argument (`listOrders(query, apiGet)`).
+- A Route Handler is `respond(() => read(..., apiGet))`, and nothing else.
 - Every path ends in a slash; path segments are `encodeURIComponent`-escaped.
 - Query values that are `undefined` or `""` are dropped; arrays repeat the key.
 - `FormData` bodies are sent untouched (multipart); anything else is JSON.
-- No retries beyond the single refresh-and-retry on a 401.
+- No retries beyond the single refresh-and-retry on a 401. In the browser, a query
+  retries once for an unreachable API or a 5xx, never for an API code.
 
 ### Types
 
@@ -119,8 +150,8 @@ react-hook-form with `zodResolver`, rendered with shadcn `Field`:
 - Field components in `components/form/` bind a named field through
   `useFormContext`; invalid state is `data-invalid` on `Field` and `aria-invalid` on
   the control.
-- `useActionForm` runs the action in a transition, maps `details` onto fields, and
-  puts everything else in a form-level `FormRootError`. `fieldForCode` sends a
+- `useActionForm` runs the action in `useMutation`, maps `details` onto fields, and
+  puts everything else in a form-level `FormRootError`. It takes `invalidates`. `fieldForCode` sends a
   domain code to a field (`product_has_no_variants` → `is_published`).
 - The submit button shows a `Spinner` and is disabled while pending. A failed submit
   never clears the form.
@@ -136,10 +167,11 @@ The shadcn `data-table` pattern: `DataTable` with TanStack column definitions in
 client component, `manualFiltering`/`manualPagination`/`manualSorting`.
 
 - Filters are `UrlSearch` and `UrlSelect`, which write search params through
-  `useUrlParams` and drop `page`.
+  `useUrlParams` (`history.replaceState` in a transition) and drop `page`. The
+  transition keeps the old rows on screen while the new key loads.
 - A list page parses search params with a `parse*Filters` function and builds the
   API query with `to*Query`; both live in `lib/<domain>/query.ts` and are tested.
-- `TablePagination` is a server component with `Link`s.
+- `TablePagination` keeps real `href`s and `pushState`s an unmodified click.
 - Every table has an `Empty` state that distinguishes "nothing yet" from "nothing
   matches".
 
@@ -149,8 +181,16 @@ client component, `manualFiltering`/`manualPagination`/`manualSorting`.
 
 - Mutations return `ActionResult<T>`: `{ ok: true, data }` or an `ActionFailure`
   (`code`, `message`, `fieldErrors`, `details`).
-- **`attempt()` is the only `try`/`catch` around API calls.** It rethrows Next's
-  `redirect`/`notFound` signals (`unstable_rethrow`) and anything that is not an API
+- In the browser: `useMutation({ mutationFn: async (v) => throwOnFailure(await
+action(v)), meta: { invalidates: [...] } })`. `failureMessage(error)` gives the
+  sentence to show, or `null` for Next's redirect signal.
+- `meta.invalidates` lists every key the write makes stale (`taxonomyInvalidates`,
+  `productInvalidates`); a mutation that returns the new record also writes it
+  into its detail key.
+- Optimistic updates only for values the API does not derive: `onMutate` cancels,
+  snapshots and writes; `onError` restores and refetches.
+- **`attempt()` (server actions) and `respond()` (Route Handlers) are the only
+  `try`/`catch` around API calls.** Both rethrow anything that is not an API
   failure.
 - Success is a `sonner` toast whose verb matches the button ("Create size" →
   "Size created").
@@ -201,7 +241,8 @@ and the browser agree. `daysAgo(n)` gives the Kathmandu calendar date for links.
 - `describeError` turns a code into a sentence; `validation_error` messages pass
   through because they are written for users.
 - An unknown code shows the request id.
-- `console.error` only in `attempt()` (transport failure) and the error boundaries.
+- `console.error` only in `attempt()` and `respond()` (transport failure) and the
+  error boundaries.
 
 ---
 
@@ -223,6 +264,9 @@ tests/e2e/*.spec.ts                 Playwright
 - Mock `next/headers` and `next/navigation` with `tests/fixtures/next-server.ts`
   (cookie jar, redirect signal) or `tests/fixtures/router.ts` (router, search params).
 - Mock server actions with `vi.mock("@/lib/<domain>/actions")` in component tests.
+- Render anything that uses a query or mutation with `renderWithQuery`
+  (`tests/fixtures/query.tsx`); seed data with `client.setQueryData(key, data)`.
+  Assert invalidation with a spy on `client.invalidateQueries`.
 - Stub `fetch` with `vi.stubGlobal`; build responses with `tests/fixtures/http.ts`.
 - Assert fields that matter and error codes, not whole objects or API messages.
 - Playwright specs call `requireLiveApi()` and skip without `E2E_API`,

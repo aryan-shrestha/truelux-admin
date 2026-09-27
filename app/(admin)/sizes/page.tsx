@@ -1,3 +1,4 @@
+import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -6,18 +7,16 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { SizeDialog } from "@/components/taxonomy/SizeDialog";
 import { SizesTable } from "@/components/taxonomy/SizesTable";
 import { Button } from "@/components/ui/button";
-import { listTaxonomy } from "@/lib/api/taxonomy";
-import { queryParam } from "@/lib/search-params";
-import { matchingName } from "@/lib/taxonomy/search";
+import { getServerQueryClient } from "@/lib/query/server";
+import { prefetchTaxonomy } from "@/lib/taxonomy/prefetch";
 
 export const metadata: Metadata = { title: "Sizes" };
 
-export default async function SizesPage({ searchParams }: PageProps<"/sizes">) {
-  const query = queryParam(await searchParams);
-  const sizes = matchingName(await listTaxonomy("sizes"), query);
+export default async function SizesPage() {
+  await prefetchTaxonomy("sizes");
 
   return (
-    <>
+    <HydrationBoundary state={dehydrate(getServerQueryClient())}>
       <PageHeader crumbs={[{ label: "Catalogue" }, { label: "Sizes" }]} title="Sizes">
         <SizeDialog
           trigger={
@@ -30,8 +29,8 @@ export default async function SizesPage({ searchParams }: PageProps<"/sizes">) {
       </PageHeader>
       <div className="flex flex-col gap-4 p-4 md:p-6">
         <UrlSearch label="Search sizes" />
-        <SizesTable sizes={sizes} query={query} />
+        <SizesTable />
       </div>
-    </>
+    </HydrationBoundary>
   );
 }

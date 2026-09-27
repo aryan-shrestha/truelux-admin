@@ -12,6 +12,7 @@ import type { Shade } from "@/lib/api/types";
 import { HEX_PATTERN } from "@/lib/catalog/fields";
 import { saveShade } from "@/lib/taxonomy/actions";
 import { shadeSchema } from "@/lib/taxonomy/schemas";
+import { taxonomyInvalidates } from "@/lib/taxonomy/queries";
 
 type ShadeDialogProps = {
   shade?: Shade;
@@ -36,6 +37,7 @@ export function ShadeDialog({ shade, ...dialog }: ShadeDialogProps) {
         sort_order: shade?.sort_order ?? 0,
       }}
       action={(values) => saveShade(shade?.id ?? null, values)}
+      invalidates={taxonomyInvalidates("shades")}
     >
       <NameSlugFields namePlaceholder="Warm Beige" />
       <HexField />

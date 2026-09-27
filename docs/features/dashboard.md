@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-09-26
+Last updated: 2026-09-27
 
 ---
 
@@ -37,7 +37,11 @@ permitted parse into a number is `money.ts`'s `toChartNumber`.
 
 ## Implemented
 
-- `app/(admin)/page.tsx` — one `GET /admin/dashboard/` feeding five sections.
+- `app/(admin)/page.tsx` — prefetches `["dashboard"]` (one `GET /admin/dashboard/`)
+  and renders `DashboardView` inside `HydrationBoundary`.
+- `components/dashboard/DashboardView.tsx` — reads `dashboardQuery`, which polls every
+  60 s while the tab is visible and refetches on focus, and feeds the five sections.
+  Order transitions and variant edits invalidate it.
 - `components/dashboard/KpiCards.tsx` — revenue today, last 7 and 30 days, and
   awaiting action (`pending` + `confirmed`), each with a link to the orders list
   filtered by the matching date range or statuses.
@@ -105,18 +109,19 @@ backend in [backend-api.md](../integrations/backend-api.md#open-questions).
 ### Calls
 
 ```text
-GET /api/v1/admin/dashboard/    server, no-store
+GET /api/v1/admin/dashboard/    server render; browser via /api/dashboard, polls 60 s
 ```
 
 ### Errors handled
 
-Any failure reaches `app/(admin)/error.tsx`.
+A first-load failure reaches `app/(admin)/error.tsx`; a failed poll keeps the last
+figures and shows one toast, replaced rather than repeated while polls keep failing.
 
 ---
 
 ## State and data
 
-None.
+- Query cache: `["dashboard"]` (`lib/dashboard/queries.ts`).
 
 ---
 

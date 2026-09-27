@@ -1,12 +1,14 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 
 type ParamChanges = Record<string, string | string[] | null>;
 
+// Next syncs useSearchParams with the History API inside a transition, so a list's
+// suspending query keeps the old rows on screen and `isPending` lasts until the new rows
+// arrive. A router navigation would re-render the page on the server as well.
 export function useUrlParams() {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -22,9 +24,16 @@ export function useUrlParams() {
     next.delete("page");
     const search = next.toString();
     startTransition(() => {
-      router.replace(search ? `${pathname}?${search}` : pathname, { scroll: false });
+      window.history.replaceState(null, "", search ? `${pathname}?${search}` : pathname);
     });
   }
 
-  return { searchParams, update, isPending };
+  function go(href: string) {
+    startTransition(() => {
+      window.history.pushState(null, "", href);
+    });
+    window.scrollTo({ top: 0 });
+  }
+
+  return { searchParams, update, go, isPending };
 }

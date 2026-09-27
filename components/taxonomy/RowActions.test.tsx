@@ -1,10 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { toast } from "sonner";
 import { describe, expect, it, vi } from "vitest";
 
 import { RowActions } from "@/components/taxonomy/RowActions";
 import { removeTaxonomy } from "@/lib/taxonomy/actions";
+import { renderWithQuery } from "@/tests/fixtures/query";
 
 vi.mock("@/lib/taxonomy/actions", () => ({ removeTaxonomy: vi.fn() }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
@@ -18,7 +19,7 @@ describe("RowActions", () => {
       fieldErrors: {},
       details: {},
     });
-    render(
+    renderWithQuery(
       <RowActions
         kind="brands"
         id="b1"

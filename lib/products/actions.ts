@@ -1,7 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { type ActionResult, attempt, invalidInput } from "@/lib/actions/attempt";
@@ -27,18 +25,10 @@ import {
   variantSchema,
 } from "@/lib/products/schemas";
 
-function revalidateProduct(id: string) {
-  revalidatePath("/products");
-  revalidatePath(`/products/${id}`);
-}
-
 export async function createProductAction(input: ProductValues): Promise<ActionResult<Product>> {
   const parsed = productSchema.safeParse(input);
   if (!parsed.success) return invalidInput();
-  const result = await attempt(() => createProduct(withoutBlankSlug(parsed.data)));
-  if (!result.ok) return result;
-  revalidatePath("/products");
-  redirect(`/products/${result.data.id}?tab=variants`);
+  return attempt(() => createProduct(withoutBlankSlug(parsed.data)));
 }
 
 export async function updateProductAction(
@@ -47,25 +37,19 @@ export async function updateProductAction(
 ): Promise<ActionResult<Product>> {
   const parsed = productSchema.safeParse(input);
   if (!parsed.success) return invalidInput();
-  const result = await attempt(() => updateProduct({ id, ...withoutBlankSlug(parsed.data) }));
-  if (result.ok) revalidateProduct(id);
-  return result;
+  return attempt(() => updateProduct({ id, ...withoutBlankSlug(parsed.data) }));
 }
 
 export async function setPublished(
   id: string,
   isPublished: boolean,
 ): Promise<ActionResult<Product>> {
-  const result = await attempt(() => updateProduct({ id, is_published: Boolean(isPublished) }));
-  if (result.ok) revalidateProduct(id);
-  return result;
+  return attempt(() => updateProduct({ id, is_published: Boolean(isPublished) }));
 }
 
 export async function removeProduct(id: string): Promise<ActionResult<null>> {
   const result = await attempt(() => deleteProduct({ id }));
-  if (!result.ok) return result;
-  revalidatePath("/products");
-  return { ok: true, data: null };
+  return result.ok ? { ok: true, data: null } : result;
 }
 
 export async function addVariant(
@@ -74,28 +58,18 @@ export async function addVariant(
 ): Promise<ActionResult<Variant>> {
   const parsed = variantSchema.safeParse(input);
   if (!parsed.success) return invalidInput();
-  const result = await attempt(() => createVariant({ productId, ...parsed.data }));
-  if (result.ok) revalidateProduct(productId);
-  return result;
+  return attempt(() => createVariant({ productId, ...parsed.data }));
 }
 
-export async function saveVariant(
-  productId: string,
-  id: string,
-  input: VariantInput,
-): Promise<ActionResult<Variant>> {
+export async function saveVariant(id: string, input: VariantInput): Promise<ActionResult<Variant>> {
   const parsed = variantSchema.safeParse(input);
   if (!parsed.success) return invalidInput();
-  const result = await attempt(() => updateVariant({ id, ...parsed.data }));
-  if (result.ok) revalidateProduct(productId);
-  return result;
+  return attempt(() => updateVariant({ id, ...parsed.data }));
 }
 
-export async function removeVariant(productId: string, id: string): Promise<ActionResult<null>> {
+export async function removeVariant(id: string): Promise<ActionResult<null>> {
   const result = await attempt(() => deleteVariant({ id }));
-  if (!result.ok) return result;
-  revalidateProduct(productId);
-  return { ok: true, data: null };
+  return result.ok ? { ok: true, data: null } : result;
 }
 
 export async function uploadImage(
@@ -110,9 +84,7 @@ export async function uploadImage(
   form.set("image", parsed.data.file);
   form.set("alt_text", parsed.data.alt_text);
   form.set("is_primary", String(parsed.data.is_primary));
-  const result = await attempt(() => uploadProductImage({ productId, form }));
-  if (result.ok) revalidateProduct(productId);
-  return result;
+  return attempt(() => uploadProductImage({ productId, form }));
 }
 
 const imagePatchSchema = z
@@ -124,21 +96,17 @@ const imagePatchSchema = z
   .partial();
 
 export async function updateImage(
-  productId: string,
   id: string,
   patch: z.input<typeof imagePatchSchema>,
 ): Promise<ActionResult<ProductImage>> {
   const parsed = imagePatchSchema.safeParse(patch);
   if (!parsed.success) return invalidInput();
-  const result = await attempt(() => updateProductImage({ id, ...parsed.data }));
-  if (result.ok) revalidateProduct(productId);
-  return result;
+  return attempt(() => updateProductImage({ id, ...parsed.data }));
 }
 
 const imageOrderSchema = z.array(z.object({ id: z.string(), sort_order: z.number().int().min(0) }));
 
 export async function reorderImages(
-  productId: string,
   order: z.input<typeof imageOrderSchema>,
 ): Promise<ActionResult<null>> {
   const parsed = imageOrderSchema.safeParse(order);
@@ -147,13 +115,10 @@ export async function reorderImages(
     const result = await attempt(() => updateProductImage({ id, sort_order }));
     if (!result.ok) return result;
   }
-  revalidateProduct(productId);
   return { ok: true, data: null };
 }
 
-export async function removeImage(productId: string, id: string): Promise<ActionResult<null>> {
+export async function removeImage(id: string): Promise<ActionResult<null>> {
   const result = await attempt(() => deleteProductImage({ id }));
-  if (!result.ok) return result;
-  revalidateProduct(productId);
-  return { ok: true, data: null };
+  return result.ok ? { ok: true, data: null } : result;
 }

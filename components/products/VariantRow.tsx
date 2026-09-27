@@ -22,7 +22,9 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { Variant } from "@/lib/api/types";
+import { dashboardKeys } from "@/lib/dashboard/queries";
 import { addVariant, removeVariant, saveVariant } from "@/lib/products/actions";
+import { productInvalidates } from "@/lib/products/queries";
 import { type VariantInput, type VariantValues, variantSchema } from "@/lib/products/schemas";
 
 const NO_SHADE = "__none";
@@ -46,6 +48,8 @@ export function VariantRow({
 }: VariantRowProps) {
   const [deleting, setDeleting] = useState(false);
   const label = variant?.sku ?? "new variant";
+  // Stock changes the dashboard's low-stock list.
+  const invalidates = [...productInvalidates(productId), dashboardKeys.all];
   const { form, submit, isPending, rootError } = useActionForm({
     schema: variantSchema,
     defaultValues: {
@@ -55,8 +59,8 @@ export function VariantRow({
       stock_quantity: variant?.stock_quantity ?? 0,
       price_override: variant?.price_override ?? null,
     },
-    action: (values) =>
-      variant ? saveVariant(productId, variant.id, values) : addVariant(productId, values),
+    action: (values) => (variant ? saveVariant(variant.id, values) : addVariant(productId, values)),
+    invalidates,
     onSuccess: (saved) => {
       toast.success(variant ? `${saved.sku} saved` : `${saved.sku} added`);
       form.reset(form.getValues());
@@ -210,7 +214,8 @@ export function VariantRow({
               description="The variant and its stock are removed. This cannot be undone."
               confirmLabel="Delete variant"
               successMessage={`${label} deleted`}
-              action={() => removeVariant(productId, variant.id)}
+              action={() => removeVariant(variant.id)}
+              invalidates={invalidates}
               onFailure={(failure) =>
                 toast.error(
                   failure.code === "conflict"

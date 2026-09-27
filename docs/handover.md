@@ -2,7 +2,7 @@
 
 Status: Current
 
-Last updated: 2026-09-26
+Last updated: 2026-09-27
 
 ---
 
@@ -70,7 +70,9 @@ the Published switch.
 
 ### Working the order queue
 
-Orders are cash on delivery. The dashboard's **Awaiting action** card shows pending
+Orders are cash on delivery. The dashboard and the **Orders** list check for new
+orders every minute while they are open, and again when you come back to the tab, so
+there is no need to reload. The dashboard's **Awaiting action** card shows pending
 and confirmed orders together; select it to open that queue.
 
 For each order:

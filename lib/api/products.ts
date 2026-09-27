@@ -1,6 +1,6 @@
 import "server-only";
 
-import { apiRead, apiWrite } from "@/lib/api/client";
+import { type Reader, apiRead, apiWrite } from "@/lib/api/client";
 import { mediaUrl } from "@/lib/api/media";
 import type {
   ImageUpdate,
@@ -26,8 +26,11 @@ function withImageUrls(product: Product): Product {
   return { ...product, images: product.images.map(withImageUrl) };
 }
 
-export async function listProducts(query: ProductQuery): Promise<Page<ProductListItem>> {
-  const page = await apiRead<Page<ProductListItem>>("/admin/products/", query);
+export async function listProducts(
+  query: ProductQuery,
+  read: Reader = apiRead,
+): Promise<Page<ProductListItem>> {
+  const page = await read<Page<ProductListItem>>("/admin/products/", query);
   return {
     ...page,
     results: page.results.map((product) => ({
@@ -37,8 +40,8 @@ export async function listProducts(query: ProductQuery): Promise<Page<ProductLis
   };
 }
 
-export async function getProduct({ id }: { id: string }): Promise<Product> {
-  return withImageUrls(await apiRead<Product>(productPath(id)));
+export async function getProduct({ id }: { id: string }, read: Reader = apiRead): Promise<Product> {
+  return withImageUrls(await read<Product>(productPath(id)));
 }
 
 export async function createProduct(body: ProductWrite): Promise<Product> {

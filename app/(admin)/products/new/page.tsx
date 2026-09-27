@@ -1,17 +1,15 @@
+import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import type { Metadata } from "next";
 
-import { ProductDetailsForm } from "@/components/products/ProductDetailsForm";
+import { NewProductView } from "@/components/products/NewProductView";
 import { PageHeader } from "@/components/shell/PageHeader";
-import { listTaxonomy } from "@/lib/api/taxonomy";
+import { getServerQueryClient } from "@/lib/query/server";
+import { prefetchTaxonomy } from "@/lib/taxonomy/prefetch";
 
 export const metadata: Metadata = { title: "New product" };
 
 export default async function NewProductPage() {
-  const [brands, categories, skinTypes] = await Promise.all([
-    listTaxonomy("brands"),
-    listTaxonomy("categories"),
-    listTaxonomy("skin-types"),
-  ]);
+  await prefetchTaxonomy("brands", "categories", "skin-types");
 
   return (
     <>
@@ -24,13 +22,9 @@ export default async function NewProductPage() {
         title="New product"
         description="Save the details first; variants and images come next."
       />
-      <div className="p-4 md:p-6">
-        <ProductDetailsForm
-          brands={brands.map((brand) => ({ value: brand.id, label: brand.name }))}
-          categories={categories.map((category) => ({ value: category.id, label: category.name }))}
-          skinTypes={skinTypes.map((skinType) => ({ value: skinType.id, label: skinType.name }))}
-        />
-      </div>
+      <HydrationBoundary state={dehydrate(getServerQueryClient())}>
+        <NewProductView />
+      </HydrationBoundary>
     </>
   );
 }

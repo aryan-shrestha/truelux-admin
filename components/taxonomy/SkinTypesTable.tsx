@@ -7,6 +7,7 @@ import { slugColumn, sortOrderColumn, usageColumn } from "@/components/taxonomy/
 import { RowActions } from "@/components/taxonomy/RowActions";
 import { SkinTypeDialog } from "@/components/taxonomy/SkinTypeDialog";
 import { TaxonomyEmpty } from "@/components/taxonomy/TaxonomyEmpty";
+import { useTaxonomySearch } from "@/components/taxonomy/use-taxonomy-search";
 import type { SkinType } from "@/lib/api/types";
 
 function detachWarning({ product_count }: SkinType): string {
@@ -40,7 +41,8 @@ const COLUMNS: ColumnDef<SkinType>[] = [
   },
 ];
 
-export function SkinTypesTable({ skinTypes, query }: { skinTypes: SkinType[]; query: string }) {
+export function SkinTypesTable() {
+  const { items: skinTypes, query } = useTaxonomySearch("skin-types");
   return (
     <DataTable
       columns={COLUMNS}

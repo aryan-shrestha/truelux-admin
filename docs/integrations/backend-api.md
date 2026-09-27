@@ -368,8 +368,9 @@ and implicit. See [ADR 0003](../decisions/0003-money-is-a-decimal-string-end-to-
 ## Open questions
 
 Everything the admin assumed while `admin-api.md` was a plan has been confirmed
-against the implemented backend. One behaviour is worth raising with it:
+against the implemented backend. Two behaviours are worth raising with it:
 
-| Question                                                                                                                  | Current behaviour                                                                            | Where it matters                        |
-| ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------- |
-| Should `created_after`/`created_before` compare the `Asia/Kathmandu` date, as the dashboard's revenue buckets already do? | UTC date, so a date-filtered list misses orders placed 00:00–05:45 in Nepal on its first day | dashboard KPI links, orders date filter |
+| Question                                                                                                                  | Current behaviour                                                                            | Where it matters                                                        |
+| ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Should `created_after`/`created_before` compare the `Asia/Kathmandu` date, as the dashboard's revenue buckets already do? | UTC date, so a date-filtered list misses orders placed 00:00–05:45 in Nepal on its first day | dashboard KPI links, orders date filter                                 |
+| Could a just-rotated refresh token be accepted again for a few seconds (a reuse grace period)?                            | Reuse is a 401 at once, so two tabs refreshing together sign one out                         | two tabs, or a page and a hover prefetch, refreshing at the same moment |
