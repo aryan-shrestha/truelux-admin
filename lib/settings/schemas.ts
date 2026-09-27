@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { MONEY_PATTERN } from "@/lib/format/money";
+import { isPositiveAmount, MONEY_PATTERN } from "@/lib/format/money";
 
 const AMOUNT_MESSAGE = "Enter an amount like 150 or 150.50.";
 
@@ -22,7 +22,7 @@ export const shippingSettingsSchema = z
         ? "Enter the order amount that ships free."
         : !MONEY_PATTERN.test(threshold)
           ? AMOUNT_MESSAGE
-          : !/[1-9]/.test(threshold)
+          : !isPositiveAmount(threshold)
             ? "Must be more than 0."
             : null;
     if (message) {
