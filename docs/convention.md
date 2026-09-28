@@ -126,8 +126,9 @@ Requests go through axios. There are two instances and no others:
   untouched so TanStack can drop the query.
 - `paramsSerializer` is `toSearch`: empty values dropped, arrays repeat the key.
   axios's default would send `status[]=`.
-- Pass objects and `FormData` as `data` untouched; axios sets the JSON content type
-  or the multipart boundary. Never set `Content-Type` by hand.
+- Pass objects and `FormData` as `data` untouched. axios sets the JSON content type;
+  for `FormData`, `send()` sets a bare `multipart/form-data` so that `fetch` adds the
+  boundary. Set no other `Content-Type` by hand.
 - The browser instance sends absolute URLs (`baseURL: window.location.origin`):
   the fetch adapter builds a `Request`, which needs one outside a browser.
 - Every path ends in a slash; path segments are `encodeURIComponent`-escaped.

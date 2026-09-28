@@ -43,14 +43,19 @@ async function send(path: string, options: SendOptions): Promise<AxiosResponse> 
   if (!path.endsWith("/")) {
     throw new Error(`API paths end in a slash: ${path}`);
   }
-  // axios serialises an object as JSON and leaves FormData to set its own boundary.
   return api
     .request({
       url: path,
       method: options.method,
       params: options.query,
       data: options.body,
-      headers: options.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {},
+      headers: {
+        // On the server axios keeps its url-encoded default for Node's FormData, and fetch
+        // sends the multipart body under that header. The fetch adapter drops a multipart
+        // type without a boundary, so fetch sets `multipart/form-data; boundary=…` itself.
+        ...(options.body instanceof FormData && { "Content-Type": "multipart/form-data" }),
+        ...(options.accessToken && { Authorization: `Bearer ${options.accessToken}` }),
+      },
     })
     .catch((cause: unknown) => {
       if (axios.isAxiosError(cause)) throw new ApiUnreachableError(cause);

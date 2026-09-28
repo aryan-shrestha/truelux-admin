@@ -134,7 +134,8 @@ N can be stale by the time of the click; the API remains the authority.
 - Radix `Select` cannot hold an empty value. `SelectField` maps "None" to a sentinel
   and stores `null` in the form.
 - A logo `File` travels to the server action as an argument (React serialises
-  `Blob`s). The server action rebuilds the multipart body.
+  `Blob`s). The server action rebuilds the multipart body, and `send()` sets its
+  content type (see the axios `FormData` gotcha in `products.md`).
 - Server actions accept 6 MB bodies (`next.config.ts`), but Vercel caps a function
   request at 4.5 MB.
 - The dialog form mounts only while the dialog is open, so an edit always starts

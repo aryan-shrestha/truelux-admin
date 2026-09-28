@@ -14,13 +14,16 @@ globalThis.fetch = async (input) => {
   throw new Error(`Unstubbed fetch to ${url}; stub fetch in this test.`);
 };
 
-// jsdom implements neither; Radix Select and cmdk call them.
-Element.prototype.scrollIntoView = function scrollIntoView() {};
-Element.prototype.hasPointerCapture = function hasPointerCapture() {
-  return false;
-};
-globalThis.ResizeObserver ??= class {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-};
+// jsdom implements neither; Radix Select and cmdk call them. lib/api suites run in the
+// node environment, which has no DOM to patch.
+if (typeof Element !== "undefined") {
+  Element.prototype.scrollIntoView = function scrollIntoView() {};
+  Element.prototype.hasPointerCapture = function hasPointerCapture() {
+    return false;
+  };
+  globalThis.ResizeObserver ??= class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}

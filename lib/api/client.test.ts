@@ -1,3 +1,5 @@
+// @vitest-environment node
+// lib/api runs on the server; under jsdom axios would take its browser FormData path.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiRead, apiWrite } from "@/lib/api/client";
@@ -125,7 +127,7 @@ describe("apiWrite", () => {
     );
   });
 
-  it("sends FormData as multipart with the boundary axios sets", async () => {
+  it("sends FormData as multipart with the boundary fetch sets", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse({ id: "i1" }, 201));
     const form = new FormData();
     form.set("alt_text", "Front");

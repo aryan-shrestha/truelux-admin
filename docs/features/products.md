@@ -162,6 +162,12 @@ A move is one to N PATCH calls, run in sequence.
   `command` item is what the keyboard and the mouse toggle.
 - A `409 conflict` on save means a taken slug, SKU, or a second variant with the
   same size and shade; it shows as "This duplicates an existing record…".
+- On the server axios treats Node's `FormData` as unknown and keeps its
+  `application/x-www-form-urlencoded` default, so an upload reached the API as a
+  multipart body under a url-encoded header (`TooManyFieldsSent`, later
+  `415 unsupported_media_type`). `send()` sets a boundary-less `multipart/form-data`,
+  which the fetch adapter drops so `fetch` writes its own. This covers brand logos too.
+  `lib/api/client.test.ts` runs in the node environment because jsdom hides the bug.
 
 ---
 
@@ -239,6 +245,8 @@ DELETE /api/v1/admin/images/{id}/                server action
 - `components/products/ProductDetailsForm.test.tsx` — the product's skin types show
   as badges; toggling options in the list changes them; search filters the list; the
   saved values reach the action.
+- `lib/api/client.test.ts` — in the node environment, a `FormData` upload leaves as
+  `multipart/form-data; boundary=…`, not url-encoded.
 - `lib/api/media.test.ts` — relative image and thumbnail URLs are resolved against
   the API origin; Cloudinary URLs and `null` pass through.
 - `components/products/orderAfterMove.test.ts` — swaps and patches only changed
