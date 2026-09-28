@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { nameField, slugField, sortOrderField } from "@/lib/catalog/fields";
-import { MONEY_PATTERN } from "@/lib/format/money";
+import { isPositiveAmount, MONEY_PATTERN } from "@/lib/format/money";
 
 const PRICE_MESSAGE = "Enter an amount like 3200 or 3200.50.";
 
@@ -25,7 +25,7 @@ const optionalPrice = z
   .nullable()
   .transform((value) => (value === "" ? null : value))
   .refine((value) => value === null || MONEY_PATTERN.test(value), PRICE_MESSAGE)
-  .refine((value) => value === null || /[1-9]/.test(value), "Must be more than 0, or blank.");
+  .refine((value) => value === null || isPositiveAmount(value), "Must be more than 0, or blank.");
 
 export const variantSchema = z.object({
   sku: z.string().trim().min(1, "Enter a SKU.").max(64, "Keep it under 64 characters."),
