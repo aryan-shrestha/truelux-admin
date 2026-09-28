@@ -21,8 +21,8 @@ import {
 } from "@/components/ui/input-group";
 import type { ProductImage } from "@/lib/api/types";
 import { removeImage, updateImage } from "@/lib/products/actions";
-import { productInvalidates } from "@/lib/products/queries";
 import { failureMessage, throwOnFailure } from "@/lib/query/action";
+import { afterImageChange } from "@/lib/query/invalidation";
 
 type ImageCardProps = {
   productId: string;
@@ -59,7 +59,7 @@ export function ImageCard({
   // The API clears the old primary itself, so this waits for its answer.
   const makePrimary = useMutation({
     mutationFn: async () => throwOnFailure(await updateImage(image.id, { is_primary: true })),
-    meta: { invalidates: productInvalidates(productId) },
+    meta: { invalidates: afterImageChange(productId) },
     onSuccess: () => toast.success("Primary image set"),
     onError: (error) => {
       const message = failureMessage(error);
@@ -146,7 +146,7 @@ export function ImageCard({
             confirmLabel="Delete image"
             successMessage="Image deleted"
             action={() => removeImage(image.id)}
-            invalidates={productInvalidates(productId)}
+            invalidates={afterImageChange(productId)}
           />
         </div>
       </CardFooter>

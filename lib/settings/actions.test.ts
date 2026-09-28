@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { saveShippingSettings } from "@/lib/settings/actions";
-import { errorResponse, jsonResponse } from "@/tests/fixtures/http";
+import { errorResponse, jsonResponse, sentRequest } from "@/tests/fixtures/http";
 import { cookieJar } from "@/tests/fixtures/next-server";
 
 vi.mock("next/headers", async () => (await import("@/tests/fixtures/next-server")).headersModule);
@@ -29,9 +29,8 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function sentBody(): unknown {
-  const init = fetchMock.mock.calls[0]?.[1];
-  return JSON.parse(String(init?.body));
+function sentBody(): Promise<unknown> {
+  return sentRequest(fetchMock).json();
 }
 
 describe("saveShippingSettings", () => {
@@ -46,10 +45,10 @@ describe("saveShippingSettings", () => {
     });
 
     expect(result).toMatchObject({ ok: true, data: saved });
-    const [url, init] = fetchMock.mock.calls[0] ?? [];
-    expect(String(url)).toMatch(/\/api\/v1\/admin\/settings\/shipping\/$/);
-    expect(init?.method).toBe("PATCH");
-    expect(sentBody()).toEqual({
+    const sent = sentRequest(fetchMock);
+    expect(sent.url).toMatch(/\/api\/v1\/admin\/settings\/shipping\/$/);
+    expect(sent.method).toBe("PATCH");
+    expect(await sentBody()).toEqual({
       inside_valley_fee: "150.00",
       outside_valley_fee: "250.00",
       free_shipping_threshold: null,
@@ -66,7 +65,7 @@ describe("saveShippingSettings", () => {
       free_shipping_threshold: " 8000 ",
     });
 
-    expect(sentBody()).toMatchObject({ free_shipping_threshold: "8000" });
+    expect(await sentBody()).toMatchObject({ free_shipping_threshold: "8000" });
   });
 
   it("refuses invalid input without calling the API", async () => {

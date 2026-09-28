@@ -22,9 +22,8 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { Variant } from "@/lib/api/types";
-import { dashboardKeys } from "@/lib/dashboard/queries";
 import { addVariant, removeVariant, saveVariant } from "@/lib/products/actions";
-import { productInvalidates } from "@/lib/products/queries";
+import { afterVariantChange } from "@/lib/query/invalidation";
 import { type VariantInput, type VariantValues, variantSchema } from "@/lib/products/schemas";
 
 const NO_SHADE = "__none";
@@ -48,8 +47,7 @@ export function VariantRow({
 }: VariantRowProps) {
   const [deleting, setDeleting] = useState(false);
   const label = variant?.sku ?? "new variant";
-  // Stock changes the dashboard's low-stock list.
-  const invalidates = [...productInvalidates(productId), dashboardKeys.all];
+  const invalidates = afterVariantChange(productId);
   const { form, submit, isPending, rootError } = useActionForm({
     schema: variantSchema,
     defaultValues: {

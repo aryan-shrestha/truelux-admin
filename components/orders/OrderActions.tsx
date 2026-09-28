@@ -7,17 +7,17 @@ import { ConfirmAction } from "@/components/form/ConfirmAction";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import type { OrderDetail, OrderStatus } from "@/lib/api/types";
-import { dashboardKeys } from "@/lib/dashboard/queries";
 import { moveOrder } from "@/lib/orders/actions";
-import { orderKeys, orderQueries } from "@/lib/orders/queries";
+import { orderQueries } from "@/lib/orders/queries";
 import { ORDER_STATUS, TRANSITION_LABEL, type TransitionTarget } from "@/lib/orders/status";
 import { failureMessage, throwOnFailure } from "@/lib/query/action";
+import { afterOrderMove } from "@/lib/query/invalidation";
 
 function isTarget(status: OrderStatus): status is TransitionTarget {
   return status !== "pending";
 }
 
-const INVALIDATES = [orderKeys.lists(), dashboardKeys.all];
+const INVALIDATES = afterOrderMove();
 
 type OrderActionsProps = {
   orderId: string;

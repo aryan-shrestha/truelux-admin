@@ -1,12 +1,13 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { toast } from "sonner";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ShippingSettingsForm } from "@/components/settings/ShippingSettingsForm";
 import type { ShippingSettings } from "@/lib/api/types";
 import { saveShippingSettings } from "@/lib/settings/actions";
 import { settingsKeys, shippingSettingsQuery } from "@/lib/settings/queries";
+import { jsonResponse } from "@/tests/fixtures/http";
 import { renderWithQuery, testQueryClient } from "@/tests/fixtures/query";
 
 vi.mock("@/lib/settings/actions", () => ({ saveShippingSettings: vi.fn() }));
@@ -25,16 +26,24 @@ function renderForm(seed: ShippingSettings = settings) {
   return renderWithQuery(<ShippingSettingsForm />, client);
 }
 
+const fetchMock = vi.fn<typeof fetch>();
+
+// Saving invalidates the settings query the form reads, which refetches it.
 beforeEach(() => {
   vi.mocked(saveShippingSettings).mockReset();
+  vi.stubGlobal("fetch", fetchMock);
+});
+
+afterEach(() => {
+  fetchMock.mockReset();
+  vi.unstubAllGlobals();
 });
 
 describe("ShippingSettingsForm", () => {
   it("turns free shipping off, hides the threshold and saves", async () => {
-    vi.mocked(saveShippingSettings).mockResolvedValueOnce({
-      ok: true,
-      data: { ...settings, free_shipping_threshold: null },
-    });
+    const saved = { ...settings, free_shipping_threshold: null };
+    vi.mocked(saveShippingSettings).mockResolvedValueOnce({ ok: true, data: saved });
+    fetchMock.mockImplementation(async () => jsonResponse(saved));
     const { client } = renderForm();
     const invalidate = vi.spyOn(client, "invalidateQueries");
 
@@ -46,7 +55,7 @@ describe("ShippingSettingsForm", () => {
     expect(saveShippingSettings).toHaveBeenCalledWith(
       expect.objectContaining({ has_free_shipping: false }),
     );
-    expect(toast.success).toHaveBeenCalledWith("Shipping settings saved");
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Shipping settings saved"));
     expect(invalidate).toHaveBeenCalledWith({ queryKey: settingsKeys.shipping() });
   });
 

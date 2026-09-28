@@ -7,6 +7,13 @@ import { afterEach } from "vitest";
 // Radix overlay's `pointer-events: none` on <body> leaks into the next test.
 afterEach(cleanup);
 
+// No test reaches the network: a test that needs a response stubs fetch itself, and
+// vi.unstubAllGlobals() puts this guard back.
+globalThis.fetch = async (input) => {
+  const url = input instanceof Request ? input.url : String(input);
+  throw new Error(`Unstubbed fetch to ${url}; stub fetch in this test.`);
+};
+
 // jsdom implements neither; Radix Select and cmdk call them.
 Element.prototype.scrollIntoView = function scrollIntoView() {};
 Element.prototype.hasPointerCapture = function hasPointerCapture() {

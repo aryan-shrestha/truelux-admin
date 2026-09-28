@@ -10,7 +10,8 @@ import { NameSlugFields } from "@/components/taxonomy/NameSlugFields";
 import type { Category } from "@/lib/api/types";
 import { saveCategory } from "@/lib/taxonomy/actions";
 import { categorySchema } from "@/lib/taxonomy/schemas";
-import { taxonomyInvalidates, taxonomyQuery } from "@/lib/taxonomy/queries";
+import { taxonomyQuery } from "@/lib/taxonomy/queries";
+import { afterTaxonomyChange } from "@/lib/query/invalidation";
 
 type CategoryDialogProps = {
   category?: Category;
@@ -43,7 +44,7 @@ export function CategoryDialog({ category, ...dialog }: CategoryDialogProps) {
         sort_order: category?.sort_order ?? 0,
       }}
       action={(values) => saveCategory(category?.id ?? null, values)}
-      invalidates={taxonomyInvalidates("categories")}
+      invalidates={afterTaxonomyChange("categories")}
     >
       <NameSlugFields namePlaceholder="Face" />
       <SelectField name="parent_id" label="Parent" noneLabel="None (top level)" options={roots} />

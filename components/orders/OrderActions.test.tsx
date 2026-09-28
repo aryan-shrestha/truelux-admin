@@ -100,6 +100,7 @@ describe("OrderActions", () => {
     );
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ["orders", "list"] });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ["dashboard"] });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["products"] });
     expect(toast.success).toHaveBeenCalledWith("TL-2026-000123 is now confirmed");
   });
 });

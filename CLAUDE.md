@@ -21,6 +21,8 @@ data of its own.
 - react-hook-form + zod for forms, TanStack Table v8 for tables, Recharts via
   shadcn `chart`
 - TanStack Query v5 for server data in the browser (ADR 0005)
+- axios (fetch adapter) for HTTP: `lib/api/client.ts` (server → API) and
+  `lib/query/get-json.ts` (browser → `/api/*`) hold the only two instances
 - Yarn 4, `nodeLinker: node-modules`
 
 `yarn` is the package manager. shadcn components are added with
@@ -138,7 +140,7 @@ lib/
 
 **Routes** (`app/**`) — read `params` and `searchParams`, prefetch with `lib/api`
 into `getServerQueryClient()`, render `HydrationBoundary` around a client view. No
-`fetch`, no formatting, no business rules.
+`fetch` or `axios`, no formatting, no business rules.
 
 **Route Handlers** (`app/api/**`) — GET only, one `lib/api` read each, through
 `respond()` with `apiGet`. They exist so a browser query can reach `lib/api`.
@@ -185,12 +187,12 @@ Do not create additional layers unless the existing architecture requires them.
 
 ## State
 
-| Tier              | Holds                                           |
-| ----------------- | ----------------------------------------------- |
-| URL search params | Filters, search, page, tab                      |
-| Query cache       | Server data, keyed in `lib/<domain>/queries.ts` |
-| Cookies           | The token pair (httpOnly), the sidebar state    |
-| React state       | Dialogs, form values, drafts                    |
+| Tier              | Holds                                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------------ |
+| URL search params | Filters, search, page, tab                                                                             |
+| Query cache       | Server data by key; refreshed by freshness class; mutations invalidate via `lib/query/invalidation.ts` |
+| Cookies           | The token pair (httpOnly), the sidebar state                                                           |
+| React state       | Dialogs, form values, drafts                                                                           |
 
 No global store, no `useEffect` to fetch. List state is written with the History API
 (`useUrlParams`), not `router.replace`.
@@ -285,7 +287,9 @@ choice.
 - **`lib/` logic always**: schemas, money, dates, URL query mapping, query keys, the
   API client's refresh and retry, the browser fetcher's refresh, the `next` guard.
 - **Components with behaviour**: forms, editors, confirm flows, URL controls.
-- **No test reaches the network.** Stub `fetch`; mock `next/headers` and
+- **No test reaches the network.** An unstubbed `fetch` throws (`tests/setup.ts`).
+  Stub `fetch` (axios calls it through its fetch adapter) and read what was sent with
+  `sentRequest`/`sentPath` from `tests/fixtures/http.ts`; mock `next/headers` and
   `next/navigation` with `tests/fixtures/`. Render query consumers with
   `renderWithQuery` and seed data with `setQueryData`.
 - Assert the error `code`, never the message from the API.
