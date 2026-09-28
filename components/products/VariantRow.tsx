@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ConfirmAction } from "@/components/form/ConfirmAction";
 import type { SelectOption } from "@/components/form/SelectField";
 import { useActionForm } from "@/components/form/use-action-form";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -195,15 +196,20 @@ export function VariantRow({
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <Input
-                {...field}
-                value={field.value ?? ""}
-                inputMode="decimal"
-                placeholder="Not on sale"
-                aria-label={`Compare-at price of ${label}`}
-                aria-invalid={fieldState.invalid}
-                className="w-28 text-right"
-              />
+              <div className="flex items-center gap-2">
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  inputMode="decimal"
+                  placeholder="Not on sale"
+                  aria-label={`Compare-at price of ${label}`}
+                  aria-invalid={fieldState.invalid}
+                  className="w-28 text-right"
+                />
+                {variant?.on_sale ? (
+                  <Badge variant="info">−{variant.discount_percent}%</Badge>
+                ) : null}
+              </div>
               <FieldError errors={[fieldState.error]} />
             </Field>
           )}

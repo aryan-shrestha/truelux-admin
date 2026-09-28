@@ -59,6 +59,8 @@ test("put a variant on sale, see it in the list, then end the sale", async ({ pa
 
   await setCompareAt(page, "999999");
   await expect(page.getByText(`${sku} saved`)).toBeVisible();
+  const variantRow = page.getByRole("row").filter({ has: page.getByLabel(`SKU of ${sku}`) });
+  await expect(variantRow.getByText(/^−\d+%$/)).toBeVisible();
 
   await page.goto(`/products?q=${encodeURIComponent(name)}&on_sale=true`);
   await expect(
@@ -67,6 +69,7 @@ test("put a variant on sale, see it in the list, then end the sale", async ({ pa
 
   await setCompareAt(page, "");
   await expect(page.getByText(`${sku} saved`)).toBeVisible();
+  await expect(variantRow.getByText(/^−\d+%$/)).toHaveCount(0);
 
   await page.goto(`/products?q=${encodeURIComponent(name)}`);
   const listed = page.getByRole("row", { name: new RegExp(name) });

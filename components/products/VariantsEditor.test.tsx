@@ -59,17 +59,30 @@ describe("VariantsEditor", () => {
     expect(removeVariant).toHaveBeenCalledWith(variant.id);
   });
 
-  it("shows a variant's saved compare-at price", () => {
+  it("shows the saving the API computed only for a variant the API says is on sale", () => {
+    const onSale = {
+      ...variant,
+      price: "2720.00",
+      compare_at_price: "3200.00",
+      on_sale: true,
+      discount_percent: 15,
+    };
+    const notOnSale = { ...variant, id: "v2", sku: "LUM-SF-50-WB", compare_at_price: "3200.00" };
     renderWithQuery(
       <VariantsEditor
         productId="p1"
-        variants={[{ ...variant, compare_at_price: "3800.00" }]}
+        variants={[onSale, notOnSale]}
         sizes={sizes}
         shades={shades}
       />,
     );
 
-    expect(screen.getByLabelText(`Compare-at price of ${variant.sku}`)).toHaveValue("3800.00");
+    const [first, second] = rows();
+    expect(within(first!).getByLabelText(`Compare-at price of ${onSale.sku}`)).toHaveValue(
+      "3200.00",
+    );
+    expect(within(first!).getByText("−15%")).toBeInTheDocument();
+    expect(within(second!).queryByText(/%$/)).not.toBeInTheDocument();
   });
 
   it("puts the API's compare-at error on that variant's cell", async () => {

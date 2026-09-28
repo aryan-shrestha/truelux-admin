@@ -18,7 +18,7 @@ glance which products are on sale.
 What is included in this implementation?
 
 - **Variants editor** on the product page: a new optional **Compare-at price (Rs)**
-  column. The card's help text explains how to run a sale: lower the price or set
+  column, with a "−15%" `badge` when the API reports the variant on sale. The card's help text explains how to run a sale: lower the price or set
   an override, and enter the old price here. Clear it to end the sale.
 - **Validation:**
   - The zod schema checks the decimal format only. "Above the price" is the
@@ -48,12 +48,15 @@ What is explicitly outside the scope?
 
 ## Implemented
 
-- `lib/api/types.ts` — `Variant.compare_at_price` and `VariantWrite.compare_at_price`
-  (`Money | null`), `ProductListItem.on_sale`, `ProductQuery.on_sale`.
+- `lib/api/types.ts` — `Variant.compare_at_price`, `Variant.on_sale`,
+  `Variant.discount_percent` and `VariantWrite.compare_at_price`,
+  `ProductListItem.on_sale`, `ProductQuery.on_sale`.
 - `lib/products/schemas.ts` — `compare_at_price` shares `optionalPrice` with
   `price_override`: trimmed, blank becomes `null`, decimal format, more than 0.
 - `components/products/VariantRow.tsx`, `VariantsEditor.tsx` — the compare-at cell
-  (placeholder "Not on sale", `aria-label` "Compare-at price of {sku}") and the help
+  (placeholder "Not on sale", `aria-label` "Compare-at price of {sku}"), an `info`
+  "−{discount_percent}%" badge beside it only when the saved variant's `on_sale` is
+  true (both values from the API, nothing compared in the browser), and the help
   text. The API's `validation_error` on `compare_at_price` lands on that row's cell
   through `useActionForm`'s field mapping. Saves use the existing
   `saveVariant`/`addVariant` actions and `afterVariantChange`, which already
@@ -69,12 +72,7 @@ What is explicitly outside the scope?
 
 ## Remaining
 
-- The per-variant "−15%" badge is not shown. The admin variant carries only
-  `compare_at_price`, not `on_sale` or `discount_percent`, and deciding whether a
-  compare-at is above the price would be a price comparison in the browser. It
-  needs the backend to add `discount_percent` (and `on_sale`) to the admin variant,
-  as the public variant has; recorded in
-  [backend-api.md](../integrations/backend-api.md#open-questions).
+None.
 
 ---
 
@@ -115,15 +113,16 @@ differs.
   `compare_at_price`; the schema re-parses its own output.
 - `lib/products/query.test.ts` — `on_sale=true` reaches the API query and the link;
   other values are dropped.
-- `components/products/VariantsEditor.test.tsx` — the saved compare-at is shown; a
+- `components/products/VariantsEditor.test.tsx` — the API's percent badge shows on
+  a variant it marks `on_sale` and not on one with a compare-at it does not; a
   `validation_error` on `compare_at_price` lands on the edited row's cell, not the
   other row and not as a form alert.
 - `components/products/ProductsView.test.tsx` — only rows the API marks `on_sale`
   get the badge; choosing "On sale" writes `/products?on_sale=true`.
 - `tests/e2e/sale-prices.spec.ts` — against the live API: on the first product not
   on sale, a compare-at below the price is refused on its cell; a compare-at of
-  999999 puts it on sale and it appears under `?on_sale=true` with the badge;
-  clearing it removes the badge; `afterAll` restores the variant's original value.
+  999999 puts it on sale, shows a "−N%" badge on the row, and it appears under
+  `?on_sale=true` with the list badge; clearing it removes both badges; `afterAll` restores the variant's original value.
   Ran green on 2026-09-29.
 
 ---

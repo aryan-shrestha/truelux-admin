@@ -111,6 +111,8 @@ export type Variant = {
   price_override: Money | null;
   price: Money;
   compare_at_price: Money | null;
+  on_sale: boolean;
+  discount_percent: number | null;
 };
 
 export type ProductImage = {

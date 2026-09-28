@@ -194,7 +194,9 @@ Product:
       "stock_quantity": 12,
       "price_override": null,
       "price": "3200.00",
-      "compare_at_price": null
+      "compare_at_price": null,
+      "on_sale": false,
+      "discount_percent": null
     }
   ],
   "images": [
@@ -214,7 +216,9 @@ Product:
 List items omit `description`, `skin_types`, `skin_feel`, `key_ingredients`,
 `variants` and `images` and add `variant_count`, `total_stock`, `on_sale` and
 `primary_image_url`. `on_sale` is true when any variant's `compare_at_price` is
-above its resolved price. `shade` is `null` for a shadeless variant; `price` is the
+above its resolved price. A variant's `on_sale` is its own compare-at being above
+its `price`; `discount_percent` is the floored saving as an integer, `null` when not
+on sale. Variant write responses carry the same fields. `shade` is `null` for a shadeless variant; `price` is the
 resolved price. `skin_types` is `[]` and the two strings `""` when unset.
 
 Write bodies:
@@ -404,10 +408,9 @@ and implicit. See [ADR 0003](../decisions/0003-money-is-a-decimal-string-end-to-
 Everything the admin assumed while `admin-api.md` was a plan has been confirmed
 against the implemented backend. These are worth raising with it:
 
-| Question                                                                                                                                        | Current behaviour                                                                                                           | Where it matters                                                        |
-| ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Should `created_after`/`created_before` compare the `Asia/Kathmandu` date, as the dashboard's revenue buckets already do?                       | UTC date, so a date-filtered list misses orders placed 00:00–05:45 in Nepal on its first day                                | dashboard KPI links, orders date filter                                 |
-| Could a just-rotated refresh token be accepted again for a few seconds (a reuse grace period)?                                                  | Reuse is a 401 at once, so two tabs refreshing together sign one out                                                        | two tabs, or a page and a hover prefetch, refreshing at the same moment |
-| Could a variant update be rejected when it was based on stale data (a version or `If-Match`, 409 on mismatch), or stock be adjusted by a delta? | `stock_quantity` is absolute, so saving a variant overwrites a storefront order's decrement made while staff edited         | variant editor                                                          |
-| Could the admin variant carry `on_sale` and `discount_percent`, as the public variant does?                                                     | Only `compare_at_price`, so the variants editor cannot show the planned "−15%" badge without comparing money in the browser | variants editor (sale prices)                                           |
-| Could the API expose a change feed (`GET admin/changes/?since=<cursor>` → changed resource types and ids)?                                      | None; the admin refetches on a timer by freshness class                                                                     | admin cache freshness; one cheap poll would replace timed refetching    |
+| Question                                                                                                                                        | Current behaviour                                                                                                   | Where it matters                                                        |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Should `created_after`/`created_before` compare the `Asia/Kathmandu` date, as the dashboard's revenue buckets already do?                       | UTC date, so a date-filtered list misses orders placed 00:00–05:45 in Nepal on its first day                        | dashboard KPI links, orders date filter                                 |
+| Could a just-rotated refresh token be accepted again for a few seconds (a reuse grace period)?                                                  | Reuse is a 401 at once, so two tabs refreshing together sign one out                                                | two tabs, or a page and a hover prefetch, refreshing at the same moment |
+| Could a variant update be rejected when it was based on stale data (a version or `If-Match`, 409 on mismatch), or stock be adjusted by a delta? | `stock_quantity` is absolute, so saving a variant overwrites a storefront order's decrement made while staff edited | variant editor                                                          |
+| Could the API expose a change feed (`GET admin/changes/?since=<cursor>` → changed resource types and ids)?                                      | None; the admin refetches on a timer by freshness class                                                             | admin cache freshness; one cheap poll would replace timed refetching    |
