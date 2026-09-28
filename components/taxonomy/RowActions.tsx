@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { TaxonomyKind } from "@/lib/api/types";
 import { removeTaxonomy } from "@/lib/taxonomy/actions";
-import { taxonomyInvalidates } from "@/lib/taxonomy/queries";
+import { afterTaxonomyChange } from "@/lib/query/invalidation";
 
 type EditDialogRenderer = (state: {
   open: boolean;
@@ -74,7 +74,7 @@ export function RowActions({
         confirmLabel="Delete"
         successMessage={`${name} deleted`}
         action={() => removeTaxonomy(kind, id)}
-        invalidates={taxonomyInvalidates(kind)}
+        invalidates={afterTaxonomyChange(kind)}
         onFailure={(failure) =>
           toast.error(failure.code === "conflict" && inUseMessage ? inUseMessage : failure.message)
         }

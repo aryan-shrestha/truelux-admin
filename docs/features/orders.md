@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-09-27
+Last updated: 2026-09-28
 
 ---
 
@@ -41,7 +41,7 @@ delivered`, with cancel from `pending` or `confirmed`.
 ## Implemented
 
 - `app/(admin)/orders/page.tsx` — prefetches the list for the URL's filters and
-  renders `OrdersView`, which reads `orderQueries.list(filters)` (polls every 60 s)
+  renders `OrdersView`, which reads `orderQueries.list(filters)` (`live`: polls every 60 s)
   and is the paginated list (25 a page) from URL state:
   `StatusTabs` (`?status=`, repeatable), `UrlSearch` (`?q=`), `DateRangeFilter`
   (`?from=`/`?to=`, ISO dates) and `TablePagination` (`?page=`).

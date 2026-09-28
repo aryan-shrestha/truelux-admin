@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { describeError } from "@/lib/api/errors";
 import { QUERY_DEFAULTS, invalidatingMutationCache } from "@/lib/query/client";
 
-let browserQueryClient: QueryClient | undefined;
+let browser: { userId: string; client: QueryClient } | undefined;
 
 function makeBrowserQueryClient(): QueryClient {
   return new QueryClient({
@@ -26,13 +26,22 @@ function makeBrowserQueryClient(): QueryClient {
   });
 }
 
-// A server render must not share a cache between requests; the browser keeps one.
-function getQueryClient(): QueryClient {
+// A server render must not share a cache between requests. The browser keeps one per
+// signed-in user: the cache lives for the whole tab session, and the client outlives the
+// admin layout, so another sign-in in the same tab starts from an empty cache.
+function getQueryClient(userId: string): QueryClient {
   if (typeof window === "undefined") return makeBrowserQueryClient();
-  browserQueryClient ??= makeBrowserQueryClient();
-  return browserQueryClient;
+  if (browser?.userId !== userId) {
+    browser = { userId, client: makeBrowserQueryClient() };
+  }
+  return browser.client;
 }
 
-export function QueryProvider({ children }: { children: ReactNode }) {
-  return <QueryClientProvider client={getQueryClient()}>{children}</QueryClientProvider>;
+type QueryProviderProps = {
+  userId: string;
+  children: ReactNode;
+};
+
+export function QueryProvider({ userId, children }: QueryProviderProps) {
+  return <QueryClientProvider client={getQueryClient(userId)}>{children}</QueryClientProvider>;
 }

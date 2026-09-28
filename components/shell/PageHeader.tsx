@@ -9,6 +9,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { RefreshButton } from "@/components/shell/RefreshButton";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
@@ -51,7 +52,10 @@ export function PageHeader({ crumbs, title, description, children }: PageHeaderP
           <h1 className="font-heading truncate text-2xl">{title}</h1>
           {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
         </div>
-        {children ? <div className="flex flex-wrap items-center gap-2">{children}</div> : null}
+        <div className="flex flex-wrap items-center gap-2">
+          <RefreshButton />
+          {children}
+        </div>
       </div>
     </header>
   );

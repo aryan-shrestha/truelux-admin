@@ -1,11 +1,8 @@
-import { type QueryKey, queryOptions } from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/react-query";
 
 import type { Taxonomy, TaxonomyKind } from "@/lib/api/types";
-import { productKeys } from "@/lib/products/queries";
-import { getJson } from "@/lib/query/fetch-json";
-
-// The lists change only when staff edit them here, and every edit invalidates them.
-const TAXONOMY_STALE_TIME_MS = 5 * 60_000;
+import { FRESHNESS } from "@/lib/query/client";
+import { getJson } from "@/lib/query/get-json";
 
 export const taxonomyKeys = {
   all: ["taxonomy"] as const,
@@ -16,12 +13,6 @@ export function taxonomyQuery<K extends TaxonomyKind>(kind: K) {
   return queryOptions({
     queryKey: taxonomyKeys.kind(kind),
     queryFn: ({ signal }) => getJson<Taxonomy[K][]>(`/api/taxonomy/${kind}`, undefined, signal),
-    staleTime: TAXONOMY_STALE_TIME_MS,
+    ...FRESHNESS.reference,
   });
-}
-
-// Products show brand, category, size, shade and skin type names, so a taxonomy edit
-// makes them stale too.
-export function taxonomyInvalidates(kind: TaxonomyKind): QueryKey[] {
-  return [taxonomyKeys.kind(kind), productKeys.all];
 }

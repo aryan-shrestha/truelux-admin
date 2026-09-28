@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { refreshTokens } from "@/lib/api/client";
 import { errorResponse } from "@/lib/api/route";
 import { safeNextPath } from "@/lib/auth/next-path";
-import { SESSION_PATH } from "@/lib/query/fetch-json";
+import { SESSION_PATH } from "@/lib/query/get-json";
 import {
   ACCESS_COOKIE,
   REFRESH_COOKIE,

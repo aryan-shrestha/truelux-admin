@@ -1,5 +1,6 @@
 import "server-only";
 
+import axios, { type AxiosResponse } from "axios";
 import { redirect } from "next/navigation";
 
 import { ApiUnreachableError, toApiError } from "@/lib/api/errors";
@@ -20,48 +21,51 @@ type SendOptions = {
 export const LOGIN_PATH = "/login";
 const EXPIRED_LOGIN_PATH = "/login?expired=1";
 
-function buildUrl(path: string, query: Query | undefined): string {
-  return `${env.apiBaseUrl}/api/v1${path}${toSearch(query)}`;
+// The fetch adapter keeps Next's patched fetch (and `cache: "no-store"`) and runs in the
+// proxy. Every status resolves: the admin branches on the envelope's `code`, so an
+// axios error only ever means the request never got an answer.
+const api = axios.create({
+  baseURL: `${env.apiBaseUrl}/api/v1`,
+  adapter: "fetch",
+  fetchOptions: { cache: "no-store" },
+  headers: { Accept: "application/json" },
+  paramsSerializer: { serialize: (params: Query) => toSearch(params).slice(1) },
+  validateStatus: () => true,
+});
+
+function isOk(response: AxiosResponse): boolean {
+  return response.status >= 200 && response.status < 300;
 }
 
-async function send(path: string, options: SendOptions): Promise<Response> {
+async function send(path: string, options: SendOptions): Promise<AxiosResponse> {
   // Django redirects a path without its trailing slash, and the redirect turns a
   // POST into a GET.
   if (!path.endsWith("/")) {
     throw new Error(`API paths end in a slash: ${path}`);
   }
-  const headers = new Headers({ Accept: "application/json" });
-  if (options.accessToken) {
-    headers.set("Authorization", `Bearer ${options.accessToken}`);
-  }
-  let body: BodyInit | undefined;
-  if (options.body instanceof FormData) {
-    body = options.body;
-  } else if (options.body !== undefined) {
-    headers.set("Content-Type", "application/json");
-    body = JSON.stringify(options.body);
-  }
-
-  try {
-    return await fetch(buildUrl(path, options.query), {
+  // axios serialises an object as JSON and leaves FormData to set its own boundary.
+  return api
+    .request({
+      url: path,
       method: options.method,
-      headers,
-      body,
-      cache: "no-store",
+      params: options.query,
+      data: options.body,
+      headers: options.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {},
+    })
+    .catch((cause: unknown) => {
+      if (axios.isAxiosError(cause)) throw new ApiUnreachableError(cause);
+      throw cause;
     });
-  } catch (cause) {
-    throw new ApiUnreachableError(cause);
-  }
 }
 
-async function parse<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    throw await toApiError(response);
+function parse<T>(response: AxiosResponse): T {
+  if (!isOk(response)) {
+    throw toApiError(response);
   }
   if (response.status === 204) {
     return undefined as T;
   }
-  return (await response.json()) as T;
+  return response.data as T;
 }
 
 export async function publicRequest<T>(
@@ -73,7 +77,7 @@ export async function publicRequest<T>(
 
 export async function refreshTokens(refresh: string): Promise<TokenPair | null> {
   const response = await send("/auth/token/refresh/", { method: "POST", body: { refresh } });
-  return response.ok ? ((await response.json()) as TokenPair) : null;
+  return isOk(response) ? (response.data as TokenPair) : null;
 }
 
 // Server Components cannot write cookies, so a read never refreshes: proxy.ts renews the

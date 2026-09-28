@@ -1,7 +1,8 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import type { ShippingSettings } from "@/lib/api/types";
-import { getJson } from "@/lib/query/fetch-json";
+import { FRESHNESS } from "@/lib/query/client";
+import { getJson } from "@/lib/query/get-json";
 
 export const settingsKeys = {
   all: ["settings"] as const,
@@ -11,4 +12,5 @@ export const settingsKeys = {
 export const shippingSettingsQuery = queryOptions({
   queryKey: settingsKeys.shipping(),
   queryFn: ({ signal }) => getJson<ShippingSettings>("/api/settings/shipping", undefined, signal),
+  ...FRESHNESS.reference,
 });

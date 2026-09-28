@@ -2,8 +2,8 @@ import { queryOptions } from "@tanstack/react-query";
 
 import type { OrderDetail, OrderListItem, Page } from "@/lib/api/types";
 import { type OrderFilters, ordersHref } from "@/lib/orders/query";
-import { POLL_INTERVAL_MS } from "@/lib/query/client";
-import { getJson } from "@/lib/query/fetch-json";
+import { FRESHNESS } from "@/lib/query/client";
+import { getJson } from "@/lib/query/get-json";
 
 export const orderKeys = {
   all: ["orders"] as const,
@@ -20,12 +20,13 @@ export const orderQueries = {
       queryKey: orderKeys.list(filters),
       queryFn: ({ signal }) =>
         getJson<Page<OrderListItem>>(`/api${ordersHref(filters)}`, undefined, signal),
-      refetchInterval: POLL_INTERVAL_MS,
+      ...FRESHNESS.live,
     }),
   detail: (id: string) =>
     queryOptions({
       queryKey: orderKeys.detail(id),
       queryFn: ({ signal }) =>
         getJson<OrderDetail>(`/api/orders/${encodeURIComponent(id)}`, undefined, signal),
+      ...FRESHNESS.live,
     }),
 };

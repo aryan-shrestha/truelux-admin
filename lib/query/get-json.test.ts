@@ -1,19 +1,25 @@
+import axios from "axios";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError, ApiUnreachableError } from "@/lib/api/errors";
-import { getJson } from "@/lib/query/fetch-json";
-import { errorResponse, jsonResponse } from "@/tests/fixtures/http";
+import { getJson } from "@/lib/query/get-json";
+import { errorResponse, jsonResponse, sentPath } from "@/tests/fixtures/http";
 
 const fetchMock = vi.fn<typeof fetch>();
 const assign = vi.fn();
 
-function calledUrls(): string[] {
-  return fetchMock.mock.calls.map(([url]) => String(url));
+function calledPaths(): string[] {
+  return fetchMock.mock.calls.map((_, call) => sentPath(fetchMock, call));
 }
 
 beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
-  vi.stubGlobal("location", { pathname: "/orders", search: "?status=pending", assign });
+  vi.stubGlobal("location", {
+    origin: "http://admin.test",
+    pathname: "/orders",
+    search: "?status=pending",
+    assign,
+  });
 });
 
 afterEach(() => {
@@ -28,13 +34,15 @@ describe("getJson", () => {
 
     await getJson("/api/orders", { status: ["pending", "confirmed"], search: "", page: 2 });
 
-    expect(calledUrls()).toEqual(["/api/orders?status=pending&status=confirmed&page=2"]);
+    expect(calledPaths()).toEqual(["/api/orders?status=pending&status=confirmed&page=2"]);
   });
 
   it("refreshes once for concurrent requests, then retries each", async () => {
-    fetchMock.mockImplementation(async (url) => {
-      if (url === "/api/session") return new Response(null, { status: 204 });
-      const refreshed = fetchMock.mock.calls.some(([called]) => called === "/api/session");
+    fetchMock.mockImplementation(async (input) => {
+      const isSession = (called: unknown) =>
+        called instanceof Request && new URL(called.url).pathname === "/api/session";
+      if (isSession(input)) return new Response(null, { status: 204 });
+      const refreshed = fetchMock.mock.calls.some(([called]) => isSession(called));
       return refreshed
         ? jsonResponse({ ok: true })
         : errorResponse(401, "session_refresh_required");
@@ -46,7 +54,7 @@ describe("getJson", () => {
       getJson("/api/products"),
     ]);
 
-    expect(calledUrls().filter((url) => url === "/api/session")).toHaveLength(1);
+    expect(calledPaths().filter((path) => path === "/api/session")).toHaveLength(1);
     expect(assign).not.toHaveBeenCalled();
   });
 
@@ -85,5 +93,17 @@ describe("getJson", () => {
     fetchMock.mockRejectedValueOnce(new TypeError("offline"));
 
     await expect(getJson("/api/orders")).rejects.toBeInstanceOf(ApiUnreachableError);
+  });
+
+  it("lets a cancelled query reject as a cancel, not as an unreachable API", async () => {
+    const controller = new AbortController();
+    controller.abort();
+
+    const error = await getJson("/api/orders", undefined, controller.signal).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(axios.isCancel(error)).toBe(true);
+    expect(error).not.toBeInstanceOf(ApiUnreachableError);
   });
 });

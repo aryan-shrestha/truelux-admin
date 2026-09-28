@@ -11,7 +11,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/">) {
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
 
   return (
-    <QueryProvider>
+    <QueryProvider userId={user.id}>
       <SidebarProvider defaultOpen={defaultOpen}>
         <AppSidebar brandName={env.brandName} user={user} />
         <SidebarInset>{children}</SidebarInset>

@@ -21,8 +21,9 @@ import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import type { ShippingSettings } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format/date";
+import { afterSettingsChange } from "@/lib/query/invalidation";
 import { saveShippingSettings } from "@/lib/settings/actions";
-import { settingsKeys, shippingSettingsQuery } from "@/lib/settings/queries";
+import { shippingSettingsQuery } from "@/lib/settings/queries";
 import { type ShippingSettingsValues, shippingSettingsSchema } from "@/lib/settings/schemas";
 
 function toValues(settings: ShippingSettings): ShippingSettingsValues {
@@ -40,7 +41,7 @@ export function ShippingSettingsForm() {
     schema: shippingSettingsSchema,
     defaultValues: toValues(settings),
     action: saveShippingSettings,
-    invalidates: [settingsKeys.shipping()],
+    invalidates: afterSettingsChange(),
     onSuccess: (saved) => {
       toast.success("Shipping settings saved");
       form.reset(toValues(saved));

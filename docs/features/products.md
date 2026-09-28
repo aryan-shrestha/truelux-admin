@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-09-27
+Last updated: 2026-09-28
 
 ---
 
@@ -85,8 +85,10 @@ Backend `admin-api.md` § Products and `skin-types.md` § Admin. Uploads go brow
   once and back if the API refuses; delete removes the detail from the cache.
 - `lib/products/actions.ts` — every product, variant and image mutation, each
   re-validating with zod. Callers run them in `useMutation` with
-  `productInvalidates(id)` (the detail and the lists); variant edits also invalidate
-  the dashboard.
+  keys from `lib/query/invalidation.ts` (`afterProductChange`, `afterVariantChange`,
+  `afterImageChange`); product and variant changes also reach the taxonomy counts,
+  variant changes the dashboard. Products are `volatile`: stock moves with storefront
+  orders, so they refetch when shown again or refocused after 30 s.
 - `lib/products/queries.ts` — `productKeys`, `productQueries`;
   `app/api/products/route.ts` and `app/api/products/[id]/route.ts` serve the
   browser.

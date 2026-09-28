@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import type { ProductImage } from "@/lib/api/types";
 import { reorderImages, uploadImage } from "@/lib/products/actions";
-import { productInvalidates } from "@/lib/products/queries";
+import { afterImageChange } from "@/lib/query/invalidation";
 import { IMAGE_TYPES, imageUploadSchema } from "@/lib/products/schemas";
 
 export function orderAfterMove(
@@ -81,7 +81,7 @@ export function ImagesManager({ productId, images }: ImagesManagerProps) {
         }
       }
     },
-    meta: { invalidates: productInvalidates(productId) },
+    meta: { invalidates: afterImageChange(productId) },
   });
 
   const { mutate: reorder, isPending: isMoving } = useImageMutation({

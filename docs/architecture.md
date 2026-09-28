@@ -1,6 +1,6 @@
 # Architecture
 
-Last updated: 2026-09-27
+Last updated: 2026-09-28
 
 This document describes the current architecture of the admin.
 
@@ -166,7 +166,7 @@ Deviations:
 Responsibility: define a URL, its metadata and its boundaries; read params; call
 `lib/api`; compose.
 
-Restrictions: no `fetch`, no formatting, no rules about what data means. A route may
+Restrictions: no `fetch` or `axios`, no formatting, no rules about what data means. A route may
 turn `not_found` into `notFound()`.
 
 ### Route Handlers (`app/api/**`)
@@ -210,17 +210,28 @@ Restrictions: no React, no formatting, no status codes returned.
 
 ## Data fetching and caching
 
-Every API call is `cache: "no-store"`. There is no server data cache, no ISR and no
+Every API call is `cache: "no-store"` (axios through its fetch adapter,
+`fetchOptions`; see [convention.md](convention.md#http)). There is no server data
+cache, no ISR and no
 `revalidate` interval: the data is per-user and operational. Route Handlers answer
 `private, no-store`.
 
 The browser cache is TanStack Query's, in memory and per tab:
 
-- `staleTime` 30 s (taxonomy 5 min); refetch on window focus once stale.
-- The dashboard and the orders list poll every 60 s while visible, about 60
-  requests an hour per open tab against the staff throttle of `2000/hour`.
+- Next's router cache reuses a visited route until reload
+  (`staleTimes.dynamic: Infinity`): the server renders and prefetches on a first visit
+  or reload only; after that navigation is client-side from the cache.
+- Every query has a freshness class (`FRESHNESS` in `lib/query/client.ts`): `live`
+  (dashboard, orders; stale after 30 s, polled every 60 s while shown, about 60
+  requests an hour per open tab against the staff throttle of `2000/hour`),
+  `volatile` (products; stale after 30 s, refetched when shown or refocused),
+  `reference` (taxonomy, settings; stale after 10 min). Stale data shows at once and
+  is refreshed in the background. `gcTime` is `Infinity`; one cache per signed-in
+  user per tab.
+- Every page header has **Refresh data**, which refetches the page's active queries.
 - Retry once only for an unreachable API or a 5xx; an API code is final.
-- A mutation names the keys it makes stale (`meta.invalidates`).
+- A mutation names the keys it makes stale (`meta.invalidates`), always from
+  `lib/query/invalidation.ts`.
 - Optimistic updates only for values the API does not derive (image order, alt text,
   the list's publish toggle), rolled back on failure.
 

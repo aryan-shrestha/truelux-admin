@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { signIn, signOut } from "@/lib/auth/actions";
-import { errorResponse, jsonResponse } from "@/tests/fixtures/http";
+import { errorResponse, jsonResponse, sentRequest } from "@/tests/fixtures/http";
 import { fakeJwt } from "@/tests/fixtures/jwt";
 import { cookieJar } from "@/tests/fixtures/next-server";
 
@@ -84,8 +84,9 @@ describe("signOut", () => {
 
     await expect(signOut()).rejects.toMatchObject({ url: "/login" });
 
-    expect(fetchMock.mock.calls[0]?.[0]).toBe("http://api.test/api/v1/auth/logout/");
-    expect(fetchMock.mock.calls[0]?.[1]?.body).toBe(JSON.stringify({ refresh: "the-refresh" }));
+    const sent = sentRequest(fetchMock);
+    expect(sent.url).toBe("http://api.test/api/v1/auth/logout/");
+    expect(await sent.json()).toEqual({ refresh: "the-refresh" });
     expect(cookieJar.values.size).toBe(0);
   });
 

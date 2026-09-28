@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-09-27
+Last updated: 2026-09-28
 
 ---
 
@@ -78,7 +78,7 @@ Backend `admin-api.md` § Taxonomy and `skin-types.md` § Admin.
   `saveSkinType`,
   `removeTaxonomy`: re-validate with the same zod schema, omit a blank slug, call the
   API and return an `ActionResult`. Dialogs and `RowActions` pass
-  `taxonomyInvalidates(kind)` (the list and `["products"]`).
+  `afterTaxonomyChange(kind)` (the list and `["products"]`).
 - `components/taxonomy/CategoryDialog.tsx` derives its parent options from the cached
   categories, so a new top-level category is offered at once.
 - `lib/taxonomy/schemas.ts`, `lib/catalog/fields.ts` — the schemas and the shared
@@ -178,7 +178,8 @@ DELETE /api/v1/admin/{kind}/{id}/     server action
 ## State and data
 
 - URL: `?q=`.
-- Query cache: `["taxonomy",kind]`, stale after 5 minutes.
+- Query cache: `["taxonomy",kind]`, `reference` (stale after 10 minutes); product
+  changes invalidate it, since it shows product and variant counts.
 - React state: dialog open, form values, logo preview object URL.
 
 ---

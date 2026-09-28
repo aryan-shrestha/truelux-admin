@@ -19,8 +19,9 @@ import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import type { Product } from "@/lib/api/types";
 import { createProductAction, updateProductAction } from "@/lib/products/actions";
-import { productKeys, productQueries } from "@/lib/products/queries";
+import { productQueries } from "@/lib/products/queries";
 import { productSchema } from "@/lib/products/schemas";
+import { afterProductChange, afterProductCreate } from "@/lib/query/invalidation";
 
 type ProductDetailsFormProps = {
   product?: Product;
@@ -54,7 +55,7 @@ export function ProductDetailsForm({
     },
     action: (values) =>
       product ? updateProductAction(product.id, values) : createProductAction(values),
-    invalidates: [productKeys.lists()],
+    invalidates: product ? afterProductChange(product.id) : afterProductCreate(),
     onSuccess: (saved) => {
       queryClient.setQueryData(productQueries.detail(saved.id).queryKey, saved);
       if (!product) {

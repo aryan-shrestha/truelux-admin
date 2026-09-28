@@ -42,6 +42,10 @@ const nextConfig: NextConfig = {
   experimental: {
     // One product image or brand logo per action; the API caps images at 5 MB.
     serverActions: { bodySizeLimit: "6mb" },
+    // A dynamic page is otherwise re-rendered on every navigation, and each render
+    // refetches from the API. After the first visit TanStack Query keeps the data fresh
+    // in the background, so a visited route's render is reused until the tab reloads.
+    staleTimes: { dynamic: Infinity },
   },
   poweredByHeader: false,
   async headers() {
