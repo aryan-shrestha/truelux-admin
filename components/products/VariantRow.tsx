@@ -56,6 +56,7 @@ export function VariantRow({
       shade_id: variant?.shade?.id ?? null,
       stock_quantity: variant?.stock_quantity ?? 0,
       price_override: variant?.price_override ?? null,
+      compare_at_price: variant?.compare_at_price ?? null,
     },
     action: (values) => (variant ? saveVariant(variant.id, values) : addVariant(productId, values)),
     invalidates,
@@ -180,6 +181,26 @@ export function VariantRow({
                 inputMode="decimal"
                 placeholder="Base price"
                 aria-label={`Price override of ${label}`}
+                aria-invalid={fieldState.invalid}
+                className="w-28 text-right"
+              />
+              <FieldError errors={[fieldState.error]} />
+            </Field>
+          )}
+        />
+      </TableCell>
+      <TableCell>
+        <Controller
+          name="compare_at_price"
+          control={control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <Input
+                {...field}
+                value={field.value ?? ""}
+                inputMode="decimal"
+                placeholder="Not on sale"
+                aria-label={`Compare-at price of ${label}`}
                 aria-invalid={fieldState.invalid}
                 className="w-28 text-right"
               />

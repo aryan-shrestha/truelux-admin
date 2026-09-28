@@ -19,6 +19,14 @@ export const productSchema = z.object({
   key_ingredients: z.string().trim(),
 });
 
+const optionalPrice = z
+  .string()
+  .trim()
+  .nullable()
+  .transform((value) => (value === "" ? null : value))
+  .refine((value) => value === null || MONEY_PATTERN.test(value), PRICE_MESSAGE)
+  .refine((value) => value === null || /[1-9]/.test(value), "Must be more than 0, or blank.");
+
 export const variantSchema = z.object({
   sku: z.string().trim().min(1, "Enter a SKU.").max(64, "Keep it under 64 characters."),
   size_id: z.string({ error: "Choose a size." }).min(1, "Choose a size."),
@@ -27,13 +35,8 @@ export const variantSchema = z.object({
     .number({ error: "Enter a whole number." })
     .int("Enter a whole number.")
     .min(0, "Stock cannot be negative."),
-  price_override: z
-    .string()
-    .trim()
-    .nullable()
-    .transform((value) => (value === "" ? null : value))
-    .refine((value) => value === null || MONEY_PATTERN.test(value), PRICE_MESSAGE)
-    .refine((value) => value === null || /[1-9]/.test(value), "Must be more than 0, or blank."),
+  price_override: optionalPrice,
+  compare_at_price: optionalPrice,
 });
 
 export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];

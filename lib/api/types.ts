@@ -110,6 +110,7 @@ export type Variant = {
   stock_quantity: number;
   price_override: Money | null;
   price: Money;
+  compare_at_price: Money | null;
 };
 
 export type ProductImage = {
@@ -146,6 +147,7 @@ export type ProductListItem = Omit<
   variant_count: number;
   total_stock: number;
   primary_image_url: string | null;
+  on_sale: boolean;
 };
 
 export type ProductOrdering = "name" | "base_price" | "created_at";
@@ -156,6 +158,7 @@ export type ProductQuery = {
   category?: string;
   is_published?: boolean;
   low_stock?: boolean;
+  on_sale?: boolean;
   ordering?: ProductOrdering | `-${ProductOrdering}`;
   limit: number;
   offset: number;
@@ -181,6 +184,7 @@ export type VariantWrite = {
   shade_id: string | null;
   stock_quantity: number;
   price_override: Money | null;
+  compare_at_price: Money | null;
 };
 
 export type ImageUpdate = Partial<Pick<ProductImage, "alt_text" | "sort_order" | "is_primary">>;
