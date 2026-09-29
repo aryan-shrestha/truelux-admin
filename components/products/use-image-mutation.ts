@@ -5,8 +5,9 @@ import { toast } from "sonner";
 
 import type { ActionResult } from "@/lib/actions/attempt";
 import type { ProductImage } from "@/lib/api/types";
-import { productInvalidates, productQueries } from "@/lib/products/queries";
+import { productQueries } from "@/lib/products/queries";
 import { failureMessage, throwOnFailure } from "@/lib/query/action";
+import { afterImageChange } from "@/lib/query/invalidation";
 
 type UseImageMutationOptions<TVariables> = {
   productId: string;
@@ -28,7 +29,7 @@ export function useImageMutation<TVariables>({
 
   return useMutation({
     mutationFn: async (variables: TVariables) => throwOnFailure(await action(variables)),
-    meta: { invalidates: productInvalidates(productId) },
+    meta: { invalidates: afterImageChange(productId) },
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey });
       const previous = queryClient.getQueryData(queryKey);

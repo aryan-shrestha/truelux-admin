@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SkinTypesTable } from "@/components/taxonomy/SkinTypesTable";
 import { removeTaxonomy } from "@/lib/taxonomy/actions";
 import { taxonomyKeys } from "@/lib/taxonomy/queries";
+import { sentPath } from "@/tests/fixtures/http";
 import { renderWithQuery, testQueryClient } from "@/tests/fixtures/query";
 import { router } from "@/tests/fixtures/router";
 
@@ -55,7 +56,7 @@ describe("SkinTypesTable", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Delete" }));
 
     await waitFor(() => expect(screen.queryByText("Oily")).not.toBeInTheDocument());
-    expect(String(fetchMock.mock.calls[0]?.[0])).toBe("/api/taxonomy/skin-types");
+    expect(sentPath(fetchMock)).toBe("/api/taxonomy/skin-types");
   });
 
   it("warns that deleting detaches the skin type from its products", async () => {

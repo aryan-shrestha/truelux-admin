@@ -18,8 +18,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Page, ProductListItem } from "@/lib/api/types";
 import { removeProduct, setPublished } from "@/lib/products/actions";
-import { productInvalidates, productKeys, productQueries } from "@/lib/products/queries";
+import { productKeys } from "@/lib/products/queries";
 import { failureMessage, throwOnFailure } from "@/lib/query/action";
+import { afterProductChange } from "@/lib/query/invalidation";
 
 export function ProductRowActions({ product }: { product: ProductListItem }) {
   const [deleting, setDeleting] = useState(false);
@@ -31,7 +32,7 @@ export function ProductRowActions({ product }: { product: ProductListItem }) {
   const { mutate: publish } = useMutation({
     mutationFn: async (isPublished: boolean) =>
       throwOnFailure(await setPublished(product.id, isPublished)),
-    meta: { invalidates: productInvalidates(product.id) },
+    meta: { invalidates: afterProductChange(product.id) },
     onMutate: async (isPublished) => {
       await queryClient.cancelQueries(lists);
       const previous = queryClient.getQueriesData<Page<ProductListItem>>(lists);
@@ -95,10 +96,9 @@ export function ProductRowActions({ product }: { product: ProductListItem }) {
         confirmLabel="Delete product"
         successMessage={`${product.name} deleted`}
         action={() => removeProduct(product.id)}
-        invalidates={[productKeys.lists()]}
-        onSuccess={() =>
-          queryClient.removeQueries({ queryKey: productQueries.detail(product.id).queryKey })
-        }
+        // Invalidated rather than removed: a reused route would otherwise hydrate the
+        // deleted product again from its first render.
+        invalidates={afterProductChange(product.id)}
         onFailure={(failure) => {
           if (failure.code !== "conflict") {
             toast.error(failure.message);

@@ -66,12 +66,16 @@ const COLUMNS: ColumnDef<ProductListItem>[] = [
   {
     accessorKey: "is_published",
     header: "Status",
-    cell: ({ row }) =>
-      row.original.is_published ? (
-        <Badge variant="success">Published</Badge>
-      ) : (
-        <Badge variant="outline">Draft</Badge>
-      ),
+    cell: ({ row }) => (
+      <span className="flex flex-wrap gap-1">
+        {row.original.is_published ? (
+          <Badge variant="success">Published</Badge>
+        ) : (
+          <Badge variant="outline">Draft</Badge>
+        )}
+        {row.original.on_sale ? <Badge variant="info">On sale</Badge> : null}
+      </span>
+    ),
   },
   {
     id: "actions",

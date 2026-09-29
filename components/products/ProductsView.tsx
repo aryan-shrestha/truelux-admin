@@ -18,7 +18,12 @@ export function ProductsView() {
   const brands = useTaxonomyOptions("brands");
   const categories = useTaxonomyOptions("categories");
   const filtered = Boolean(
-    filters.q || filters.brand || filters.category || filters.published || filters.lowStock,
+    filters.q ||
+    filters.brand ||
+    filters.category ||
+    filters.published ||
+    filters.lowStock ||
+    filters.onSale,
   );
 
   return (
@@ -46,6 +51,12 @@ export function ProductsView() {
           label="Stock"
           anyLabel="Any stock"
           options={[{ value: "low", label: "Low stock" }]}
+        />
+        <UrlSelect
+          param="on_sale"
+          label="Sale"
+          anyLabel="Any price"
+          options={[{ value: "true", label: "On sale" }]}
         />
       </div>
       <ProductsTable products={page.results} filtered={filtered} />

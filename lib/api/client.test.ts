@@ -1,8 +1,10 @@
+// @vitest-environment node
+// lib/api runs on the server; under jsdom axios would take its browser FormData path.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiRead, apiWrite } from "@/lib/api/client";
 import { ApiError, ApiUnreachableError } from "@/lib/api/errors";
-import { errorResponse, jsonResponse } from "@/tests/fixtures/http";
+import { errorResponse, jsonResponse, sentRequest } from "@/tests/fixtures/http";
 import { fakeJwt } from "@/tests/fixtures/jwt";
 import { RedirectSignal, cookieJar } from "@/tests/fixtures/next-server";
 
@@ -15,8 +17,7 @@ vi.mock(
 const fetchMock = vi.fn<typeof fetch>();
 
 function authHeader(call: number): string | null {
-  const init = fetchMock.mock.calls[call]?.[1];
-  return new Headers(init?.headers).get("Authorization");
+  return sentRequest(fetchMock, call).headers.get("Authorization");
 }
 
 beforeEach(() => {
@@ -36,7 +37,7 @@ describe("apiWrite", () => {
     await expect(apiWrite("/admin/products/", { method: "POST", body: {} })).resolves.toEqual({
       id: "p1",
     });
-    expect(fetchMock.mock.calls[0]?.[0]).toBe("http://api.test/api/v1/admin/products/");
+    expect(sentRequest(fetchMock).url).toBe("http://api.test/api/v1/admin/products/");
     expect(authHeader(0)).toBe("Bearer old-access");
   });
 
@@ -52,8 +53,9 @@ describe("apiWrite", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(fetchMock.mock.calls[1]?.[0]).toBe("http://api.test/api/v1/auth/token/refresh/");
-    expect(fetchMock.mock.calls[1]?.[1]?.body).toBe(JSON.stringify({ refresh: "old-refresh" }));
+    const refresh = sentRequest(fetchMock, 1);
+    expect(refresh.url).toBe("http://api.test/api/v1/auth/token/refresh/");
+    expect(await refresh.json()).toEqual({ refresh: "old-refresh" });
     expect(authHeader(2)).toBe(`Bearer ${pair.access}`);
     expect(cookieJar.values.get("tl_access")).toBe(pair.access);
     expect(cookieJar.values.get("tl_refresh")).toBe(pair.refresh);
@@ -125,16 +127,16 @@ describe("apiWrite", () => {
     );
   });
 
-  it("sends FormData untouched so fetch sets the multipart boundary", async () => {
+  it("sends FormData as multipart with the boundary fetch sets", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse({ id: "i1" }, 201));
     const form = new FormData();
     form.set("alt_text", "Front");
 
     await apiWrite("/admin/products/p1/images/", { method: "POST", body: form });
 
-    const init = fetchMock.mock.calls[0]?.[1];
-    expect(init?.body).toBe(form);
-    expect(new Headers(init?.headers).has("Content-Type")).toBe(false);
+    const sent = sentRequest(fetchMock);
+    expect(sent.headers.get("Content-Type")).toMatch(/^multipart\/form-data; boundary=/);
+    expect((await sent.formData()).get("alt_text")).toBe("Front");
   });
 });
 
@@ -146,7 +148,7 @@ describe("apiRead", () => {
 
     await apiRead("/admin/orders/", { status: ["pending", "confirmed"], search: "", limit: 25 });
 
-    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+    expect(sentRequest(fetchMock).url).toBe(
       "http://api.test/api/v1/admin/orders/?status=pending&status=confirmed&limit=25",
     );
   });

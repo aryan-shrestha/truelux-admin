@@ -56,7 +56,8 @@ export function VariantsEditor({ productId, variants, sizes, shades }: VariantsE
         <CardTitle>Variants</CardTitle>
         <CardDescription>
           Each variant is one SKU with its own stock. Leave the price override blank to use the base
-          price.
+          price. To put a variant on sale, lower the base price or set an override, and enter the
+          old price as its compare-at price. Clear the compare-at price to end the sale.
         </CardDescription>
         <CardAction>
           <Button variant="outline" size="sm" onClick={addDraft}>
@@ -87,6 +88,7 @@ export function VariantsEditor({ productId, variants, sizes, shades }: VariantsE
                 <TableHead className="min-w-40">Shade</TableHead>
                 <TableHead className="min-w-28">Stock</TableHead>
                 <TableHead className="min-w-36">Price override (Rs)</TableHead>
+                <TableHead className="min-w-36">Compare-at price (Rs)</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>

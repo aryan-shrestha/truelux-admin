@@ -1,6 +1,6 @@
 # Code Conventions
 
-Last updated: 2026-09-27
+Last updated: 2026-09-28
 
 This document records conventions that apply across the repository.
 
@@ -81,7 +81,8 @@ export const orderKeys = {
 ```
 
 - One `lib/<domain>/queries.ts` per area: a key factory (entity → list/detail →
-  params) and `queryOptions`. It imports types from `lib/api/types.ts`, never
+  params) and `queryOptions`. Each `queryOptions` spreads a class from `FRESHNESS`,
+  chosen by asking "what outside the admin changes this, and how often?". It imports types from `lib/api/types.ts`, never
   `lib/api/*` or `server-only`.
 - A key's params are the parsed filter object (`parse*Filters`), never raw search
   params.
@@ -110,6 +111,26 @@ export async function deleteProduct({ id }: { id: string }): Promise<void> {
   actions.** Only `apiWrite` may refresh tokens. A read takes `read` as its last
   argument (`listOrders(query, apiGet)`).
 - A Route Handler is `respond(() => read(..., apiGet))`, and nothing else.
+
+### HTTP
+
+Requests go through axios. There are two instances and no others:
+`lib/api/client.ts` (server → API, `baseURL` from `env`) and `lib/query/get-json.ts`
+(browser → the admin's `/api/*`).
+
+- `adapter: "fetch"` with `fetchOptions: { cache: "no-store" }`. It keeps Next's
+  patched `fetch` on the server, runs in `proxy.ts`, and lets tests stub `fetch`.
+- `validateStatus: () => true`: every status resolves, and the caller turns a non-2xx
+  into `ApiError` with `toApiError(response)`. An axios error therefore only means no
+  answer (`ApiUnreachableError`) or a cancel (`axios.isCancel`), which is rethrown
+  untouched so TanStack can drop the query.
+- `paramsSerializer` is `toSearch`: empty values dropped, arrays repeat the key.
+  axios's default would send `status[]=`.
+- Pass objects and `FormData` as `data` untouched. axios sets the JSON content type;
+  for `FormData`, `send()` sets a bare `multipart/form-data` so that `fetch` adds the
+  boundary. Set no other `Content-Type` by hand.
+- The browser instance sends absolute URLs (`baseURL: window.location.origin`):
+  the fetch adapter builds a `Request`, which needs one outside a browser.
 - Every path ends in a slash; path segments are `encodeURIComponent`-escaped.
 - Query values that are `undefined` or `""` are dropped; arrays repeat the key.
 - `FormData` bodies are sent untouched (multipart); anything else is JSON.
@@ -184,9 +205,10 @@ client component, `manualFiltering`/`manualPagination`/`manualSorting`.
 - In the browser: `useMutation({ mutationFn: async (v) => throwOnFailure(await
 action(v)), meta: { invalidates: [...] } })`. `failureMessage(error)` gives the
   sentence to show, or `null` for Next's redirect signal.
-- `meta.invalidates` lists every key the write makes stale (`taxonomyInvalidates`,
-  `productInvalidates`); a mutation that returns the new record also writes it
-  into its detail key.
+- `meta.invalidates` comes from `lib/query/invalidation.ts` (`afterProductChange(id)`
+  and friends), never an inline list, so every write's reach is in one place. A new
+  query that an existing write affects gets added there. A mutation that returns the
+  new record also writes it into its detail key.
 - Optimistic updates only for values the API does not derive: `onMutate` cancels,
   snapshots and writes; `onError` restores and refetches.
 - **`attempt()` (server actions) and `respond()` (Route Handlers) are the only
@@ -268,6 +290,10 @@ tests/e2e/*.spec.ts                 Playwright
   (`tests/fixtures/query.tsx`); seed data with `client.setQueryData(key, data)`.
   Assert invalidation with a spy on `client.invalidateQueries`.
 - Stub `fetch` with `vi.stubGlobal`; build responses with `tests/fixtures/http.ts`.
+  axios hands `fetch` one `Request`, so read what was sent with `sentRequest(fetchMock,
+n)` (`.url`, `.method`, `.headers`, `await .json()`) or `sentPath`. An unstubbed
+  `fetch` throws (`tests/setup.ts`), so no test reaches the network; a test whose
+  mutation invalidates an active query stubs `fetch` for the refetch.
 - Assert fields that matter and error codes, not whole objects or API messages.
 - Playwright specs call `requireLiveApi()` and skip without `E2E_API`,
   `E2E_EMAIL` and `E2E_PASSWORD`. `E2E_API=1` is a switch; the dev server reads

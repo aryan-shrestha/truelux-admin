@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-09-27
+Last updated: 2026-09-29
 
 ---
 
@@ -20,7 +20,8 @@ What is included in this implementation?
 - `/products`: a server-paginated `data-table`.
   - Columns: image thumbnail, name, brand, category, price, variants, total stock, and
     a published `badge`.
-  - Filters for search, brand, category, published and low stock, all in the URL.
+  - Filters for search, brand, category, published, low stock and on sale, all in
+    the URL.
   - Row actions: edit, publish/unpublish, delete.
 - `/products/new` and `/products/[id]`: `tabs` for **Details**, **Variants** and
   **Images**.
@@ -29,8 +30,8 @@ What is included in this implementation?
     `command` with `checkbox`es, the choice shown as `badge`s), skin feel
     (`input`), key ingredients (`textarea`), and a published `switch`.
   - Variants: an editable `table` of SKU, size (`select`), shade (`select` with
-    swatches, or "No shade"), stock (`input` number), and price override. Adds and
-    removes rows with a confirm.
+    swatches, or "No shade"), stock (`input` number), price override, and compare-at
+    price ([sale-prices.md](sale-prices.md)). Adds and removes rows with a confirm.
   - Images: upload (multiple, ≤ 5 MB, jpeg/png/webp), a grid with alt-text editing,
     set primary, reorder (up/down buttons), and delete.
 - Publishing without variants surfaces `422 product_has_no_variants` inline.
@@ -49,11 +50,13 @@ Backend `admin-api.md` § Products and `skin-types.md` § Admin. Uploads go brow
 
 - `app/(admin)/products/page.tsx` — prefetches the page of products and the brand and
   category arrays in parallel; `ProductsView` reads them from the cache. The toolbar is `UrlSearch` (`?q=`, name or SKU) and
-  four `UrlSelect`s (`?brand=`, `?category=`, `?published=yes|no`, `?stock=low`);
+  five `UrlSelect`s (`?brand=`, `?category=`, `?published=yes|no`, `?stock=low`,
+  `?on_sale=true`);
   `TablePagination` pages with `?page=` over `limit`/`offset` (25 a page).
 - `components/products/ProductsTable.tsx` — thumbnail (`avatar`), name and slug
   (linked to the editor), brand, category, base price, variant count, total stock
-  (`Out` badge at 0), and a Published/Draft `badge`.
+  (`Out` badge at 0), and a Published/Draft `badge` with an "On sale" `badge` beside
+  it.
 - `components/products/ProductRowActions.tsx` — Edit, Publish/Unpublish, Delete. A
   `409 conflict` on delete closes the dialog and toasts "This product has been
   ordered…" with an **Unpublish instead** action when it is published.
@@ -73,7 +76,8 @@ Backend `admin-api.md` § Products and `skin-types.md` § Admin. Uploads go brow
   form value is an array of ids.
 - `components/products/VariantsEditor.tsx`, `VariantRow.tsx` — a `table` in which each
   row is its own react-hook-form form: SKU, size, shade (swatch options or "No
-  shade"), stock, price override (blank = base price, sent as `null`). **Add variant**
+  shade"), stock, price override (blank = base price, sent as `null`), compare-at
+  price (blank = not on sale, sent as `null`). **Add variant**
   appends a draft row; a draft is discarded with ✕, a saved variant is deleted after
   an `alert-dialog`. Save is enabled only when the row changed.
 - `components/products/ImagesManager.tsx`, `ImageCard.tsx` — multiple upload
@@ -85,8 +89,10 @@ Backend `admin-api.md` § Products and `skin-types.md` § Admin. Uploads go brow
   once and back if the API refuses; delete removes the detail from the cache.
 - `lib/products/actions.ts` — every product, variant and image mutation, each
   re-validating with zod. Callers run them in `useMutation` with
-  `productInvalidates(id)` (the detail and the lists); variant edits also invalidate
-  the dashboard.
+  keys from `lib/query/invalidation.ts` (`afterProductChange`, `afterVariantChange`,
+  `afterImageChange`); product and variant changes also reach the taxonomy counts,
+  variant changes the dashboard. Products are `volatile`: stock moves with storefront
+  orders, so they refetch when shown again or refocused after 30 s.
 - `lib/products/queries.ts` — `productKeys`, `productQueries`;
   `app/api/products/route.ts` and `app/api/products/[id]/route.ts` serve the
   browser.
@@ -160,13 +166,19 @@ A move is one to N PATCH calls, run in sequence.
   `command` item is what the keyboard and the mouse toggle.
 - A `409 conflict` on save means a taken slug, SKU, or a second variant with the
   same size and shade; it shows as "This duplicates an existing record…".
+- On the server axios treats Node's `FormData` as unknown and keeps its
+  `application/x-www-form-urlencoded` default, so an upload reached the API as a
+  multipart body under a url-encoded header (`TooManyFieldsSent`, later
+  `415 unsupported_media_type`). `send()` sets a boundary-less `multipart/form-data`,
+  which the fetch adapter drops so `fetch` writes its own. This covers brand logos too.
+  `lib/api/client.test.ts` runs in the node environment because jsdom hides the bug.
 
 ---
 
 ## Routes
 
 ```text
-/products          dynamic; ?q ?brand ?category ?published ?stock ?page
+/products          dynamic; ?q ?brand ?category ?published ?stock ?on_sale ?page
 /products/new      dynamic
 /products/[id]     dynamic; ?tab=details|variants|images
 ```
@@ -237,6 +249,8 @@ DELETE /api/v1/admin/images/{id}/                server action
 - `components/products/ProductDetailsForm.test.tsx` — the product's skin types show
   as badges; toggling options in the list changes them; search filters the list; the
   saved values reach the action.
+- `lib/api/client.test.ts` — in the node environment, a `FormData` upload leaves as
+  `multipart/form-data; boundary=…`, not url-encoded.
 - `lib/api/media.test.ts` — relative image and thumbnail URLs are resolved against
   the API origin; Cloudinary URLs and `null` pass through.
 - `components/products/orderAfterMove.test.ts` — swaps and patches only changed

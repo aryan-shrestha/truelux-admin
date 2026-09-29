@@ -1,3 +1,5 @@
+import type { AxiosResponse } from "axios";
+
 export class ApiError extends Error {
   constructor(
     readonly code: string,
@@ -24,9 +26,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export async function toApiError(response: Response): Promise<ApiError> {
-  const requestId = response.headers.get("X-Request-ID");
-  const body: unknown = await response.json().catch(() => null);
+// axios has already parsed the body and lower-cased the header names.
+export function toApiError(response: AxiosResponse): ApiError {
+  const header: unknown = response.headers["x-request-id"];
+  const requestId = typeof header === "string" ? header : null;
+  const body: unknown = response.data;
   const error = isRecord(body) && isRecord(body.error) ? body.error : {};
 
   return new ApiError(

@@ -8,7 +8,7 @@ import { NameSlugFields } from "@/components/taxonomy/NameSlugFields";
 import type { SkinType } from "@/lib/api/types";
 import { saveSkinType } from "@/lib/taxonomy/actions";
 import { skinTypeSchema } from "@/lib/taxonomy/schemas";
-import { taxonomyInvalidates } from "@/lib/taxonomy/queries";
+import { afterTaxonomyChange } from "@/lib/query/invalidation";
 
 type SkinTypeDialogProps = {
   skinType?: SkinType;
@@ -32,7 +32,7 @@ export function SkinTypeDialog({ skinType, ...dialog }: SkinTypeDialogProps) {
         sort_order: skinType?.sort_order ?? 0,
       }}
       action={(values) => saveSkinType(skinType?.id ?? null, values)}
-      invalidates={taxonomyInvalidates("skin-types")}
+      invalidates={afterTaxonomyChange("skin-types")}
     >
       <NameSlugFields namePlaceholder="Combination" />
       <NumberField name="sort_order" label="Sort order" description="Lower numbers come first." />

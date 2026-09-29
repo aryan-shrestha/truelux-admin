@@ -10,6 +10,7 @@ import {
   ShoppingBagIcon,
   SparklesIcon,
   TagIcon,
+  TruckIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -51,6 +52,10 @@ const NAV: { label: string; items: NavItem[] }[] = [
       { title: "Sizes", href: "/sizes", icon: RulerIcon },
       { title: "Skin types", href: "/skin-types", icon: SparklesIcon },
     ],
+  },
+  {
+    label: "Settings",
+    items: [{ title: "Shipping", href: "/settings/shipping", icon: TruckIcon }],
   },
 ];
 

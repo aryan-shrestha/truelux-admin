@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { VariantsEditor } from "@/components/products/VariantsEditor";
-import { addVariant, removeVariant } from "@/lib/products/actions";
+import { addVariant, removeVariant, saveVariant } from "@/lib/products/actions";
 import { variant } from "@/tests/fixtures/products";
 import { renderWithQuery } from "@/tests/fixtures/query";
 
@@ -57,5 +57,59 @@ describe("VariantsEditor", () => {
 
     await userEvent.click(within(dialog).getByRole("button", { name: "Delete variant" }));
     expect(removeVariant).toHaveBeenCalledWith(variant.id);
+  });
+
+  it("shows the saving the API computed only for a variant the API says is on sale", () => {
+    const onSale = {
+      ...variant,
+      price: "2720.00",
+      compare_at_price: "3200.00",
+      on_sale: true,
+      discount_percent: 15,
+    };
+    const notOnSale = { ...variant, id: "v2", sku: "LUM-SF-50-WB", compare_at_price: "3200.00" };
+    renderWithQuery(
+      <VariantsEditor
+        productId="p1"
+        variants={[onSale, notOnSale]}
+        sizes={sizes}
+        shades={shades}
+      />,
+    );
+
+    const [first, second] = rows();
+    expect(within(first!).getByLabelText(`Compare-at price of ${onSale.sku}`)).toHaveValue(
+      "3200.00",
+    );
+    expect(within(first!).getByText("−15%")).toBeInTheDocument();
+    expect(within(second!).queryByText(/%$/)).not.toBeInTheDocument();
+  });
+
+  it("puts the API's compare-at error on that variant's cell", async () => {
+    const other = { ...variant, id: "v2", sku: "LUM-SF-50-WB" };
+    vi.mocked(saveVariant).mockResolvedValueOnce({
+      ok: false,
+      code: "validation_error",
+      message: "Some fields are invalid.",
+      fieldErrors: { compare_at_price: "Must be greater than the price." },
+      details: { compare_at_price: ["Must be greater than the price."] },
+    });
+    renderWithQuery(
+      <VariantsEditor productId="p1" variants={[variant, other]} sizes={sizes} shades={shades} />,
+    );
+
+    const input = screen.getByLabelText(`Compare-at price of ${other.sku}`);
+    await userEvent.type(input, "3000");
+    await userEvent.click(screen.getByRole("button", { name: `Save ${other.sku}` }));
+
+    expect(saveVariant).toHaveBeenCalledWith(
+      other.id,
+      expect.objectContaining({ compare_at_price: "3000" }),
+    );
+    const [first, second] = rows();
+    expect(await within(second!).findByText("Must be greater than the price.")).toBeVisible();
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(within(first!).queryByText("Must be greater than the price.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Some fields are invalid.")).not.toBeInTheDocument();
   });
 });

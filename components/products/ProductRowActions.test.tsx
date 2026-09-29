@@ -6,8 +6,8 @@ import { describe, expect, it, vi } from "vitest";
 import { ProductRowActions } from "@/components/products/ProductRowActions";
 import type { ActionResult } from "@/lib/actions/attempt";
 import type { Page, Product, ProductListItem } from "@/lib/api/types";
-import { setPublished } from "@/lib/products/actions";
-import { productKeys } from "@/lib/products/queries";
+import { removeProduct, setPublished } from "@/lib/products/actions";
+import { productKeys, productQueries } from "@/lib/products/queries";
 import { product } from "@/tests/fixtures/products";
 import { renderWithQuery, testQueryClient } from "@/tests/fixtures/query";
 
@@ -28,6 +28,7 @@ const row: ProductListItem = {
   variant_count: 0,
   total_stock: 0,
   primary_image_url: null,
+  on_sale: false,
 };
 
 const listKey = productKeys.list({
@@ -36,6 +37,7 @@ const listKey = productKeys.list({
   category: undefined,
   published: undefined,
   lowStock: false,
+  onSale: false,
   page: 1,
 });
 
@@ -73,5 +75,22 @@ describe("ProductRowActions publish", () => {
 
     await waitFor(() => expect(published()).toBe(false));
     expect(toast.error).toHaveBeenCalledWith("Add at least one variant before publishing.");
+  });
+});
+
+describe("ProductRowActions delete", () => {
+  it("invalidates the product's detail instead of removing it", async () => {
+    vi.mocked(removeProduct).mockResolvedValueOnce({ ok: true, data: null });
+    const client = testQueryClient();
+    const detailKey = productQueries.detail(product.id).queryKey;
+    client.setQueryData(detailKey, product);
+    renderWithQuery(<ProductRowActions product={row} />, client);
+
+    await userEvent.click(screen.getByRole("button", { name: `Actions for ${product.name}` }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Delete" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Delete product" }));
+
+    await waitFor(() => expect(client.getQueryState(detailKey)?.isInvalidated).toBe(true));
+    expect(client.getQueryData(detailKey)).toEqual(product);
   });
 });

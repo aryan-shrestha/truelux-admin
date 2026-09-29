@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-09-27
+Last updated: 2026-09-28
 
 ---
 
@@ -72,7 +72,7 @@ Backend `docs/features/staff-auth.md`. [ADR 0001](../decisions/0001-auth-is-a-ba
   refreshes: 401 `authentication_failed` without a session, 401
   `session_refresh_required` for an expiring access token.
 - `app/api/session/route.ts` — the browser's refresh: same-origin `POST`, rotate,
-  write both cookies. `lib/query/fetch-json.ts` calls it once per tab however many
+  write both cookies. `lib/query/get-json.ts` calls it once per tab however many
   queries are waiting ([tanstack-query.md](tanstack-query.md)).
 - `lib/api/client.ts` (`server-only`) — `apiRead` for Server Components, `apiWrite` for
   server actions. `apiWrite` refreshes once on a 401, rewrites both cookies and retries;
