@@ -22,6 +22,7 @@ const variant = {
   shade_id: null,
   stock_quantity: 12,
   price_override: "",
+  compare_at_price: "",
 };
 
 describe("productSchema", () => {
@@ -82,8 +83,28 @@ describe("variantSchema", () => {
     expect(variantSchema.safeParse({ ...variant, stock_quantity: 0 }).success).toBe(true);
   });
 
+  it("sends a blank compare-at price as null, which ends a sale", () => {
+    expect(variantSchema.parse(variant).compare_at_price).toBeNull();
+  });
+
+  it("keeps a compare-at price as a decimal string and leaves comparing it to the API", () => {
+    const parsed = variantSchema.parse({
+      ...variant,
+      price_override: "3000",
+      compare_at_price: "10",
+    });
+    expect(parsed.compare_at_price).toBe("10");
+  });
+
+  it.each(["0", "-1", "3,200", "12.345", "abc"])("rejects the compare-at price %s", (value) => {
+    const result = variantSchema.safeParse({ ...variant, compare_at_price: value });
+    expect(new Set(result.error?.issues.map((issue) => issue.path[0]))).toEqual(
+      new Set(["compare_at_price"]),
+    );
+  });
+
   it("parses its own output again, as the server action does", () => {
-    const once = variantSchema.parse({ ...variant, price_override: "" });
+    const once = variantSchema.parse({ ...variant, price_override: "", compare_at_price: "3200" });
     expect(variantSchema.parse(once)).toEqual(once);
   });
 });

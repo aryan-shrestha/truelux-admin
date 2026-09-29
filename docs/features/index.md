@@ -21,6 +21,7 @@ every UI element with shadcn/ui ([ADR 0002](../decisions/0002-shadcn-ui-is-the-c
 | 7   | deployment        | Implemented | `features/deployment.md`        | all        | 2026-09-26   |
 | 8   | tanstack-query    | Implemented | `features/tanstack-query.md`    | 1–6        | 2026-09-27   |
 | 9   | shipping-settings | Implemented | `features/shipping-settings.md` | 8          | 2026-09-27   |
+| 10  | sale-prices       | Implemented | `features/sale-prices.md`       | 5, 8       | 2026-09-29   |
 
 `Depends on` refers to the `#` column of this table.
 
@@ -28,11 +29,11 @@ Every feature is verified with unit and component tests against stubbed `fetch` 
 Next mocks. The Playwright specs in `tests/e2e/` ran green against the live, seeded
 API on 2026-09-26 (sign in and out, the order queue, creating and publishing a
 product with skin types, and skin type CRUD), and with the shipping settings spec on
-2026-09-27; they skip until `E2E_API` is set and
+2026-09-27, and with the sale prices spec on 2026-09-29; they skip until `E2E_API` is set and
 delete what they create in `test.afterAll`, even when a spec fails midway. Every earlier contract assumption has been checked against
 the implemented backend; what is still open is in
 [backend-api.md](../integrations/backend-api.md#open-questions).
 
 ## Implementation order
 
-1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9.
+1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10.

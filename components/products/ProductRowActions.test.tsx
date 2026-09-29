@@ -28,6 +28,7 @@ const row: ProductListItem = {
   variant_count: 0,
   total_stock: 0,
   primary_image_url: null,
+  on_sale: false,
 };
 
 const listKey = productKeys.list({
@@ -36,6 +37,7 @@ const listKey = productKeys.list({
   category: undefined,
   published: undefined,
   lowStock: false,
+  onSale: false,
   page: 1,
 });
 

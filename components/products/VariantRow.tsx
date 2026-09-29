@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ConfirmAction } from "@/components/form/ConfirmAction";
 import type { SelectOption } from "@/components/form/SelectField";
 import { useActionForm } from "@/components/form/use-action-form";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -56,6 +57,7 @@ export function VariantRow({
       shade_id: variant?.shade?.id ?? null,
       stock_quantity: variant?.stock_quantity ?? 0,
       price_override: variant?.price_override ?? null,
+      compare_at_price: variant?.compare_at_price ?? null,
     },
     action: (values) => (variant ? saveVariant(variant.id, values) : addVariant(productId, values)),
     invalidates,
@@ -183,6 +185,31 @@ export function VariantRow({
                 aria-invalid={fieldState.invalid}
                 className="w-28 text-right"
               />
+              <FieldError errors={[fieldState.error]} />
+            </Field>
+          )}
+        />
+      </TableCell>
+      <TableCell>
+        <Controller
+          name="compare_at_price"
+          control={control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <div className="flex items-center gap-2">
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  inputMode="decimal"
+                  placeholder="Not on sale"
+                  aria-label={`Compare-at price of ${label}`}
+                  aria-invalid={fieldState.invalid}
+                  className="w-28 text-right"
+                />
+                {variant?.on_sale ? (
+                  <Badge variant="info">−{variant.discount_percent}%</Badge>
+                ) : null}
+              </div>
               <FieldError errors={[fieldState.error]} />
             </Field>
           )}

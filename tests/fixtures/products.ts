@@ -8,6 +8,9 @@ export const variant: Variant = {
   stock_quantity: 12,
   price_override: null,
   price: "3200.00",
+  compare_at_price: null,
+  on_sale: false,
+  discount_percent: null,
 };
 
 export function image(id: string, sort_order: number, is_primary = false): ProductImage {

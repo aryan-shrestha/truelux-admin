@@ -14,6 +14,7 @@ describe("product filters in the URL", () => {
       brand: "b1",
       published: "no",
       stock: "low",
+      on_sale: "true",
       page: "3",
     });
 
@@ -23,6 +24,7 @@ describe("product filters in the URL", () => {
       category: undefined,
       is_published: false,
       low_stock: true,
+      on_sale: true,
       ordering: "name",
       limit: 25,
       offset: 50,
@@ -30,16 +32,32 @@ describe("product filters in the URL", () => {
   });
 
   it("drops values it does not recognise instead of forwarding them", () => {
-    const filters = parseProductFilters({ published: "maybe", stock: "high", page: "-2" });
+    const filters = parseProductFilters({
+      published: "maybe",
+      stock: "high",
+      on_sale: "yes",
+      page: "-2",
+    });
 
-    expect(filters).toMatchObject({ published: undefined, lowStock: false, page: 1 });
+    expect(filters).toMatchObject({
+      published: undefined,
+      lowStock: false,
+      onSale: false,
+      page: 1,
+    });
+    expect(toProductQuery(filters).on_sale).toBeUndefined();
   });
 
   it("writes the same filters back to a link", () => {
-    const filters = parseProductFilters({ q: "silk", category: "c1", stock: "low" });
+    const filters = parseProductFilters({
+      q: "silk",
+      category: "c1",
+      stock: "low",
+      on_sale: "true",
+    });
 
     expect(productsHref({ ...filters, page: 2 })).toBe(
-      "/products?q=silk&category=c1&stock=low&page=2",
+      "/products?q=silk&category=c1&stock=low&on_sale=true&page=2",
     );
   });
 });

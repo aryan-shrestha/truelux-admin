@@ -2,7 +2,7 @@
 
 Status: Reference
 
-Last updated: 2026-09-27
+Last updated: 2026-09-29
 
 ---
 
@@ -155,19 +155,19 @@ below; taxonomy lists are **bare arrays**.
 
 ### Products
 
-| Method | Path                      | Notes                                                                                                                                                   |
-| ------ | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GET    | `products/`               | paginated. `search` (name, SKU), `brand` (id), `category` (id), `is_published`, `low_stock=true`, `ordering` (`name`, `base_price`, `created_at`, `-…`) |
-| POST   | `products/`               | creates; variants and images come after                                                                                                                 |
-| GET    | `products/{id}/`          | full representation                                                                                                                                     |
-| PATCH  | `products/{id}/`          | any writable field                                                                                                                                      |
-| DELETE | `products/{id}/`          | `204`; `409 conflict` if any variant was ordered                                                                                                        |
-| POST   | `products/{id}/variants/` | adds a variant                                                                                                                                          |
-| PATCH  | `variants/{id}/`          | `sku`, `size_id`, `shade_id`, `price_override`, `stock_quantity`                                                                                        |
-| DELETE | `variants/{id}/`          | `409` if ordered                                                                                                                                        |
-| POST   | `products/{id}/images/`   | `multipart/form-data`: `image` (≤ 5 MB, jpeg/png/webp), `alt_text`, `is_primary`                                                                        |
-| PATCH  | `images/{id}/`            | `alt_text`, `sort_order`, `is_primary` (promoting clears the old primary)                                                                               |
-| DELETE | `images/{id}/`            | `204`                                                                                                                                                   |
+| Method | Path                      | Notes                                                                                                                                                                   |
+| ------ | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `products/`               | paginated. `search` (name, SKU), `brand` (id), `category` (id), `is_published`, `low_stock=true`, `on_sale=true`, `ordering` (`name`, `base_price`, `created_at`, `-…`) |
+| POST   | `products/`               | creates; variants and images come after                                                                                                                                 |
+| GET    | `products/{id}/`          | full representation                                                                                                                                                     |
+| PATCH  | `products/{id}/`          | any writable field                                                                                                                                                      |
+| DELETE | `products/{id}/`          | `204`; `409 conflict` if any variant was ordered                                                                                                                        |
+| POST   | `products/{id}/variants/` | adds a variant                                                                                                                                                          |
+| PATCH  | `variants/{id}/`          | `sku`, `size_id`, `shade_id`, `price_override`, `compare_at_price`, `stock_quantity`                                                                                    |
+| DELETE | `variants/{id}/`          | `409` if ordered                                                                                                                                                        |
+| POST   | `products/{id}/images/`   | `multipart/form-data`: `image` (≤ 5 MB, jpeg/png/webp), `alt_text`, `is_primary`                                                                                        |
+| PATCH  | `images/{id}/`            | `alt_text`, `sort_order`, `is_primary` (promoting clears the old primary)                                                                                               |
+| DELETE | `images/{id}/`            | `204`                                                                                                                                                                   |
 
 Product:
 
@@ -193,7 +193,10 @@ Product:
       "shade": { "id": "uuid", "name": "Warm Beige", "hex_code": "#D8A47F" },
       "stock_quantity": 12,
       "price_override": null,
-      "price": "3200.00"
+      "price": "3200.00",
+      "compare_at_price": null,
+      "on_sale": false,
+      "discount_percent": null
     }
   ],
   "images": [
@@ -211,8 +214,11 @@ Product:
 ```
 
 List items omit `description`, `skin_types`, `skin_feel`, `key_ingredients`,
-`variants` and `images` and add `variant_count`, `total_stock` and
-`primary_image_url`. `shade` is `null` for a shadeless variant; `price` is the
+`variants` and `images` and add `variant_count`, `total_stock`, `on_sale` and
+`primary_image_url`. `on_sale` is true when any variant's `compare_at_price` is
+above its resolved price. A variant's `on_sale` is its own compare-at being above
+its `price`; `discount_percent` is the floored saving as an integer, `null` when not
+on sale. Variant write responses carry the same fields. `shade` is `null` for a shadeless variant; `price` is the
 resolved price. `skin_types` is `[]` and the two strings `""` when unset.
 
 Write bodies:
@@ -222,7 +228,9 @@ product  name, slug (optional; derived and made unique), description, brand_id,
          category_id, base_price, is_published, sort_order, skin_type_ids (uuid[];
          replaces the whole set, [] clears it), skin_feel (<= 200), key_ingredients
 variant  sku, size_id, shade_id (nullable), stock_quantity (>= 0),
-         price_override (nullable, > 0)
+         price_override (nullable, > 0), compare_at_price (nullable, > 0; one not
+         above the variant's resolved price is 400 validation_error on
+         compare_at_price)
 ```
 
 Publishing a product with no variants: `422 product_has_no_variants`. Creating one
