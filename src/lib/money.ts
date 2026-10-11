@@ -1,5 +1,9 @@
 const GROUPER = new Intl.NumberFormat("en-IN");
 
+// What a form accepts as an amount: digits with up to two decimal places, sent to the
+// API as the same string.
+export const MONEY_PATTERN = /^\d+(\.\d{1,2})?$/;
+
 // The API sends money as a decimal string. It is grouped from its digits (BigInt for
 // the rupees) and never becomes a float, so no amount is ever rounded on screen.
 const AMOUNT = /^(-?\d+)(?:\.(\d{1,2}))?$/;

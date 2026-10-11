@@ -1,11 +1,11 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 
+import { SwitchField } from "@/components/form/switch-field";
+import { TextareaField } from "@/components/form/textarea-field";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 
 import { BRAND_FORM_SCHEMA } from "../schemas/taxonomy-form.schema";
 import type { Brand } from "../schemas/taxonomy.schema";
@@ -43,38 +43,11 @@ export function BrandDialog({
       toBody={toBrandBody}
     >
       <NameSlugFields namePlaceholder="Lumière" />
-      <DescriptionField />
+      <TextareaField name="description" label="Description" />
       <LogoField currentUrl={brand?.logo_url ?? null} name={brand?.name ?? "New brand"} />
-      <ActiveField />
+      <SwitchField name="is_active" label="Active" description="Shown on the storefront." />
       <SortOrderField />
     </TaxonomyFormDialog>
-  );
-}
-
-function DescriptionField() {
-  const { register } = useFormContext();
-  return (
-    <Field>
-      <FieldLabel htmlFor="field-description">Description</FieldLabel>
-      <Textarea id="field-description" rows={3} {...register("description")} />
-    </Field>
-  );
-}
-
-function ActiveField() {
-  const { control } = useFormContext();
-  return (
-    <Controller
-      name="is_active"
-      control={control}
-      render={({ field }) => (
-        <Field orientation="horizontal">
-          <Switch id="field-is_active" checked={field.value} onCheckedChange={field.onChange} />
-          <FieldLabel htmlFor="field-is_active">Active</FieldLabel>
-          <FieldDescription>Shown on the storefront.</FieldDescription>
-        </Field>
-      )}
-    />
   );
 }
 

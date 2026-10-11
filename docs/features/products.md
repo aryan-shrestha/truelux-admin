@@ -1,6 +1,6 @@
 # Products
 
-Status: Planned
+Status: In progress
 
 Last updated: 2026-10-11
 
@@ -62,87 +62,111 @@ What is explicitly outside the scope?
 
 ## Planned
 
-- Link the dashboard's low-stock product name to `/products/$productId?tab=variants`
-  in `src/features/dashboard/components/low-stock-table.tsx`; it is plain text until
-  this route exists ([dashboard.md](dashboard.md)).
-- Add `productKeys.all` to `useSaveTaxonomy` and `useDeleteTaxonomy`'s
-  `meta.invalidates` (`src/features/taxonomy/queries/taxonomy.mutations.ts`):
-  products show taxonomy names. Read the pickers' options from `taxonomyQueries.list`.
-- Add `productKeys.all` to `useTransitionOrder`'s `meta.invalidates`
-  (`src/features/orders/queries/orders.mutations.ts`): a cancel puts stock back.
-- `src/features/products/` — `products.repository.ts` (products, variants, images),
-  `product.schema.ts`, `variant.schema.ts`, `image.schema.ts`, `products.queries.ts`
-  (`productKeys`, `productQueries.list(filters)`, `.detail(id)`),
-  `products.mutations.ts`, and components: `products-table`, `product-row-actions`,
-  `product-details-form`, `variants-editor`, `variant-row`, `images-manager`,
-  `image-card`, `multi-select-field`.
-- `src/routes/_dashboard/products/index.tsx` — `validateSearch`: `q`, `brand`,
-  `category`, `published` (`yes`/`no`), `stock` (`low`), `on_sale` (`true`), `page`;
-  unknown values dropped. Maps to `search`, `brand`, `category`, `is_published`,
-  `low_stock=true`, `on_sale=true`, `limit` 25, `offset`, `ordering=name`.
-- `new.tsx` — the Details form alone; on success navigate to
-  `/products/{id}?tab=variants`.
-- `$productId.tsx` — loader ensures the product and the five taxonomy lists in
-  parallel; `not_found` renders the not-found page.
-- Details form: base price in an `Rs` input group as a decimal string; skin types sent
-  as `skin_type_ids`, the whole set every save; `skin_feel` ≤ 200 characters.
-- Variants: each row is its own form; **Save** is enabled only when the row changed
-  and never sends `stock_quantity` for a saved variant; a blank price override or
-  compare-at is sent as `null`. Every cell input has an `aria-label` naming the
-  variant ("Stock of LUM-SF-30-WB").
-- Images: validated in the browser and by the API; one request per file in sequence;
-  the first image becomes primary when none is. Reordering renumbers `sort_order`
-  from the displayed order and PATCHes only the images that changed. Reorder and alt
-  text are optimistic and roll back on failure. Reorder buttons are labelled with the
-  position; images carry the API's `alt_text` (`alt=""` when empty).
-- Publish/Unpublish in the list is optimistic and rolls back if the API refuses.
-- List state follows the list-state rules in [tanstack-query.md](tanstack-query.md#rules-for-features)
-  (URL filters with `replace`, `Link` pagination, `keepPreviousData`).
-- Optimistic updates are limited to what those rules allow: image order, alt text and
-  the list's publish toggle.
-- Mutations name their stale keys in `meta.invalidates` from the rules' table
-  (product, variant and image rows).
-- `src/config/navigation.ts` — **Catalogue → Products**, first in the group; from
-  [app-shell.md](app-shell.md).
-- Deletes confirm with the shared `ConfirmDialog`; an empty list shows the shared
-  `EmptyState` (both built with [orders.md](orders.md)).
-- Add shadcn `tabs`, `select`, `switch`, `textarea`, `popover`, `command`,
-  `checkbox`, `input-group` when building.
+Built in four slices. Slices 1 (list) and 2 (Details) are implemented; these remain:
 
-Error treatment:
+**Slice 3: Variants**
+
+- `tabs` on `/products/$productId` for **Details**, **Variants** and **Images**, the
+  tab in `?tab=` (validated); `/products/new` then opens the new product on
+  `?tab=variants`.
+- Link the dashboard's low-stock product name to `/products/$productId?tab=variants`
+  in `src/features/dashboard/components/low-stock-table.tsx` (plain text until then;
+  [dashboard.md](dashboard.md)).
+- An editable `table`, each row its own form: SKU, size, shade (swatches, or "No
+  shade"), stock, price override and compare-at price
+  ([sale-prices.md](sale-prices.md)). **Save** is enabled only when the row changed
+  and never sends `stock_quantity` for a saved variant (stock changes through
+  [stock-ledger.md](stock-ledger.md)); a blank price override or compare-at is sent
+  as `null`. Every cell input has an `aria-label` naming the variant ("Stock of
+  LUM-SF-30-WB"). Rows are added as drafts and removed after a confirm.
+- `POST products/{id}/variants/`, `PATCH`/`DELETE variants/{id}/`; each invalidates
+  the product, product lists, the taxonomy lists and the dashboard (low stock).
+
+**Slice 4: Images**
+
+- Upload several (JPEG/PNG/WebP, ≤ 5 MB each), validated in the browser and by the
+  API; one request per file, in sequence; the first image becomes primary when none
+  is.
+- A grid with alt text (optimistic, rolled back on failure), make primary (not
+  optimistic: the API clears the old primary), move earlier/later (renumbers
+  `sort_order` from the displayed order and PATCHes only the images that changed;
+  optimistic), delete after a confirm. Reorder buttons are labelled with the
+  position; images carry the API's `alt_text` (`alt=""` when empty).
+
+Error treatment still to build:
 
 | `code`                      | Treatment                                                       |
 | --------------------------- | --------------------------------------------------------------- |
-| `product_has_no_variants`   | Inline on the Published switch                                  |
-| `conflict` (product delete) | Toast with **Unpublish instead** when it is published           |
 | `conflict` (variant delete) | "…has been ordered… Set its stock to 0 instead."                |
-| `conflict` (save)           | "This duplicates an existing record…" as a form alert           |
-| `validation_error`          | Field messages from `details`, the rest as a form alert         |
+| `conflict` (variant save)   | A taken SKU, or a second variant with the same size and shade   |
 | `unsupported_media_type`    | Form alert on the upload (a non-multipart body reached the API) |
-| `not_found` (read)          | The not-found page                                              |
 
-Planned tests: schemas (prices as decimal strings, bad prices rejected, brand and
-category required, a blank override is `null`, stock a non-negative integer, skin
-feel capped at 200, image type and size limits); URL ↔ API query mapping; filters
-write the URL, keep other filters and drop `page`; adding and discarding a draft
-variant; a saved variant is deleted only after the confirm and its stock is
-read-only; skin type badges and toggling; an upload leaves as
-`multipart/form-data; boundary=…`; reorder renumbers colliding orders; optimistic
-publish rolls back on `product_has_no_variants`; Playwright: create, add a variant,
-upload an image, choose skin types, publish, find it in the list, delete it.
+Planned tests: a blank override is `null`; stock a non-negative integer; adding and
+discarding a draft variant; a saved variant is deleted only after the confirm and its
+stock is read-only; an upload leaves as `multipart/form-data; boundary=…`; reorder
+renumbers colliding orders; Playwright: create, add a variant, upload an image,
+choose skin types, publish, find it in the list, delete it.
 
 ---
 
 ## Implemented
 
-None.
+**Slice 1: list and row actions**
+
+- `src/features/products/schemas/product-filters.schema.ts` — `?q`, `brand`,
+  `category` (UUIDs), `published` (`yes`/`no`), `stock` (`low`), `on_sale` (`true`),
+  `page`; each field falls back on its own.
+- `repositories/products.repository.ts` — `listProducts` maps them to `search`,
+  `brand`, `category`, `is_published`, `low_stock=true`, `on_sale=true`,
+  `ordering=name`, `limit` 25, `offset`; `getProduct`, `createProduct`,
+  `updateProduct`, `deleteProduct`, each parsed with Zod (`product.schema.ts`, which
+  already describes variants and images).
+- `queries/products.queries.ts` — `productKeys`; `productQueries.list` (`volatile`,
+  `keepPreviousData`) and `.detail` (`volatile`).
+- `queries/products.mutations.ts` — `useSaveProduct` (writes the returned product
+  into its detail key), `useSetPublished` (optimistic in every cached list, rolled
+  back and refetched on failure), `useDeleteProduct`; both save and delete
+  invalidate product lists and every taxonomy list (their counts).
+- `components/products-list.tsx`, `product-filters.tsx` (search and five selects),
+  `products-table.tsx` (thumbnail, name and slug linked, brand, category, price,
+  variants, stock with `Out` at 0, Published/Draft, an `info` On sale badge),
+  `product-row-actions.tsx` (Edit, Publish/Unpublish, Delete; a delete `409` toasts
+  with **Unpublish instead** for a published product).
+- `src/routes/_dashboard/products/index.tsx` — awaits the brand and category lists
+  (filter options), starts the product list without awaiting.
+- `src/config/navigation.ts` — **Catalogue → Products**.
+- Taxonomy saves and deletes, and order moves, now invalidate `productKeys.all`.
+
+**Slice 2: Details**
+
+- `schemas/product-form.schema.ts`, `product-body.ts` — base price as a decimal
+  string (`MONEY_PATTERN` in `src/lib/money.ts`), brand and category required, skin
+  feel ≤ 200; a blank slug is left out; `skin_type_ids` is always sent (PATCH
+  replaces the set).
+- `components/product-form.tsx` — create and edit: name, slug, brand, category
+  (children as "Parent › Child"), base price in an `Rs` group, sort order,
+  description, skin types (`multi-select-field.tsx`: `popover` + `command` +
+  `checkbox`, the choice as badges), skin feel, key ingredients, Published.
+  `product_has_no_variants` lands on the Published switch; field errors go under
+  their fields (`showApiError`); a save `409` is a form alert.
+- `components/product-detail.tsx` — the edit page.
+- `src/routes/_dashboard/products/new.tsx` (opens the product once created) and
+  `$productId.tsx` (awaits the product and the brand, category and skin-type lists;
+  `not_found` renders the not-found page).
+- Shared, built here: `src/components/form/` (`TextField` with an optional prefix,
+  `TextareaField`, `SwitchField`, `showApiError`), now also used by taxonomy; shadcn
+  `command` and `checkbox`.
 
 ---
 
 ## Remaining
 
-- Everything in Planned.
-- Decide how relative image URLs are shown in development (see Gotchas).
+- Slices 3 (Variants) and 4 (Images) in Planned, with the `?tab=` tabs and the
+  dashboard's low-stock link.
+- The stock history keys join `useTransitionOrder`'s and the variant mutations'
+  `meta.invalidates` with [stock-ledger.md](stock-ledger.md).
+- Product images in development: as for logos, the back-end is to return absolute
+  URLs ([taxonomy.md](taxonomy.md#remaining)).
 
 ---
 
@@ -216,7 +240,17 @@ Signed-in staff (the API).
 
 ## Tests
 
-None yet; see Planned.
+- `schemas/product-filters.schema.test.ts` — known values kept, the rest dropped.
+- `components/products-list.test.tsx` — price, stock (`Out`), Draft and On sale;
+  the URL's filters reach the API in its terms (`is_published`, `low_stock`,
+  `on_sale`, `ordering=name`, `limit`, `offset`); the empty states; a publish shows
+  at once and is put back on `product_has_no_variants`; a delete `409` offers
+  **Unpublish instead**, which sends `{ is_published: false }`.
+- `components/product-form.test.tsx` — brand, category and price are required before
+  anything is sent; create sends the documented body without a blank slug and opens
+  the product; edit starts from the saved product and sends the whole skin-type set;
+  `product_has_no_variants` lands on Published; an API field error lands on its
+  field; an unknown id shows not-found.
 
 ---
 

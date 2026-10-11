@@ -17,7 +17,7 @@ keeps the staff JWT in `localStorage` (ADR 0005). It replaces the Next.js admin 
 | 6   | staff-auth         | Implemented | `features/staff-auth.md`         | 3, 4        | 2026-10-11   |
 | 7   | dashboard          | Implemented | `features/dashboard.md`          | 4, 5, 6, 10 | 2026-10-11   |
 | 8   | taxonomy           | Implemented | `features/taxonomy.md`           | 5, 6        | 2026-10-11   |
-| 9   | products           | Planned     | `features/products.md`           | 5, 6, 8     | 2026-10-11   |
+| 9   | products           | In progress | `features/products.md`           | 5, 6, 8     | 2026-10-11   |
 | 10  | orders             | Implemented | `features/orders.md`             | 4, 5, 6     | 2026-10-11   |
 | 11  | shipping-settings  | Planned     | `features/shipping-settings.md`  | 4, 5, 6     | 2026-10-11   |
 | 12  | sale-prices        | Planned     | `features/sale-prices.md`        | 9           | 2026-10-11   |
@@ -36,8 +36,8 @@ already provides is under each document's **Implemented**, everything else under
 
 ## Implementation order
 
-Done: 6, 3, 4, 5, 10, 7, 8. Next: 9 → 12 → 13 → 11, with 14 once its host is
-chosen. The shell's navigation entries, `ConfirmDialog`, `EmptyState`, list state and
+Done: 6, 3, 4, 5, 10, 7, 8; 9 in progress (list and Details done, Variants and
+Images next). Then 12 → 13 → 11, with 14 once its host is chosen. The shell's navigation entries, `ConfirmDialog`, `EmptyState`, list state and
 optimistic updates are built by the features that first need them; each feature
 document lists its share.
 

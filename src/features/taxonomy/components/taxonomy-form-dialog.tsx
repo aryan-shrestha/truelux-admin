@@ -1,15 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, type ReactNode } from "react";
-import {
-  FormProvider,
-  useForm,
-  type DefaultValues,
-  type FieldValues,
-  type Path,
-} from "react-hook-form";
+import { FormProvider, useForm, type DefaultValues, type FieldValues } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
 
+import { showApiError } from "@/components/form/show-api-error";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +18,6 @@ import {
 } from "@/components/ui/dialog";
 import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
-import { describeError, fieldErrors, type ApiError } from "@/lib/repositories/errors";
 
 import { useSaveTaxonomy } from "../queries/taxonomy.mutations";
 import type { TaxonomyKind } from "../schemas/taxonomy.schema";
@@ -89,26 +83,6 @@ function TaxonomyForm<TInput extends FieldValues, TOutput>({
   });
   const rootError = form.formState.errors.root?.message;
 
-  // The API's field messages go under the fields this form has; anything else, and
-  // every other failure, is one alert above the fields.
-  function showApiError(error: ApiError) {
-    if (error.code === "validation_error") {
-      const unplaced: string[] = [];
-      for (const [field, message] of Object.entries(fieldErrors(error))) {
-        if (field in defaultValues) form.setError(field as Path<TInput>, { message });
-        else unplaced.push(message);
-      }
-      if (unplaced.length > 0) form.setError("root", { message: unplaced.join(" ") });
-      return;
-    }
-    form.setError("root", {
-      message:
-        error.code === "conflict"
-          ? "This duplicates an existing record. Check the name and the slug."
-          : describeError(error),
-    });
-  }
-
   function handleSubmit(values: TOutput) {
     save.mutate(
       { id: entryId, body: toBody(values) },
@@ -117,7 +91,10 @@ function TaxonomyForm<TInput extends FieldValues, TOutput>({
           toast.success(savedMessage);
           onSaved();
         },
-        onError: showApiError,
+        onError: (error) =>
+          showApiError(form, error, {
+            conflict: "This duplicates an existing record. Check the name and the slug.",
+          }),
       },
     );
   }

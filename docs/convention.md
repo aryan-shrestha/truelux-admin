@@ -201,12 +201,17 @@ productKeys.lists() })`.
 ## Forms
 
 React Hook Form with `zodResolver(<FORM_SCHEMA>)` and shadcn's `Field` components.
-The reference is `src/features/taxonomy/components/taxonomy-form-dialog.tsx`.
+Field components bound by `name` live in `src/components/form/` (`TextField`,
+`TextareaField`, `SwitchField`). The references are
+`src/features/taxonomy/components/taxonomy-form-dialog.tsx` (a form in a dialog) and
+`src/features/products/components/product-form.tsx` (a page form).
 
-- Submit through a mutation. On an `ApiError` with `code === "validation_error"`,
-  `fieldErrors(error)` gives one message per field: `setError(field, { message })`
-  for the fields the form has, and the rest in one form alert, so the API's messages
-  appear under the offending field.
+- Submit through a mutation. On failure call `showApiError(form, error, messages)`
+  from `src/components/form/show-api-error.ts`: a `validation_error`'s
+  `fieldErrors` go under the fields the form has, the rest and every other code
+  become one form alert (`root`), with `messages` overriding a code's sentence where
+  the screen knows more. A domain error that belongs to one field (publishing
+  without variants) is set on that field before calling it.
 - A form in a dialog mounts only while the dialog is open, so it always starts from
   the current values.
 - Disable the submit button while the mutation is pending; never block on a

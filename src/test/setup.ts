@@ -24,6 +24,7 @@ window.scrollTo = () => {};
 // Select use them.
 Element.prototype.hasPointerCapture = () => false;
 Element.prototype.releasePointerCapture = () => {};
+Element.prototype.setPointerCapture = () => {};
 Element.prototype.scrollIntoView = () => {};
 window.ResizeObserver = class {
   observe() {}

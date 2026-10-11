@@ -3,6 +3,7 @@ import {
   DropletsIcon,
   FolderTreeIcon,
   LayoutDashboardIcon,
+  PackageIcon,
   PaletteIcon,
   RulerIcon,
   ShoppingBagIcon,
@@ -33,6 +34,7 @@ export const NAVIGATION: readonly NavigationGroup[] = [
   {
     label: "Catalogue",
     items: [
+      { title: "Products", to: "/products", icon: PackageIcon },
       { title: "Brands", to: "/brands", icon: TagIcon },
       { title: "Categories", to: "/categories", icon: FolderTreeIcon },
       { title: "Shades", to: "/shades", icon: PaletteIcon },

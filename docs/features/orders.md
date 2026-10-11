@@ -99,9 +99,8 @@ None.
 
 - `e2e/orders.spec.ts` has not been run against the live API; it needs the staff
   credentials (see [staff-auth.md](staff-auth.md#remaining)).
-- Products and stock history are added to `useTransitionOrder`'s
-  `meta.invalidates` by those features, once their key factories exist (a cancel
-  restores stock). The dashboard is in place.
+- Stock history is added to `useTransitionOrder`'s `meta.invalidates` by
+  [stock-ledger.md](stock-ledger.md). The dashboard and products are in place.
 
 ---
 

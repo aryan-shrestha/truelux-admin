@@ -109,8 +109,6 @@ None.
   development the API returns a relative `/media/…` path, which the admin, on
   another origin, cannot load: logos show their initial until `../back-end` changes.
   Production (Cloudinary) is absolute already.
-- Products adds `productKeys.all` to both taxonomy mutations' `meta.invalidates`
-  (products show taxonomy names) ([products.md](products.md)).
 
 ---
 

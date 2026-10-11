@@ -51,7 +51,8 @@ src/
     components/
         ui/           shadcn, generated
         layout/       app sidebar, top bar, page header, refresh button
-        data-table/   DataTable for server-paginated lists
+        data-table/   DataTable (paginated or whole-array lists), SearchInput
+        form/         react-hook-form fields bound by name, showApiError
         feedback/     route error, not-found and pending pages, ConfirmDialog,
                       EmptyState
     lib/
