@@ -54,6 +54,9 @@ What is explicitly outside the scope?
 
 ## Planned
 
+- Add the stock-history keys to `afterVariantChange` in
+  `src/features/products/queries/products.mutations.ts` (variant saves and deletes),
+  and let a variant delete `409` suggest setting its stock to 0 instead.
 - Add the stock-history keys to `useTransitionOrder`'s `meta.invalidates`
   (`src/features/orders/queries/orders.mutations.ts`): a cancel records a movement.
 - `src/features/products/` (stock belongs to the variant) — `stock.repository.ts`

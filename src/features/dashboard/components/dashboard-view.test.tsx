@@ -117,6 +117,10 @@ describe("dashboard", () => {
       "/orders/6f1d2c3b-4a5e-4f60-8a7b-9c0d1e2f3a4b",
     );
     const outRow = screen.getByRole("row", { name: /LUM-SF-30-WB/ });
+    expect(within(outRow).getByRole("link", { name: "Silk Foundation" })).toHaveAttribute(
+      "href",
+      "/products/1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d?tab=variants",
+    );
     expect(within(outRow).getByText("30 ml, Warm Beige")).toBeInTheDocument();
     expect(within(outRow).getByText("Out")).toBeInTheDocument();
     const lowRow = screen.getByRole("row", { name: /LUM-RT-100/ });

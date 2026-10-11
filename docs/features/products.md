@@ -62,31 +62,14 @@ What is explicitly outside the scope?
 
 ## Planned
 
-Built in four slices. Slices 1 (list) and 2 (Details) are implemented; these remain:
-
-**Slice 3: Variants**
-
-- `tabs` on `/products/$productId` for **Details**, **Variants** and **Images**, the
-  tab in `?tab=` (validated); `/products/new` then opens the new product on
-  `?tab=variants`.
-- Link the dashboard's low-stock product name to `/products/$productId?tab=variants`
-  in `src/features/dashboard/components/low-stock-table.tsx` (plain text until then;
-  [dashboard.md](dashboard.md)).
-- An editable `table`, each row its own form: SKU, size, shade (swatches, or "No
-  shade"), stock, price override and compare-at price
-  ([sale-prices.md](sale-prices.md)). **Save** is enabled only when the row changed
-  and never sends `stock_quantity` for a saved variant (stock changes through
-  [stock-ledger.md](stock-ledger.md)); a blank price override or compare-at is sent
-  as `null`. Every cell input has an `aria-label` naming the variant ("Stock of
-  LUM-SF-30-WB"). Rows are added as drafts and removed after a confirm.
-- `POST products/{id}/variants/`, `PATCH`/`DELETE variants/{id}/`; each invalidates
-  the product, product lists, the taxonomy lists and the dashboard (low stock).
+Built in four slices. Slices 1 (list), 2 (Details) and 3 (Variants) are implemented; this remains:
 
 **Slice 4: Images**
 
 - Upload several (JPEG/PNG/WebP, ≤ 5 MB each), validated in the browser and by the
   API; one request per file, in sequence; the first image becomes primary when none
   is.
+- An **Images** tab (`?tab=images`, added to `PRODUCT_TAB_SCHEMA`).
 - A grid with alt text (optimistic, rolled back on failure), make primary (not
   optimistic: the API clears the old primary), move earlier/later (renumbers
   `sort_order` from the displayed order and PATCHes only the images that changed;
@@ -95,15 +78,11 @@ Built in four slices. Slices 1 (list) and 2 (Details) are implemented; these rem
 
 Error treatment still to build:
 
-| `code`                      | Treatment                                                       |
-| --------------------------- | --------------------------------------------------------------- |
-| `conflict` (variant delete) | "…has been ordered… Set its stock to 0 instead."                |
-| `conflict` (variant save)   | A taken SKU, or a second variant with the same size and shade   |
-| `unsupported_media_type`    | Form alert on the upload (a non-multipart body reached the API) |
+| `code`                   | Treatment                                                       |
+| ------------------------ | --------------------------------------------------------------- |
+| `unsupported_media_type` | Form alert on the upload (a non-multipart body reached the API) |
 
-Planned tests: a blank override is `null`; stock a non-negative integer; adding and
-discarding a draft variant; a saved variant is deleted only after the confirm and its
-stock is read-only; an upload leaves as `multipart/form-data; boundary=…`; reorder
+Planned tests: an upload leaves as `multipart/form-data; boundary=…`; reorder
 renumbers colliding orders; Playwright: create, add a variant, upload an image,
 choose skin types, publish, find it in the list, delete it.
 
@@ -157,12 +136,38 @@ choose skin types, publish, find it in the list, delete it.
   `TextareaField`, `SwitchField`, `showApiError`), now also used by taxonomy; shadcn
   `command` and `checkbox`.
 
+**Slice 3: Variants**
+
+- `schemas/product-tab.schema.ts` — `?tab=details|variants` on
+  `/products/$productId`; `product-detail.tsx` renders the tabs and the route writes
+  the tab with `replace`. `/products/new` opens the new product on `?tab=variants`.
+- `schemas/variant-form.schema.ts`, `variant-body.ts` — SKU (≤ 64), size required,
+  shade or none, opening stock a whole number ≥ 0, price override and compare-at
+  empty or a decimal string. A blank amount is sent as `null`; `stock_quantity` is
+  sent only for a new variant (an absolute count on a saved one could overwrite a
+  sale made meanwhile).
+- `repositories/products.repository.ts` — `createVariant`, `updateVariant`,
+  `deleteVariant`; `queries/products.mutations.ts` — `useSaveVariant`,
+  `useDeleteVariant`, invalidating the product, product lists, every taxonomy list
+  (size and shade counts) and the dashboard (low stock).
+- `components/variants-editor.tsx`, `variant-row.tsx` — a table where each row is
+  its own form (`values` keeps a saved row in step after the refetch): SKU, size,
+  shade (swatches or "No shade"), stock (an input only on a draft), price (the base
+  price as placeholder), compare-at. **Save** is enabled only when a saved row
+  changed. Drafts are added and discarded locally; a saved variant is deleted after
+  a confirm. Every cell is labelled with the variant ("Price of LUM-SF-30-WB").
+  A save `409` reads "Another variant already has this SKU, or this size and shade."
+  under the row; a delete `409` toasts that the variant has been ordered.
+- `src/features/dashboard/components/low-stock-table.tsx` — the product name links
+  to `/products/$productId?tab=variants`.
+
 ---
 
 ## Remaining
 
-- Slices 3 (Variants) and 4 (Images) in Planned, with the `?tab=` tabs and the
-  dashboard's low-stock link.
+- Slice 4 (Images) in Planned.
+- A delete `409` on an ordered variant cannot yet suggest setting its stock to 0:
+  saved stock changes come with [stock-ledger.md](stock-ledger.md).
 - The stock history keys join `useTransitionOrder`'s and the variant mutations'
   `meta.invalidates` with [stock-ledger.md](stock-ledger.md).
 - Product images in development: as for logos, the back-end is to return absolute
@@ -251,6 +256,14 @@ Signed-in staff (the API).
   the product; edit starts from the saved product and sends the whole skin-type set;
   `product_has_no_variants` lands on Published; an API field error lands on its
   field; an unknown id shows not-found.
+- `variant-body.test.ts` — blank prices are `null`; stock only for a new variant;
+  price and stock rules.
+- `components/variants-editor.test.tsx` — the tab comes from and goes back to the
+  URL; a saved variant's stock is read-only and **Save** waits for a change, then
+  sends no stock and a cleared price as `null`; a draft is added with its opening
+  stock and replaced by the saved row; a draft is discarded without a request; a
+  save `409` is explained on the row; a delete needs the confirmation and a `409`
+  keeps the row.
 
 ---
 

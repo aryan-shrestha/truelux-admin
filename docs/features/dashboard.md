@@ -73,8 +73,9 @@ None.
   - `components/status-summary.tsx` — a link per status to `/orders?status=…`,
     `OrderStatusBadge` plus the count
   - `components/recent-orders.tsx` — the five latest, linked to the order; empty state
-  - `components/low-stock-table.tsx` — product (plain text for now), SKU, size and
-    shade, stock as a badge (`Out` at zero); empty state ("Stock is healthy")
+  - `components/low-stock-table.tsx` — product (linked to its Variants tab), SKU,
+    size and shade, stock as a badge (`Out` at zero); empty state ("Stock is
+    healthy")
   - `components/dashboard-view.tsx`, `dashboard-skeleton.tsx` — the layout and a
     skeleton shaped like it
 - `src/routes/_dashboard/index.tsx` — awaits the dashboard in the loader;
@@ -90,8 +91,7 @@ None.
 
 ## Remaining
 
-- Link the low-stock product name to `/products/$productId?tab=variants` when the
-  products feature adds that route ([products.md](products.md)).
+None.
 
 ---
 

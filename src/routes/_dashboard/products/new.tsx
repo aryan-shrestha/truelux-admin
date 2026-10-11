@@ -26,7 +26,11 @@ function NewProductPage() {
       />
       <ProductForm
         onCreated={(product) =>
-          void navigate({ to: "/products/$productId", params: { productId: product.id } })
+          void navigate({
+            to: "/products/$productId",
+            params: { productId: product.id },
+            search: { tab: "variants" },
+          })
         }
       />
     </div>

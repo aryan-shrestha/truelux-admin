@@ -37,8 +37,27 @@ export const SKIN_TYPES = [
   },
 ];
 
+export const SIZE = {
+  id: "0c000000-0000-4000-8000-000000000005",
+  name: "30 ml",
+  slug: "30-ml",
+  sort_order: 0,
+  variant_count: 1,
+};
+
+export const SHADE = {
+  id: "0c000000-0000-4000-8000-000000000006",
+  name: "Warm Beige",
+  slug: "warm-beige",
+  hex_code: "#D8A47F",
+  sort_order: 0,
+  variant_count: 1,
+};
+
 // The taxonomy lists a product screen reads for its pickers and filters.
 export const catalogueHandlers = [
+  http.get("*/api/v1/admin/sizes/", () => HttpResponse.json([SIZE])),
+  http.get("*/api/v1/admin/shades/", () => HttpResponse.json([SHADE])),
   http.get("*/api/v1/admin/brands/", () => HttpResponse.json([BRAND])),
   http.get("*/api/v1/admin/categories/", () => HttpResponse.json([CATEGORY])),
   http.get("*/api/v1/admin/skin-types/", () => HttpResponse.json(SKIN_TYPES)),

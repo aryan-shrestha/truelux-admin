@@ -1,10 +1,11 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
-import { ProductDetail, productQueries } from "@/features/products";
+import { PRODUCT_TAB_SCHEMA, ProductDetail, productQueries } from "@/features/products";
 import { taxonomyQueries } from "@/features/taxonomy";
 import { ApiError } from "@/lib/repositories/errors";
 
 export const Route = createFileRoute("/_dashboard/products/$productId")({
+  validateSearch: PRODUCT_TAB_SCHEMA,
   loader: async ({ context, params }) => {
     try {
       await Promise.all([
@@ -12,6 +13,8 @@ export const Route = createFileRoute("/_dashboard/products/$productId")({
         context.queryClient.ensureQueryData(taxonomyQueries.list("brands")),
         context.queryClient.ensureQueryData(taxonomyQueries.list("categories")),
         context.queryClient.ensureQueryData(taxonomyQueries.list("skin-types")),
+        context.queryClient.ensureQueryData(taxonomyQueries.list("sizes")),
+        context.queryClient.ensureQueryData(taxonomyQueries.list("shades")),
       ]);
     } catch (error) {
       if (error instanceof ApiError && error.code === "not_found") throw notFound();
@@ -23,5 +26,16 @@ export const Route = createFileRoute("/_dashboard/products/$productId")({
 
 function ProductPage() {
   const { productId } = Route.useParams();
-  return <ProductDetail productId={productId} />;
+  const { tab = "details" } = Route.useSearch();
+  const navigate = Route.useNavigate();
+
+  return (
+    <ProductDetail
+      productId={productId}
+      tab={tab}
+      onTabChange={(next) =>
+        void navigate({ search: { tab: next === "details" ? undefined : next }, replace: true })
+      }
+    />
+  );
 }

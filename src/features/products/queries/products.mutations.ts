@@ -1,8 +1,16 @@
 import { useMutation, useQueryClient, type QueryKey } from "@tanstack/react-query";
 
+import { dashboardKeys } from "@/features/dashboard";
 import { taxonomyKeys } from "@/features/taxonomy";
 
-import { createProduct, deleteProduct, updateProduct } from "../repositories/products.repository";
+import {
+  createProduct,
+  createVariant,
+  deleteProduct,
+  deleteVariant,
+  updateProduct,
+  updateVariant,
+} from "../repositories/products.repository";
 import type { ProductListItem } from "../schemas/product.schema";
 import { productKeys } from "./products.queries";
 
@@ -59,5 +67,27 @@ export function useDeleteProduct() {
     mutationFn: (id: string) => deleteProduct(id),
     meta: { invalidates: AFTER_PRODUCT_CHANGE },
     onSuccess: (_data, id) => queryClient.removeQueries({ queryKey: productKeys.detail(id) }),
+  });
+}
+
+// A variant changes its product, the lists (variant count, stock), the size and shade
+// counts in taxonomy, and the dashboard's low-stock list. Stock history joins this
+// with the stock-ledger feature.
+function afterVariantChange(productId: string) {
+  return [productKeys.detail(productId), productKeys.lists(), taxonomyKeys.all, dashboardKeys.all];
+}
+
+export function useSaveVariant(productId: string, variantId: string | null) {
+  return useMutation({
+    mutationFn: (body: object) =>
+      variantId === null ? createVariant(productId, body) : updateVariant(variantId, body),
+    meta: { invalidates: afterVariantChange(productId) },
+  });
+}
+
+export function useDeleteVariant(productId: string) {
+  return useMutation({
+    mutationFn: (variantId: string) => deleteVariant(variantId),
+    meta: { invalidates: afterVariantChange(productId) },
   });
 }

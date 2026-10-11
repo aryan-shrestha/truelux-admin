@@ -36,7 +36,7 @@ already provides is under each document's **Implemented**, everything else under
 
 ## Implementation order
 
-Done: 6, 3, 4, 5, 10, 7, 8; 9 in progress (list and Details done, Variants and
+Done: 6, 3, 4, 5, 10, 7, 8; 9 in progress (list, Details and Variants done,
 Images next). Then 12 → 13 → 11, with 14 once its host is chosen. The shell's navigation entries, `ConfirmDialog`, `EmptyState`, list state and
 optimistic updates are built by the features that first need them; each feature
 document lists its share.

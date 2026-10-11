@@ -2,7 +2,13 @@ import { httpClient } from "@/lib/repositories/client";
 import { DEFAULT_PAGE_SIZE, paginatedSchema, toListParams } from "@/lib/repositories/pagination";
 
 import type { ProductFilters } from "../schemas/product-filters.schema";
-import { PRODUCT_LIST_ITEM_SCHEMA, PRODUCT_SCHEMA, type Product } from "../schemas/product.schema";
+import {
+  PRODUCT_LIST_ITEM_SCHEMA,
+  PRODUCT_SCHEMA,
+  VARIANT_SCHEMA,
+  type Product,
+  type Variant,
+} from "../schemas/product.schema";
 
 const PRODUCT_PAGE_SCHEMA = paginatedSchema(PRODUCT_LIST_ITEM_SCHEMA);
 
@@ -43,4 +49,18 @@ export async function updateProduct(id: string, body: object): Promise<Product> 
 
 export async function deleteProduct(id: string): Promise<void> {
   await httpClient.delete(`admin/products/${id}/`);
+}
+
+export async function createVariant(productId: string, body: object): Promise<Variant> {
+  const response = await httpClient.post(`admin/products/${productId}/variants/`, body);
+  return VARIANT_SCHEMA.parse(response.data);
+}
+
+export async function updateVariant(id: string, body: object): Promise<Variant> {
+  const response = await httpClient.patch(`admin/variants/${id}/`, body);
+  return VARIANT_SCHEMA.parse(response.data);
+}
+
+export async function deleteVariant(id: string): Promise<void> {
+  await httpClient.delete(`admin/variants/${id}/`);
 }

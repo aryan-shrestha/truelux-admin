@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { PackageCheckIcon } from "lucide-react";
 
 import { EmptyState } from "@/components/feedback/empty-state";
@@ -14,8 +15,6 @@ import {
 
 import type { LowStockVariant } from "../schemas/dashboard.schema";
 
-// The product name becomes a link to its Variants tab when the products feature adds
-// that route (products.md).
 export function LowStockTable({ variants }: { variants: readonly LowStockVariant[] }) {
   return (
     <Card>
@@ -43,8 +42,15 @@ export function LowStockTable({ variants }: { variants: readonly LowStockVariant
             <TableBody>
               {variants.map((variant) => (
                 <TableRow key={variant.variant_id}>
-                  <TableCell className="font-medium whitespace-normal">
-                    {variant.product_name}
+                  <TableCell className="whitespace-normal">
+                    <Link
+                      to="/products/$productId"
+                      params={{ productId: variant.product_id }}
+                      search={{ tab: "variants" }}
+                      className="font-medium hover:underline"
+                    >
+                      {variant.product_name}
+                    </Link>
                   </TableCell>
                   <TableCell className="font-mono text-xs">{variant.sku}</TableCell>
                   <TableCell>
