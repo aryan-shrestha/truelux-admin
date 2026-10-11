@@ -60,7 +60,7 @@ src/
         env.ts        Zod-validated VITE_* variables (ADR 0004)
         freshness.ts  staleTime / polling classes every queryOptions spreads
         money.ts      formatMoney: decimal strings, never floats
-        date.ts       dates and calendar days in the browser's zone
+        date.ts       dates in the browser's zone; the shop's Kathmandu days
         theme.ts      applies the theme preference to <html>
         cn.ts         class-name helper used by shadcn
     stores/           ui.store.ts
@@ -277,9 +277,11 @@ Future implementation must preserve these:
 - **Each environment needs a CORS entry.** The admin's origin must be in the API's
   `DJANGO_CORS_ALLOWED_ORIGINS`; otherwise every call is a `network_error` that
   never reaches the API's logs.
-- **The main bundle is about 530 kB (170 kB gzipped)**, mostly React, the router,
-  Query and Radix. Vite warns about it on every build. Route-level code splitting is
-  on; vendor chunking has not been needed yet.
+- **The entry chunk is about 280 kB (87 kB gzipped)**, mostly React, the router,
+  Query and Radix. Route-level code splitting is on: Recharts (about 100 kB gzipped)
+  loads only with the dashboard, the calendar with orders. It depends on
+  `"sideEffects": ["*.css"]` in `package.json`, because route loaders import feature
+  barrels; vendor chunking has not been needed yet.
 - **The theme is applied by JavaScript.** There is no inline script in
   `index.html`, so a dark-mode user can see a light background for the instant
   before the bundle runs. Accepted to keep a strict CSP possible.

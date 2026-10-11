@@ -5,7 +5,6 @@ import {
   useReactTable,
   type ColumnDef,
   type OnChangeFn,
-  type PaginationState,
   type SortingState,
 } from "@tanstack/react-table";
 import { ArrowDownIcon, ArrowUpIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
@@ -40,13 +39,21 @@ function PageLink({ page, label, children }: { page: number; label: string; chil
   );
 }
 
-// Pagination and sorting happen on the API, so the table only renders the current page.
-// The page lives in the route's 1-based `page` search param, and the pager is made of
-// real links, so the back button, a reload and a middle-click all keep the page.
+interface Pagination {
+  pageIndex: number;
+  pageSize: number;
+  rowCount: number;
+}
+
+// Pagination and sorting happen on the API, so the table only renders the rows it is
+// given. A paginated list passes `pagination` with the API's `count` as `rowCount`: the
+// page lives in the route's 1-based
+// `page` search param, and the pager is made of real links, so the back button, a
+// reload and a middle-click all keep the page. A whole-array list passes none and gets
+// no pager.
 export function DataTable<TData, TValue>({
   columns,
   data,
-  rowCount,
   pagination,
   sorting = [],
   onSortingChange,
@@ -56,8 +63,7 @@ export function DataTable<TData, TValue>({
 }: {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  rowCount: number;
-  pagination: PaginationState;
+  pagination?: Pagination;
   sorting?: SortingState;
   onSortingChange?: OnChangeFn<SortingState>;
   isLoading?: boolean;
@@ -68,19 +74,12 @@ export function DataTable<TData, TValue>({
   const table = useReactTable({
     columns,
     data,
-    rowCount,
-    state: { pagination, sorting },
+    state: { sorting },
     onSortingChange,
-    manualPagination: true,
     manualSorting: true,
     enableSorting: onSortingChange !== undefined,
     getCoreRowModel: getCoreRowModel(),
   });
-
-  const pageCount = Math.max(table.getPageCount(), 1);
-  const page = pagination.pageIndex + 1;
-  const firstRow = rowCount === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
-  const lastRow = Math.min(page * pagination.pageSize, rowCount);
 
   return (
     <div className="space-y-3">
@@ -158,33 +157,44 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
-        <p aria-live="polite">
-          {rowCount === 0 ? "No results" : `${firstRow}–${lastRow} of ${rowCount}`}
-        </p>
-        <div className="flex items-center gap-2">
-          <span>
-            Page {page} of {pageCount}
-          </span>
-          {table.getCanPreviousPage() ? (
-            <PageLink page={page - 1} label="Previous page">
-              <ChevronLeftIcon />
-            </PageLink>
-          ) : (
-            <Button variant="outline" size="icon" aria-label="Previous page" disabled>
-              <ChevronLeftIcon />
-            </Button>
-          )}
-          {table.getCanNextPage() ? (
-            <PageLink page={page + 1} label="Next page">
-              <ChevronRightIcon />
-            </PageLink>
-          ) : (
-            <Button variant="outline" size="icon" aria-label="Next page" disabled>
-              <ChevronRightIcon />
-            </Button>
-          )}
-        </div>
+      {pagination && <Pager {...pagination} />}
+    </div>
+  );
+}
+
+function Pager({ pageIndex, pageSize, rowCount }: Pagination) {
+  const page = pageIndex + 1;
+  const pageCount = Math.max(Math.ceil(rowCount / pageSize), 1);
+  const firstRow = rowCount === 0 ? 0 : pageIndex * pageSize + 1;
+  const lastRow = Math.min(page * pageSize, rowCount);
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+      <p aria-live="polite">
+        {rowCount === 0 ? "No results" : `${firstRow}–${lastRow} of ${rowCount}`}
+      </p>
+      <div className="flex items-center gap-2">
+        <span>
+          Page {page} of {pageCount}
+        </span>
+        {page > 1 ? (
+          <PageLink page={page - 1} label="Previous page">
+            <ChevronLeftIcon />
+          </PageLink>
+        ) : (
+          <Button variant="outline" size="icon" aria-label="Previous page" disabled>
+            <ChevronLeftIcon />
+          </Button>
+        )}
+        {page < pageCount ? (
+          <PageLink page={page + 1} label="Next page">
+            <ChevronRightIcon />
+          </PageLink>
+        ) : (
+          <Button variant="outline" size="icon" aria-label="Next page" disabled>
+            <ChevronRightIcon />
+          </Button>
+        )}
       </div>
     </div>
   );

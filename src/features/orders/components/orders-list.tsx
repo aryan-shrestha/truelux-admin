@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 
+import { SearchInput } from "@/components/data-table/search-input";
 import { DEFAULT_PAGE_SIZE } from "@/lib/repositories/pagination";
 
 import { orderQueries } from "../queries/orders.queries";
 import type { OrderFilters } from "../schemas/order-filters.schema";
 import { DateRangeFilter } from "./date-range-filter";
-import { OrderSearch } from "./order-search";
 import { OrdersTable } from "./orders-table";
 import { StatusTabs } from "./status-tabs";
 
@@ -25,7 +25,11 @@ export function OrdersList({
     <div className="flex flex-col gap-4">
       <StatusTabs selected={filters.status} onSelect={(status) => onFiltersChange({ status })} />
       <div className="flex flex-wrap items-center gap-2">
-        <OrderSearch value={filters.q} onSearch={(q) => onFiltersChange({ q: q || undefined })} />
+        <SearchInput
+          label="Search number, name, email or phone"
+          value={filters.q}
+          onSearch={(q) => onFiltersChange({ q: q || undefined })}
+        />
         <DateRangeFilter
           from={filters.from}
           to={filters.to}

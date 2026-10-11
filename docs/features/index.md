@@ -15,8 +15,8 @@ keeps the staff JWT in `localStorage` (ADR 0005). It replaces the Next.js admin 
 | 4   | app-shell          | Implemented | `features/app-shell.md`          | 1, 3        | 2026-10-11   |
 | 5   | tanstack-query     | Implemented | `features/tanstack-query.md`     | 1, 3        | 2026-10-11   |
 | 6   | staff-auth         | Implemented | `features/staff-auth.md`         | 3, 4        | 2026-10-11   |
-| 7   | dashboard          | Planned     | `features/dashboard.md`          | 4, 5, 6, 10 | 2026-10-11   |
-| 8   | taxonomy           | Planned     | `features/taxonomy.md`           | 5, 6        | 2026-10-11   |
+| 7   | dashboard          | Implemented | `features/dashboard.md`          | 4, 5, 6, 10 | 2026-10-11   |
+| 8   | taxonomy           | Implemented | `features/taxonomy.md`           | 5, 6        | 2026-10-11   |
 | 9   | products           | Planned     | `features/products.md`           | 5, 6, 8     | 2026-10-11   |
 | 10  | orders             | Implemented | `features/orders.md`             | 4, 5, 6     | 2026-10-11   |
 | 11  | shipping-settings  | Planned     | `features/shipping-settings.md`  | 4, 5, 6     | 2026-10-11   |
@@ -36,7 +36,7 @@ already provides is under each document's **Implemented**, everything else under
 
 ## Implementation order
 
-Done: 6, 3, 4, 5, 10. Next: 7 → 8 → 9 → 12 → 13 → 11, with 14 once its host is
+Done: 6, 3, 4, 5, 10, 7, 8. Next: 9 → 12 → 13 → 11, with 14 once its host is
 chosen. The shell's navigation entries, `ConfirmDialog`, `EmptyState`, list state and
 optimistic updates are built by the features that first need them; each feature
 document lists its share.
@@ -61,9 +61,9 @@ status badge. Orders is the reference slice for lists in
 - **Deployment is blocked on a decision**: which static host serves the SPA
   ([deployment.md](deployment.md)).
 - **Relative image URLs in development**: the API returns `/media/…` for locally
-  stored files. The SPA can now resolve them against `VITE_API_URL`; decide that or
-  absolute URLs from the API before products or brand logos are shown
-  ([taxonomy.md](taxonomy.md#gotchas)).
+  stored files, which the admin cannot load. Decided: the back-end will return
+  absolute URLs; until it does, brand logos (and product images) do not show in
+  development ([taxonomy.md](taxonomy.md#remaining)).
 - **Sign-in has not been checked against the live API**: `e2e/auth.spec.ts` needs
   the API running with this origin in `DJANGO_CORS_ALLOWED_ORIGINS`
   ([staff-auth.md](staff-auth.md#remaining)).

@@ -2,6 +2,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 
+import { dashboardKeys } from "@/features/dashboard";
 import { saveSession } from "@/lib/repositories/session";
 import { server } from "@/test/msw-server";
 import { renderApp } from "@/test/render-app";
@@ -140,6 +141,23 @@ describe("order actions", () => {
     expect(screen.getByText("TL-2026-000123 is now confirmed")).toBeInTheDocument();
     expect(sentBody).toEqual({ to: "confirmed" });
     expect(detailRequests).toBe(1);
+  });
+
+  it("marks the dashboard stale after a move", async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(DETAIL_PATH, () => HttpResponse.json(order())),
+      http.post(`${DETAIL_PATH}transition/`, () =>
+        HttpResponse.json(order({ status: "confirmed", allowed_transitions: ["shipped"] })),
+      ),
+    );
+    const { queryClient } = renderApp(`/orders/${ORDER_ID}`);
+    queryClient.setQueryData(dashboardKeys.all, { cached: true });
+
+    await user.click(await screen.findByRole("button", { name: "Confirm order" }));
+
+    await screen.findByRole("button", { name: "Mark as shipped" });
+    expect(queryClient.getQueryState(dashboardKeys.all)?.isInvalidated).toBe(true);
   });
 
   it("cancels only after the confirmation that the items go back into stock", async () => {

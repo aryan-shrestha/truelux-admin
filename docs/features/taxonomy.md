@@ -1,6 +1,6 @@
 # Taxonomy
 
-Status: Planned
+Status: Implemented
 
 Last updated: 2026-10-11
 
@@ -54,64 +54,63 @@ What is explicitly outside the scope?
 
 ## Planned
 
-- `src/features/taxonomy/` — one repository per kind (`brands.repository.ts`, …) or
-  one parameterised by kind, schemas per kind, `taxonomy.queries.ts`
-  (`["taxonomy", kind]`), mutations per kind, and components: a table and a dialog per
-  kind, `row-actions.tsx` (`dropdown-menu` labelled "Actions for <name>": Edit,
-  Delete), `category-tree.ts` (parent, then its children, both by sort order; an
-  orphan shows as top level).
-- Routes `src/routes/_dashboard/{brands,categories,shades,sizes,skin-types}.tsx` with
-  `validateSearch` for `q`.
-- Search filters the cached array with the query's `select` (name or slug,
-  case-insensitive), debounced 300 ms and written to `?q=`, so a keystroke makes no
-  request.
-- The dialog form mounts only while open, so an edit starts from the row's current
-  values. The category parent options come from the cached categories, so a new
-  top-level category is offered at once.
-- A brand save with a new logo sends `FormData`; without one, JSON. The logo preview
-  uses an object URL, revoked on close.
-- Shared field rules (name, slug, sort order as a non-negative integer, hex) in one
-  schema module; a blank slug is dropped from the body.
-- `select` cannot hold an empty value: "None" maps to a sentinel and the form stores
-  `null`.
-- The shade swatch is decorative (`aria-hidden`); the colour picker has its own label
-  and the hex input carries the field label.
-- `src/config/navigation.ts` — a **Catalogue** group with Brands, Categories, Shades,
-  Sizes and Skin types (Products joins it with [products.md](products.md)); from
-  [app-shell.md](app-shell.md).
-- Deletes confirm with the shared `ConfirmDialog`, and an empty list shows the shared
-  `EmptyState`, both built with [orders.md](orders.md).
-- Mutations name their stale keys in `meta.invalidates`: that kind's list and all
-  products ([tanstack-query.md](tanstack-query.md#rules-for-features)).
-- Add shadcn `select`, `switch`, `textarea` when building.
-
-Error treatment:
-
-| `code`              | Treatment                                                                     |
-| ------------------- | ----------------------------------------------------------------------------- |
-| `validation_error`  | Field messages from `details` on the matching field, the rest as a form alert |
-| `conflict` (delete) | The in-use message; never raised for a skin type                              |
-| `conflict` (save)   | "This duplicates an existing record…" as a form alert                         |
-
-Planned tests: hex accepts `#D8A47F` and lowercase and rejects `red`, `#FFF`,
-`#GGGGGG`; slug and sort-order rules; a blank slug is dropped; the category tree
-order; a 409 on delete shows the in-use message and keeps the dialog open; the skin
-type confirmation names the product count, and says only "This cannot be undone." at
-0; search filters without a request; a delete refetches the list; a logo upload is
-sent as multipart; Playwright: create, rename, delete a skin type.
+None.
 
 ---
 
 ## Implemented
 
-None.
+- `src/features/taxonomy/`:
+  - `schemas/taxonomy.schema.ts` — the five read schemas, `TAXONOMY_SCHEMAS` (kind →
+    schema, the kind being the API path segment) and `TaxonomyEntry<K>`
+  - `schemas/taxonomy-form.schema.ts` — form schemas sharing field rules: name
+    (required, ≤ 150 for brands and categories, ≤ 50 otherwise), slug (empty or
+    `a-z0-9-`), sort order (whole number ≥ 0), hex (`#RRGGBB`), logo (JPEG/PNG/WebP,
+    ≤ 5 MB), `parent_id`
+  - `schemas/taxonomy-search.schema.ts` — `?q=` for the five routes
+  - `taxonomy-body.ts` — form values → request: a blank slug is left out, the hex
+    is uppercased, and a brand with a new logo becomes `FormData` (JSON otherwise)
+  - `category-tree.ts` — `toCategoryRows`: top-level categories in sort order, each
+    followed by its children; an orphan of a search shows as top level
+  - `repositories/taxonomy.repository.ts` — `listTaxonomy`, `saveTaxonomy` (POST
+    or PATCH), `deleteTaxonomy`, each parsed with its kind's schema
+  - `queries/taxonomy.queries.ts` — `taxonomyKeys` (`["taxonomy", kind]`),
+    `taxonomyQueries.list(kind)` (`reference`)
+  - `queries/taxonomy.mutations.ts` — `useSaveTaxonomy`, `useDeleteTaxonomy`;
+    `meta.invalidates` is the kind's list
+  - `use-taxonomy-search.ts` — filters the cached list by name or slug through the
+    query's `select`
+  - `components/taxonomy-form-dialog.tsx` — the shared dialog: RHF + Zod, the form
+    mounted only while open, `validation_error` details on matching fields
+    (`fieldErrors` → `setError`) and the rest as one alert, a save `409` as "This
+    duplicates an existing record. Check the name and the slug."; opened by its own
+    trigger (New …) or by a row (Edit)
+  - `components/{brand,category,shade,size,skin-type}-dialog.tsx` — brand:
+    description, logo with an object-URL preview, Active switch; category: parent
+    `select` of other top-level categories or None; shade: colour picker and hex
+    text on one value
+  - `components/{brands,categories,shades,sizes,skin-types}-table.tsx` with
+    `columns.tsx`, `row-actions.tsx` (Edit, Delete behind `ConfirmDialog`; a delete
+    `409` toasts the kind's in-use sentence with the row's count) and
+    `taxonomy-empty.tsx`
+- `src/routes/_dashboard/{brands,categories,shades,sizes,skin-types}.tsx` — await
+  the list in the loader; **New …** in the header; search writes `?q=` with
+  `replace`.
+- `src/config/navigation.ts` — the **Catalogue** group.
+- Shared, built here: `DataTable` without a pager for whole-array lists,
+  `SearchInput` (moved from orders), `ConfirmDialog` without a trigger, shadcn
+  `select` and `switch`, and jsdom stubs for Radix in `src/test/setup.ts`.
 
 ---
 
 ## Remaining
 
-- Everything in Planned.
-- Decide how a relative logo URL is shown (see Gotchas).
+- **Back-end: absolute `logo_url` in every environment** (your decision). In
+  development the API returns a relative `/media/…` path, which the admin, on
+  another origin, cannot load: logos show their initial until `../back-end` changes.
+  Production (Cloudinary) is absolute already.
+- Products adds `productKeys.all` to both taxonomy mutations' `meta.invalidates`
+  (products show taxonomy names) ([products.md](products.md)).
 
 ---
 
@@ -152,10 +151,17 @@ N can be stale by the time of the click; the API remains the authority.
 
 - `409 conflict` also answers a create or edit whose name or slug is taken.
 - Brand `logo_url` is relative (`/media/…`) when the API stores files locally, as it
-  does in development, and absolute on Cloudinary. `/media/` on the admin origin is
-  not the API. Since ADR 0005 the SPA knows the API's origin (`VITE_API_URL`), so it
-  can resolve a relative URL against it; the alternative is for the API to return
-  absolute URLs. Decide before the first image is shown.
+  does in development, and absolute on Cloudinary. Decided: the back-end will return
+  absolute URLs; the admin renders the value as given, and its schema keeps it a
+  plain string so a relative one never fails the parse.
+- The dialog's form mounts only while open, so Edit always starts from the row's
+  current values, and a cancelled edit leaves nothing behind.
+- A skin type never answers a delete with `409`; the API detaches it from its
+  products (204). The confirmation says how many products lose it.
+- Radix Dialog and Select need `ResizeObserver`, pointer capture and
+  `scrollIntoView`, which jsdom lacks; `src/test/setup.ts` stubs them.
+- In tests, Node's `request.formData()` rejects the multipart body jsdom builds;
+  assert on `request.text()` instead.
 
 ---
 
@@ -187,15 +193,33 @@ Signed-in staff (the API).
 
 ## Tests
 
-None yet; see Planned.
+- `schemas/taxonomy-form.schema.test.ts` — hex accepts `#D8A47F` and lowercase,
+  rejects `red`, `#FFF`, `#GGGGGG`; slug and sort-order rules; logo type and size.
+- `taxonomy-body.test.ts` — a blank slug is left out; hex in capitals; a logo makes
+  multipart, JSON otherwise.
+- `category-tree.test.ts` — children under their parent in sort order; an orphan is
+  top level.
+- `components/brands-table.test.tsx` — status badges; search without a request;
+  create sends JSON without a blank slug and shows the new row; a logo upload is
+  `multipart/form-data` with the file; an API field error lands on Name; a save
+  `409` shows the duplicate alert; a delete `409` toasts the in-use sentence and
+  keeps the row.
+- `components/categories-table.test.tsx` — tree order with the Parent column; the
+  parent select offers only other top-level categories; a cycle error lands on
+  Parent.
+- `components/shades-table.test.tsx` — picker and hex text stay in step; the hex is
+  sent in capitals.
+- `components/skin-types-table.test.tsx` — the confirmation names the product count,
+  or says only "This cannot be undone." at 0; a delete shows the refetched list.
 
 ---
 
 ## Files
 
 ```text
-src/features/taxonomy/                                         planned
-src/routes/_dashboard/{brands,categories,shades,sizes,skin-types}.tsx   planned
+src/features/taxonomy/
+src/routes/_dashboard/{brands,categories,shades,sizes,skin-types}.tsx
+src/components/data-table/search-input.tsx
 ```
 
 ---

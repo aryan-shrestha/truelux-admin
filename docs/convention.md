@@ -201,10 +201,14 @@ productKeys.lists() })`.
 ## Forms
 
 React Hook Form with `zodResolver(<FORM_SCHEMA>)` and shadcn's `Field` components.
+The reference is `src/features/taxonomy/components/taxonomy-form-dialog.tsx`.
 
 - Submit through a mutation. On an `ApiError` with `code === "validation_error"`,
-  copy `details` onto the form with `setError(field, { message })`, so the API's
-  messages appear under the offending field.
+  `fieldErrors(error)` gives one message per field: `setError(field, { message })`
+  for the fields the form has, and the rest in one form alert, so the API's messages
+  appear under the offending field.
+- A form in a dialog mounts only while the dialog is open, so it always starts from
+  the current values.
 - Disable the submit button while the mutation is pending; never block on a
   timer.
 - Default values come from the query data, never from a store.
@@ -232,6 +236,11 @@ and `src/features/orders/components/orders-list.tsx`.
 - column definitions live in the feature (`orders-table.tsx`)
 - the empty state is `EmptyState` from `src/components/feedback/`, with a filtered
   and an unfiltered message
+- search is `SearchInput` from `src/components/data-table/`, writing `?q=` after a
+  300 ms pause
+- a list the API returns whole (taxonomy) passes no `pagination`, so `DataTable`
+  renders no pager, and its search filters the cached array with the query's
+  `select`
 
 ---
 
@@ -384,7 +393,13 @@ arithmetic on money.
 **Time.** The API sends UTC ISO-8601 strings. `src/lib/date.ts` formats them in the
 browser's time zone with `Intl.DateTimeFormat` (`formatDateTime`), and reads and
 writes calendar days for date filters as local dates (`parseIsoDate`, `toIsoDate`,
-`formatDay`) so a day never shifts through UTC midnight.
+`formatDay`) so a day never shifts through UTC midnight. A link that must match the
+API's day buckets (the dashboard's) uses `shopDaysAgo`, which counts
+`Asia/Kathmandu` days.
+
+**Side effects.** `package.json` declares `"sideEffects": ["*.css"]` so Rollup can drop
+what a feature barrel re-exports but a route loader does not use. Never rely on a
+side-effect-only import of a `.ts` module; it would be dropped from the build.
 
 **Icons.** Lucide, imported by name with the `Icon` suffix
 (`LayoutDashboardIcon`), so the import says what it is.

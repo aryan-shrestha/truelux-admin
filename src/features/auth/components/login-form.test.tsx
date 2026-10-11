@@ -5,6 +5,7 @@ import { http, HttpResponse } from "msw";
 import { readSession } from "@/lib/repositories/session";
 import { server } from "@/test/msw-server";
 import { renderApp } from "@/test/render-app";
+import { dashboardHandler } from "@/test/dashboard";
 import { meHandler } from "@/test/staff";
 
 afterEach(() => localStorage.clear());
@@ -60,6 +61,7 @@ describe("LoginForm", () => {
         return HttpResponse.json({ access: "a1", refresh: "r1" });
       }),
       meHandler,
+      dashboardHandler(),
     );
     const { router } = renderApp("/login?next=%2F");
 

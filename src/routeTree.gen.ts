@@ -13,6 +13,11 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard/index'
+import { Route as DashboardBrandsRouteImport } from './routes/_dashboard/brands'
+import { Route as DashboardCategoriesRouteImport } from './routes/_dashboard/categories'
+import { Route as DashboardShadesRouteImport } from './routes/_dashboard/shades'
+import { Route as DashboardSizesRouteImport } from './routes/_dashboard/sizes'
+import { Route as DashboardSkinTypesRouteImport } from './routes/_dashboard/skin-types'
 import { Route as DashboardOrdersIndexRouteImport } from './routes/_dashboard/orders/index'
 import { Route as DashboardOrdersOrderIdRouteImport } from './routes/_dashboard/orders/$orderId'
 
@@ -34,6 +39,31 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardBrandsRoute = DashboardBrandsRouteImport.update({
+  id: '/brands',
+  path: '/brands',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCategoriesRoute = DashboardCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardShadesRoute = DashboardShadesRouteImport.update({
+  id: '/shades',
+  path: '/shades',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSizesRoute = DashboardSizesRouteImport.update({
+  id: '/sizes',
+  path: '/sizes',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSkinTypesRoute = DashboardSkinTypesRouteImport.update({
+  id: '/skin-types',
+  path: '/skin-types',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardOrdersIndexRoute = DashboardOrdersIndexRouteImport.update({
   id: '/orders/',
   path: '/orders/',
@@ -48,12 +78,22 @@ const DashboardOrdersOrderIdRoute = DashboardOrdersOrderIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute
   '/login': typeof AuthLoginRoute
+  '/brands': typeof DashboardBrandsRoute
+  '/categories': typeof DashboardCategoriesRoute
+  '/shades': typeof DashboardShadesRoute
+  '/sizes': typeof DashboardSizesRoute
+  '/skin-types': typeof DashboardSkinTypesRoute
   '/orders/$orderId': typeof DashboardOrdersOrderIdRoute
   '/orders/': typeof DashboardOrdersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof DashboardIndexRoute
   '/login': typeof AuthLoginRoute
+  '/brands': typeof DashboardBrandsRoute
+  '/categories': typeof DashboardCategoriesRoute
+  '/shades': typeof DashboardShadesRoute
+  '/sizes': typeof DashboardSizesRoute
+  '/skin-types': typeof DashboardSkinTypesRoute
   '/orders/$orderId': typeof DashboardOrdersOrderIdRoute
   '/orders': typeof DashboardOrdersIndexRoute
 }
@@ -62,20 +102,48 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteWithChildren
   '/_dashboard': typeof DashboardRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
+  '/_dashboard/brands': typeof DashboardBrandsRoute
+  '/_dashboard/categories': typeof DashboardCategoriesRoute
+  '/_dashboard/shades': typeof DashboardShadesRoute
+  '/_dashboard/sizes': typeof DashboardSizesRoute
+  '/_dashboard/skin-types': typeof DashboardSkinTypesRoute
   '/_dashboard/': typeof DashboardIndexRoute
   '/_dashboard/orders/$orderId': typeof DashboardOrdersOrderIdRoute
   '/_dashboard/orders/': typeof DashboardOrdersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/orders/$orderId' | '/orders/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/brands'
+    | '/categories'
+    | '/shades'
+    | '/sizes'
+    | '/skin-types'
+    | '/orders/$orderId'
+    | '/orders/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/orders/$orderId' | '/orders'
+  to:
+    | '/'
+    | '/login'
+    | '/brands'
+    | '/categories'
+    | '/shades'
+    | '/sizes'
+    | '/skin-types'
+    | '/orders/$orderId'
+    | '/orders'
   id:
     | '__root__'
     | '/_auth'
     | '/_dashboard'
     | '/_auth/login'
+    | '/_dashboard/brands'
+    | '/_dashboard/categories'
+    | '/_dashboard/shades'
+    | '/_dashboard/sizes'
+    | '/_dashboard/skin-types'
     | '/_dashboard/'
     | '/_dashboard/orders/$orderId'
     | '/_dashboard/orders/'
@@ -116,6 +184,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/brands': {
+      id: '/_dashboard/brands'
+      path: '/brands'
+      fullPath: '/brands'
+      preLoaderRoute: typeof DashboardBrandsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/categories': {
+      id: '/_dashboard/categories'
+      path: '/categories'
+      fullPath: '/categories'
+      preLoaderRoute: typeof DashboardCategoriesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/shades': {
+      id: '/_dashboard/shades'
+      path: '/shades'
+      fullPath: '/shades'
+      preLoaderRoute: typeof DashboardShadesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/sizes': {
+      id: '/_dashboard/sizes'
+      path: '/sizes'
+      fullPath: '/sizes'
+      preLoaderRoute: typeof DashboardSizesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/skin-types': {
+      id: '/_dashboard/skin-types'
+      path: '/skin-types'
+      fullPath: '/skin-types'
+      preLoaderRoute: typeof DashboardSkinTypesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/orders/': {
       id: '/_dashboard/orders/'
       path: '/orders'
@@ -144,12 +247,22 @@ const AuthRouteChildren: AuthRouteChildren = {
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface DashboardRouteChildren {
+  DashboardBrandsRoute: typeof DashboardBrandsRoute
+  DashboardCategoriesRoute: typeof DashboardCategoriesRoute
+  DashboardShadesRoute: typeof DashboardShadesRoute
+  DashboardSizesRoute: typeof DashboardSizesRoute
+  DashboardSkinTypesRoute: typeof DashboardSkinTypesRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardOrdersOrderIdRoute: typeof DashboardOrdersOrderIdRoute
   DashboardOrdersIndexRoute: typeof DashboardOrdersIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardBrandsRoute: DashboardBrandsRoute,
+  DashboardCategoriesRoute: DashboardCategoriesRoute,
+  DashboardShadesRoute: DashboardShadesRoute,
+  DashboardSizesRoute: DashboardSizesRoute,
+  DashboardSkinTypesRoute: DashboardSkinTypesRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardOrdersOrderIdRoute: DashboardOrdersOrderIdRoute,
   DashboardOrdersIndexRoute: DashboardOrdersIndexRoute,

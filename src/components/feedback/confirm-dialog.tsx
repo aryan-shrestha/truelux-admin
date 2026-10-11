@@ -14,7 +14,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 
 // The caller owns `open` and the mutation, and closes the dialog when the action has
-// succeeded, so a failure leaves it open with its context.
+// succeeded. Without a `trigger`, the caller opens it (from a menu item, for example).
 export function ConfirmDialog({
   trigger,
   title,
@@ -25,7 +25,7 @@ export function ConfirmDialog({
   onOpenChange,
   onConfirm,
 }: {
-  trigger: ReactNode;
+  trigger?: ReactNode;
   title: string;
   description: string;
   confirmLabel: string;
@@ -36,7 +36,7 @@ export function ConfirmDialog({
 }) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      {trigger !== undefined && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

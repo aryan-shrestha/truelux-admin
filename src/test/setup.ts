@@ -20,6 +20,17 @@ window.matchMedia = (query: string) =>
 // jsdom does not implement scrolling; the router's scroll restoration calls this.
 window.scrollTo = () => {};
 
+// jsdom has no pointer capture, scrollIntoView or ResizeObserver; Radix Dialog and
+// Select use them.
+Element.prototype.hasPointerCapture = () => false;
+Element.prototype.releasePointerCapture = () => {};
+Element.prototype.scrollIntoView = () => {};
+window.ResizeObserver = class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 beforeAll(() => server.listen({ onUnhandledFrame: "error" }));
 afterEach(() => {
   cleanup();

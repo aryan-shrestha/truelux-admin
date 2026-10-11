@@ -1,4 +1,4 @@
-import { formatMoney } from "./money";
+import { formatMoney, toChartNumber } from "./money";
 
 describe("formatMoney", () => {
   it("groups rupees the Indian way and keeps two places", () => {
@@ -13,5 +13,17 @@ describe("formatMoney", () => {
 
   it("returns a malformed amount verbatim instead of NaN", () => {
     expect(formatMoney("abc")).toBe("abc");
+  });
+});
+
+describe("toChartNumber", () => {
+  it("converts a decimal string for chart geometry", () => {
+    expect(toChartNumber("9600.00")).toBe(9600);
+    expect(toChartNumber("12.5")).toBe(12.5);
+  });
+
+  it("plots a malformed amount as zero", () => {
+    expect(toChartNumber("")).toBe(0);
+    expect(toChartNumber("1e3")).toBe(0);
   });
 });

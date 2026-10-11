@@ -89,6 +89,24 @@ describe("orders list", () => {
     expect(requestedStatuses.at(-1)).toEqual(["pending"]);
   });
 
+  it("searches once typing pauses and starts again from the first page", async () => {
+    const user = userEvent.setup();
+    const searches: (string | null)[] = [];
+    server.use(
+      http.get("*/api/v1/admin/orders/", ({ request }) => {
+        searches.push(new URL(request.url).searchParams.get("search"));
+        return HttpResponse.json(orderPage([listItem("TL-2026-000123")]));
+      }),
+    );
+    const { router } = renderApp("/orders?page=3");
+    await screen.findByRole("link", { name: "TL-2026-000123" });
+
+    await user.type(screen.getByRole("searchbox"), "sita");
+
+    await vi.waitFor(() => expect(router.state.location.search).toEqual({ q: "sita" }));
+    expect(searches.filter((search) => search !== null)).toEqual(["sita"]);
+  });
+
   it("keeps the current rows on screen while the next page loads", async () => {
     const user = userEvent.setup();
     server.use(

@@ -6,11 +6,12 @@ import { readSession, saveSession } from "@/lib/repositories/session";
 import { useUiStore } from "@/stores/ui.store";
 import { server } from "@/test/msw-server";
 import { renderApp } from "@/test/render-app";
+import { dashboardHandler } from "@/test/dashboard";
 import { meHandler } from "@/test/staff";
 
 beforeEach(() => {
   saveSession({ access: "a1", refresh: "r1" });
-  server.use(meHandler);
+  server.use(meHandler, dashboardHandler());
 });
 
 afterEach(() => {

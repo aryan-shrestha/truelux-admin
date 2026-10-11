@@ -39,8 +39,7 @@ describe("DataTable", () => {
       <DataTable
         columns={COLUMNS}
         data={[{ name: "Lakmé" }, { name: "Maybelline" }]}
-        rowCount={2}
-        pagination={{ pageIndex: 0, pageSize: 25 }}
+        pagination={{ pageIndex: 0, pageSize: 25, rowCount: 2 }}
       />,
     );
 
@@ -54,8 +53,7 @@ describe("DataTable", () => {
       <DataTable
         columns={COLUMNS}
         data={[]}
-        rowCount={0}
-        pagination={{ pageIndex: 0, pageSize: 25 }}
+        pagination={{ pageIndex: 0, pageSize: 25, rowCount: 0 }}
         empty="No brands yet."
       />,
     );
@@ -64,13 +62,20 @@ describe("DataTable", () => {
     expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
   });
 
+  it("shows no pager for a whole-array list", async () => {
+    await renderInRoute(<DataTable columns={COLUMNS} data={[{ name: "Lakmé" }]} />);
+
+    expect(screen.getByRole("cell", { name: "Lakmé" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Next page" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/of 1/)).not.toBeInTheDocument();
+  });
+
   it("links to the neighbouring pages, keeping the other search params", async () => {
     await renderInRoute(
       <DataTable
         columns={COLUMNS}
         data={[{ name: "Lakmé" }]}
-        rowCount={60}
-        pagination={{ pageIndex: 1, pageSize: 25 }}
+        pagination={{ pageIndex: 1, pageSize: 25, rowCount: 60 }}
       />,
     );
 

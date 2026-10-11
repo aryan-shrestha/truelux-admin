@@ -1,6 +1,6 @@
 # Dashboard
 
-Status: Planned
+Status: Implemented
 
 Last updated: 2026-10-11
 
@@ -23,8 +23,9 @@ What is included in this implementation?
 - Orders by status: a linked `badge` per status with its count, to
   `/orders?status=…`
 - Recent orders: a `table` of the 5 latest, linked to the order
-- Low stock: a `table` of up to 10 variants (product, SKU, size/shade, stock), linked
-  to the product's Variants tab, `Out` at zero
+- Low stock: a `table` of up to 10 variants (product, SKU, size/shade, stock), `Out`
+  at zero. The product name links to the product's Variants tab once products exists
+  ([products.md](products.md))
 - Empty states for recent orders and low stock
 
 What is explicitly outside the scope?
@@ -49,45 +50,48 @@ What is explicitly outside the scope?
 
 ## Planned
 
-- `src/features/dashboard/` — `dashboard.repository.ts` (`getDashboard`),
-  `dashboard.schema.ts`, `dashboard.queries.ts` (`["dashboard"]`, `live`: polled every
-  60 s while visible, refetched on focus).
-- `src/routes/_dashboard/index.tsx` — the loader ensures the query; the page composes
-  the five sections.
-- Add `dashboardKeys.all` to `useTransitionOrder`'s `meta.invalidates` in
-  `src/features/orders/queries/orders.mutations.ts` (export the keys from the
-  dashboard's `index.ts`): an order move changes the KPIs and the status counts.
-- The route sets its own `pendingComponent`, a skeleton shaped like these sections.
-  The router's default `PageSkeleton` ([app-shell.md](app-shell.md)) is a generic
-  header, KPI row and table, and does not match the dashboard's layout.
-- `components/kpi-cards.tsx` — the four cards. Links use `Asia/Kathmandu` dates
-  (`today`, `today − 6`, `today − 29`) as `?from=`/`?to=`; awaiting action links to
-  `?status=pending&status=confirmed`. Each link names its destination ("Today's
-  orders"), not "View".
-- `components/sales-chart.tsx` — area chart; the tooltip shows the API's amount
-  string formatted and the order count. The one conversion of an amount to a number,
-  for chart geometry only, goes through the money module's `toChartNumber`.
-- `components/status-summary.tsx`, `recent-orders.tsx`, `low-stock-table.tsx`.
-- Add the shadcn `chart` component (Recharts) and port
-  `../admin/lib/format/money.ts` (`formatMoney`, `toChartNumber`) to `src/lib/money.ts`.
-- A failed poll keeps the last figures and toasts once
-  ([tanstack-query.md](tanstack-query.md)).
-
-Planned tests: the cards render the API's strings formatted; awaiting action links to
-both statuses; the chart gets 30 points with the right values and labels; both empty
-states; a low-stock row links to its product's Variants tab; `toChartNumber`.
+None.
 
 ---
 
 ## Implemented
 
-- `src/routes/_dashboard/index.tsx` — a placeholder `PageHeader` only.
+- `src/features/dashboard/`:
+  - `schemas/dashboard.schema.ts` — `DASHBOARD_SCHEMA`; `recent_orders` reuses the
+    orders feature's `ORDER_LIST_ITEM_SCHEMA`
+  - `repositories/dashboard.repository.ts` — `getDashboard`
+  - `queries/dashboard.queries.ts` — `dashboardKeys.all` (`["dashboard"]`) and
+    `dashboardQueries.dashboard()`, `live` (polled every 60 s while visible)
+  - `components/kpi-cards.tsx` — revenue today, 7 and 30 days, and awaiting action
+    (pending + confirmed, a count). Each links to the orders list with typed
+    filters: `from`/`to` from `shopDaysAgo` (Kathmandu days), or
+    `status: [pending, confirmed]`. Link text names the destination.
+  - `components/sales-chart.tsx` + `sales-points.ts` — an area chart (shadcn
+    `chart`, Recharts); `toSalesPoints` makes one point per day with
+    `toChartNumber` for geometry and the API's amount, formatted, for the tooltip.
+    Y ticks are compact numbers.
+  - `components/status-summary.tsx` — a link per status to `/orders?status=…`,
+    `OrderStatusBadge` plus the count
+  - `components/recent-orders.tsx` — the five latest, linked to the order; empty state
+  - `components/low-stock-table.tsx` — product (plain text for now), SKU, size and
+    shade, stock as a badge (`Out` at zero); empty state ("Stock is healthy")
+  - `components/dashboard-view.tsx`, `dashboard-skeleton.tsx` — the layout and a
+    skeleton shaped like it
+- `src/routes/_dashboard/index.tsx` — awaits the dashboard in the loader;
+  `pendingComponent: DashboardSkeleton`.
+- `src/features/orders/queries/orders.mutations.ts` — `useTransitionOrder`
+  invalidates `dashboardKeys.all`.
+- `src/lib/money.ts` — `toChartNumber`; `src/lib/date.ts` — `shopDaysAgo`.
+- `package.json` — `"sideEffects": ["*.css"]` (see Gotchas).
+- A failed poll keeps the last figures and toasts once, through the query cache's
+  `onError` ([tanstack-query.md](tanstack-query.md)).
 
 ---
 
 ## Remaining
 
-- Everything in Planned.
+- Link the low-stock product name to `/products/$productId?tab=variants` when the
+  products feature adds that route ([products.md](products.md)).
 
 ---
 
@@ -119,6 +123,15 @@ to work around.
   geometry, not an amount shown as money. The tooltip shows the API's string.
 - The awaiting-action figure is a sum of two order counts, not money.
 - `low_stock[].shade` is `null` for a shadeless variant.
+- The orders and dashboard features import each other's `index.ts` (the dashboard
+  renders `OrderStatusBadge`; an order move invalidates `dashboardKeys`). The cycle
+  is safe because each uses the other's exports only inside components and hooks;
+  never use one at a module's top level.
+- Route loaders stay in the entry chunk and import feature barrels. Without
+  `"sideEffects": ["*.css"]` in `package.json`, Rollup keeps every module a barrel
+  re-exports, and Recharts, the calendar and every route landed in one 842 kB entry
+  chunk. With it, Recharts loads only with this route. A module imported only for its
+  side effects would now be dropped: import CSS that way, nothing else.
 
 ---
 
@@ -147,16 +160,29 @@ Signed-in staff (the API).
 
 ## Tests
 
-None yet; see Planned.
+- `components/dashboard-view.test.tsx` — the API's revenue formatted and awaiting
+  action as pending + confirmed; the awaiting card opens `/orders` with both
+  statuses; the today card opens today's Kathmandu range; a status count opens its
+  queue; recent orders link to the order; low stock shows size and shade and `Out` at
+  zero; both empty states.
+- `components/sales-points.test.ts` — 30 points; values and labels.
+- `src/lib/money.test.ts` (`toChartNumber`), `src/lib/date.test.ts`
+  (`shopDaysAgo` across the UTC/Kathmandu day boundary).
+- `src/features/orders/components/order-detail.test.tsx` — a move marks the
+  dashboard stale.
+- `src/test/dashboard.ts` — a zero-figures `dashboardHandler` for any test that
+  renders `/`.
 
 ---
 
 ## Files
 
 ```text
+src/features/dashboard/
 src/routes/_dashboard/index.tsx
-src/features/dashboard/        planned
-src/lib/money.ts               planned
+src/lib/money.ts
+src/lib/date.ts
+src/test/dashboard.ts
 ```
 
 ---

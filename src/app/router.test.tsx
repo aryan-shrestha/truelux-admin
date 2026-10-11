@@ -3,6 +3,7 @@ import { screen, within } from "@testing-library/react";
 import { saveSession } from "@/lib/repositories/session";
 import { server } from "@/test/msw-server";
 import { renderApp } from "@/test/render-app";
+import { dashboardHandler } from "@/test/dashboard";
 import { meHandler } from "@/test/staff";
 
 afterEach(() => localStorage.clear());
@@ -10,7 +11,7 @@ afterEach(() => localStorage.clear());
 describe("route tree", () => {
   it("renders the dashboard inside the sidebar shell for a signed-in user", async () => {
     saveSession({ access: "a1", refresh: "r1" });
-    server.use(meHandler);
+    server.use(meHandler, dashboardHandler());
 
     renderApp("/");
 
@@ -32,7 +33,7 @@ describe("route tree", () => {
 
   it("sends a signed-in user on from the sign-in page to the next path", async () => {
     saveSession({ access: "a1", refresh: "r1" });
-    server.use(meHandler);
+    server.use(meHandler, dashboardHandler());
 
     const { router } = renderApp("/login?next=%2F");
 

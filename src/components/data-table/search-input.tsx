@@ -4,12 +4,14 @@ import { useRef } from "react";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
 const DEBOUNCE_MS = 300;
-const LABEL = "Search number, name, email or phone";
 
-export function OrderSearch({
+// Writes the search to the URL a moment after typing stops, not on every keystroke.
+export function SearchInput({
+  label,
   value,
   onSearch,
 }: {
+  label: string;
   value: string | undefined;
   onSearch: (query: string) => void;
 }) {
@@ -22,8 +24,8 @@ export function OrderSearch({
       </InputGroupAddon>
       <InputGroupInput
         type="search"
-        aria-label={LABEL}
-        placeholder={LABEL}
+        aria-label={label}
+        placeholder={label}
         defaultValue={value ?? ""}
         onChange={(event) => {
           const query = event.target.value.trim();

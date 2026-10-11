@@ -62,6 +62,12 @@ What is explicitly outside the scope?
 
 ## Planned
 
+- Link the dashboard's low-stock product name to `/products/$productId?tab=variants`
+  in `src/features/dashboard/components/low-stock-table.tsx`; it is plain text until
+  this route exists ([dashboard.md](dashboard.md)).
+- Add `productKeys.all` to `useSaveTaxonomy` and `useDeleteTaxonomy`'s
+  `meta.invalidates` (`src/features/taxonomy/queries/taxonomy.mutations.ts`):
+  products show taxonomy names. Read the pickers' options from `taxonomyQueries.list`.
 - Add `productKeys.all` to `useTransitionOrder`'s `meta.invalidates`
   (`src/features/orders/queries/orders.mutations.ts`): a cancel puts stock back.
 - `src/features/products/` — `products.repository.ts` (products, variants, images),

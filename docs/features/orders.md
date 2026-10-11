@@ -72,11 +72,12 @@ None.
   - `queries/orders.queries.ts` — `orderKeys`; `orderQueries.list(filters)` (`live`,
     `keepPreviousData`) and `.detail(id)` (`live`)
   - `queries/orders.mutations.ts` — `useTransitionOrder`: writes the returned order
-    into its detail key, invalidates order lists (`meta.invalidates`), toasts
+    into its detail key, invalidates order lists and the dashboard
+    (`meta.invalidates`), toasts
     "TL-… is now <status>"; on failure toasts `describeError` and refetches the detail
   - `components/` — `orders-list` (tabs, search, date range and table, given the
-    filters and a change handler by the route), `orders-table`, `status-tabs`,
-    `order-search` (debounced 300 ms), `date-range-filter` (first click starts the
+    filters and a change handler by the route; search through the shared
+    `SearchInput`), `orders-table`, `status-tabs`, `date-range-filter` (first click starts the
     range, second ends it; future days disabled; the label names the range),
     `order-detail`, `order-items-card`, `customer-card` (`tel:` link, note),
     `order-actions` (buttons from `allowed_transitions`; **Cancel order** behind
@@ -98,9 +99,9 @@ None.
 
 - `e2e/orders.spec.ts` has not been run against the live API; it needs the staff
   credentials (see [staff-auth.md](staff-auth.md#remaining)).
-- The dashboard, products and stock history are added to `useTransitionOrder`'s
+- Products and stock history are added to `useTransitionOrder`'s
   `meta.invalidates` by those features, once their key factories exist (a cancel
-  restores stock).
+  restores stock). The dashboard is in place.
 
 ---
 

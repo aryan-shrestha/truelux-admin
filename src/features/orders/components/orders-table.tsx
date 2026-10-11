@@ -73,8 +73,7 @@ export function OrdersTable({
     <DataTable
       columns={COLUMNS}
       data={orders}
-      rowCount={count}
-      pagination={{ pageIndex, pageSize }}
+      pagination={{ pageIndex, pageSize, rowCount: count }}
       isLoading={isLoading}
       isPlaceholderData={isPlaceholderData}
       empty={
