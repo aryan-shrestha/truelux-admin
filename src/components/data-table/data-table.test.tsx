@@ -1,6 +1,13 @@
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+  RouterProvider,
+} from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
 
 import { DataTable } from "./data-table";
 
@@ -10,31 +17,46 @@ interface Brand {
 
 const COLUMNS: ColumnDef<Brand>[] = [{ accessorKey: "name", header: "Name" }];
 
+// The pager links to the current route's `page`, so the table renders inside a router.
+async function renderInRoute(table: ReactNode) {
+  const rootRoute = createRootRoute();
+  const brandsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/brands",
+    component: () => table,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([brandsRoute]),
+    history: createMemoryHistory({ initialEntries: ["/brands?q=lak"] }),
+  });
+  render(<RouterProvider router={router} />);
+  await screen.findByRole("table");
+}
+
 describe("DataTable", () => {
-  it("renders the rows it is given", () => {
-    render(
+  it("renders the rows it is given", async () => {
+    await renderInRoute(
       <DataTable
         columns={COLUMNS}
         data={[{ name: "Lakmé" }, { name: "Maybelline" }]}
         rowCount={2}
         pagination={{ pageIndex: 0, pageSize: 25 }}
-        onPaginationChange={vi.fn()}
       />,
     );
 
     expect(screen.getByRole("cell", { name: "Lakmé" })).toBeInTheDocument();
     expect(screen.getByRole("cell", { name: "Maybelline" })).toBeInTheDocument();
+    expect(screen.getByText("1–2 of 2")).toBeInTheDocument();
   });
 
-  it("shows the empty message when there are no rows", () => {
-    render(
+  it("shows the empty state and no page links when there are no rows", async () => {
+    await renderInRoute(
       <DataTable
         columns={COLUMNS}
         data={[]}
         rowCount={0}
         pagination={{ pageIndex: 0, pageSize: 25 }}
-        onPaginationChange={vi.fn()}
-        emptyMessage="No brands yet."
+        empty="No brands yet."
       />,
     );
 
@@ -42,22 +64,25 @@ describe("DataTable", () => {
     expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
   });
 
-  it("asks for the next page using the API's row count", async () => {
-    const onPaginationChange = vi.fn();
-    render(
+  it("links to the neighbouring pages, keeping the other search params", async () => {
+    await renderInRoute(
       <DataTable
         columns={COLUMNS}
         data={[{ name: "Lakmé" }]}
         rowCount={60}
-        pagination={{ pageIndex: 0, pageSize: 25 }}
-        onPaginationChange={onPaginationChange}
+        pagination={{ pageIndex: 1, pageSize: 25 }}
       />,
     );
 
-    await userEvent.click(screen.getByRole("button", { name: "Next page" }));
-
-    expect(screen.getByText("Page 1 of 3")).toBeInTheDocument();
-    const updater = onPaginationChange.mock.calls[0]?.[0] as (state: object) => object;
-    expect(updater({ pageIndex: 0, pageSize: 25 })).toEqual({ pageIndex: 1, pageSize: 25 });
+    expect(screen.getByText("Page 2 of 3")).toBeInTheDocument();
+    expect(screen.getByText("26–50 of 60")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Previous page" })).toHaveAttribute(
+      "href",
+      "/brands?q=lak&page=1",
+    );
+    expect(screen.getByRole("link", { name: "Next page" })).toHaveAttribute(
+      "href",
+      "/brands?q=lak&page=3",
+    );
   });
 });

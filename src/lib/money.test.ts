@@ -1,0 +1,17 @@
+import { formatMoney } from "./money";
+
+describe("formatMoney", () => {
+  it("groups rupees the Indian way and keeps two places", () => {
+    expect(formatMoney("190350.00")).toBe("Rs 1,90,350.00");
+    expect(formatMoney("5400.5")).toBe("Rs 5,400.50");
+    expect(formatMoney("0.00")).toBe("Rs 0.00");
+  });
+
+  it("keeps digits exact beyond float precision", () => {
+    expect(formatMoney("12345678901234567.89")).toBe("Rs 12,34,56,78,90,12,34,567.89");
+  });
+
+  it("returns a malformed amount verbatim instead of NaN", () => {
+    expect(formatMoney("abc")).toBe("abc");
+  });
+});

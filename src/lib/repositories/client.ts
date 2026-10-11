@@ -19,6 +19,8 @@ const TOKEN_PATHS = new Set(["auth/token/", "auth/token/refresh/"]);
 export const httpClient = axios.create({
   baseURL: `${env.VITE_API_URL}/api/v1/`,
   headers: { Accept: "application/json" },
+  // DRF reads a repeated filter as `status=a&status=b`; Axios would send `status[]=a`.
+  paramsSerializer: { indexes: null },
 });
 
 httpClient.interceptors.request.use((config) => {

@@ -1,6 +1,6 @@
 # Orders
 
-Status: In progress
+Status: Implemented
 
 Last updated: 2026-10-11
 
@@ -19,8 +19,8 @@ What is included in this implementation?
 
 - `/orders`: a server-paginated `DataTable` of number, placed date and time, customer,
   phone, units, total and a status `badge`
-  - status `tabs` (All, Pending, Confirmed, Shipped, Delivered, Cancelled), search, and
-    a date range (`calendar` + `popover`), all in the URL
+  - status `tabs` (All, Pending, Confirmed, Shipped, Delivered, Cancelled), search, a
+    date range (`calendar` + `popover`) and the page, all in the URL
   - filtered and unfiltered empty states
 - `/orders/$orderId`: a customer and address `card`, an items `table` with line
   totals, the API's subtotal, shipping fee and total, the payment method and the note
@@ -50,74 +50,57 @@ What is explicitly outside the scope?
 
 ## Planned
 
-- `src/features/orders/` — `orders.repository.ts` (`listOrders`, `getOrder`,
-  `transitionOrder`), `order.schema.ts`, `orders.queries.ts` (`orderKeys`,
-  `orderQueries.list(filters)`, `.detail(id)`), `orders.mutations.ts`
-  (`useTransitionOrder`: writes the returned order into its detail key, invalidates
-  order lists, the dashboard, products and stock history), `components/`
-  (`orders-table`, `status-tabs`, `date-range-filter`, `order-items-card`,
-  `customer-card`, `order-actions`). `order.schema.ts` reuses
-  `ORDER_STATUS_SCHEMA` for `status` and `allowed_transitions`.
-- `src/routes/_dashboard/orders/index.tsx` — `validateSearch`: `status` (repeatable,
-  known statuses only, normalised to the API's order), `q`, `from`, `to` (ISO dates),
-  `page`. Maps to `status`, `search`, `created_after`, `created_before`, `limit` 25,
-  `offset`.
-- `src/routes/_dashboard/orders/$orderId.tsx` — loader ensures the detail; a
-  `not_found` renders the not-found page.
-- Status tabs: a URL with two or more statuses (the dashboard's awaiting-action link)
-  selects no tab. On a narrow screen the tab list scrolls inside its wrapper.
-- Date range: two-month `calendar` in range mode, written to the URL once both ends
-  are chosen, a clear button, future days disabled; the button's accessible name
-  includes the range.
-- The detail grid is one column below `xl`, so the items table scrolls inside its card
-  on a phone. The phone number is a `tel:` link.
-- List state follows the list-state rules in [tanstack-query.md](tanstack-query.md#rules-for-features):
-  filters, search and tabs write the URL with `navigate({ search, replace: true })`,
-  pagination is a real `Link`, rows stay while the next page loads
-  (`keepPreviousData`), and the normalised filters are the query key.
-- `src/config/navigation.ts` — **Shop → Orders**, after Dashboard (from
-  [app-shell.md](app-shell.md)).
-- `src/components/feedback/confirm-dialog.tsx` — `ConfirmDialog` on `alert-dialog`,
-  first used by cancel; and `empty-state.tsx` — `EmptyState` on shadcn `empty`, first
-  used by the filtered and unfiltered empty list. Both are shared, so taxonomy and
-  products reuse them (from [app-shell.md](app-shell.md)).
-- Add shadcn `tabs`, `calendar`, `popover`, `empty`, `alert-dialog` when building.
-
-Error treatment:
-
-| `code`                      | Treatment                                                           |
-| --------------------------- | ------------------------------------------------------------------- |
-| `invalid_status_transition` | Toast: "The order cannot move to that status from where it is now." |
-| `order_already_shipped`     | Toast: "The order has already shipped…"                             |
-| `order_not_cancellable`     | Toast: "Only pending or confirmed orders can be cancelled."         |
-| `not_found` (read)          | The not-found page                                                  |
-
-Planned tests: only allowed transitions render, none for a finished order; cancel
-needs the confirm that mentions stock; each 422 code's sentence is toasted; the
-returned order lands in the cache and the lists and dashboard are invalidated;
-repeated statuses, search and dates reach the API query and unknown values are
-dropped; statuses in a different order share one query key; a page change keeps the
-old rows until the new page arrives; every status has a distinct badge; Playwright from the dashboard to the list
-and an order.
+None.
 
 ---
 
 ## Implemented
 
-Built with the app shell ([app-shell.md](app-shell.md)):
-
-- `src/features/orders/schemas/order-status.schema.ts` — `ORDER_STATUS_SCHEMA`
-  (`pending`, `confirmed`, `shipped`, `delivered`, `cancelled`) and `OrderStatus`.
-- `src/features/orders/order-status.ts` — `ORDER_STATUS`: status → label and badge
-  variant (`warning`, `info`, `secondary`, `success`, `destructive`).
-- `src/features/orders/components/order-status-badge.tsx` — `OrderStatusBadge`,
-  exported from `index.ts`. Tested in `order-status-badge.test.tsx`.
+- `src/features/orders/`:
+  - `schemas/order-status.schema.ts` — `ORDER_STATUS_SCHEMA` (`pending`, `confirmed`,
+    `shipped`, `delivered`, `cancelled`); `order-status.ts` — `ORDER_STATUS` (label
+    and badge variant) and `TRANSITION_LABEL`
+  - `schemas/order.schema.ts` — `ORDER_LIST_ITEM_SCHEMA`, `ORDER_ITEM_SCHEMA`,
+    `ORDER_SCHEMA` (the detail), money as strings
+  - `schemas/order-filters.schema.ts` — `ORDER_FILTERS_SCHEMA`, the list route's
+    `validateSearch`: `status` (one or many; unknown dropped; de-duplicated and put in
+    the API's order, so equal filters share one key), `q` (trimmed), `from`/`to`
+    (`YYYY-MM-DD`), `page` (≥ 1). Each field falls back on its own.
+  - `repositories/orders.repository.ts` — `listOrders` (filters → `status`,
+    `search`, `created_after`, `created_before`, and `limit`/`offset` through
+    `toListParams`), `getOrder`, `transitionOrder`
+  - `queries/orders.queries.ts` — `orderKeys`; `orderQueries.list(filters)` (`live`,
+    `keepPreviousData`) and `.detail(id)` (`live`)
+  - `queries/orders.mutations.ts` — `useTransitionOrder`: writes the returned order
+    into its detail key, invalidates order lists (`meta.invalidates`), toasts
+    "TL-… is now <status>"; on failure toasts `describeError` and refetches the detail
+  - `components/` — `orders-list` (tabs, search, date range and table, given the
+    filters and a change handler by the route), `orders-table`, `status-tabs`,
+    `order-search` (debounced 300 ms), `date-range-filter` (first click starts the
+    range, second ends it; future days disabled; the label names the range),
+    `order-detail`, `order-items-card`, `customer-card` (`tel:` link, note),
+    `order-actions` (buttons from `allowed_transitions`; **Cancel order** behind
+    `ConfirmDialog`), `order-status-badge`
+- `src/routes/_dashboard/orders/index.tsx` — validates the search, starts the list
+  prefetch without awaiting it, and sends filter changes to the URL with
+  `replace`, dropping `page`.
+- `src/routes/_dashboard/orders/$orderId.tsx` — awaits the detail; `not_found`
+  renders the not-found page.
+- `src/config/navigation.ts` — **Shop → Orders**.
+- Shared, built here: `ConfirmDialog` and `EmptyState`
+  (`src/components/feedback/`), `DataTable`'s link pager, `src/lib/money.ts`
+  (`formatMoney`), `src/lib/date.ts`, and the HTTP client's repeated-key array
+  params.
 
 ---
 
 ## Remaining
 
-- Everything in Planned.
+- `e2e/orders.spec.ts` has not been run against the live API; it needs the staff
+  credentials (see [staff-auth.md](staff-auth.md#remaining)).
+- The dashboard, products and stock history are added to `useTransitionOrder`'s
+  `meta.invalidates` by those features, once their key factories exist (a cancel
+  restores stock).
 
 ---
 
@@ -151,6 +134,15 @@ toasted, and the detail refetches.
 - `item_count` is units (the sum of quantities), not lines.
 - `created_after` and `created_before` are inclusive `Asia/Kathmandu` days. The date
   picker's days are the browser's local days; they agree for staff in Nepal.
+- `status` must be sent as a repeated key (`status=a&status=b`); the HTTP client's
+  `paramsSerializer: { indexes: null }` does this for every array param.
+- `POST …/transition/` answers with the full order detail, so the page shows it
+  without a refetch.
+- The list route does not await its loader: awaiting would hold a filter change and,
+  after a second, replace the whole page (search box included) with the pending
+  skeleton. The table keeps the previous rows, dimmed, instead.
+- react-day-picker's own range selection completes on the first click (a one-day
+  range), so the date filter tracks the clicks itself.
 
 ---
 
@@ -181,15 +173,37 @@ Signed-in staff (the API). Any staff user may move any order.
 
 ## Tests
 
-None yet; see Planned.
+- `schemas/order-filters.schema.test.ts` — statuses normalised (order, duplicates,
+  unknown, single value); malformed dates, page and an empty search dropped.
+- `components/orders-list.test.tsx` — rows with formatted total and badge; the URL's
+  filters reach the API as `status` (repeated), `search`, `created_after`,
+  `created_before`, `limit`, `offset`; a tab writes `?status=` and drops `page`; the
+  previous rows stay (busy) while the next page loads; the empty states.
+- `components/order-detail.test.tsx` — items, shade line, API totals, `tel:` link and
+  note; an unknown id shows not-found; only allowed transitions render, none for a
+  finished order; a move shows the returned order without a second GET; cancel needs
+  the stock confirmation; each 422 code toasts its sentence and refetches.
+- `components/order-status-badge.test.tsx` — labels and distinct variants.
+- `src/components/data-table/data-table.test.tsx` — the pager links keep the other
+  search params.
+- `src/lib/money.test.ts`, `src/lib/date.test.ts`, and the repeated-key case in
+  `src/lib/repositories/client.test.ts`.
+- `e2e/orders.spec.ts` — list, a status tab, an order, back to the same filter.
+  Skipped without the staff credentials.
 
 ---
 
 ## Files
 
 ```text
-src/features/orders/                     planned
-src/routes/_dashboard/orders/            planned
+src/features/orders/
+src/routes/_dashboard/orders/
+src/components/feedback/confirm-dialog.tsx
+src/components/feedback/empty-state.tsx
+src/components/data-table/data-table.tsx
+src/lib/money.ts
+src/lib/date.ts
+e2e/orders.spec.ts
 ```
 
 ---

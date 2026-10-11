@@ -1,5 +1,5 @@
 import type { LinkProps } from "@tanstack/react-router";
-import { LayoutDashboardIcon, type LucideIcon } from "lucide-react";
+import { LayoutDashboardIcon, ShoppingBagIcon, type LucideIcon } from "lucide-react";
 
 export interface NavigationItem {
   title: string;
@@ -14,5 +14,11 @@ export interface NavigationGroup {
 
 // An entry is added when its route exists: `to` is type-checked against the route tree.
 export const NAVIGATION: readonly NavigationGroup[] = [
-  { label: "Shop", items: [{ title: "Dashboard", to: "/", icon: LayoutDashboardIcon }] },
+  {
+    label: "Shop",
+    items: [
+      { title: "Dashboard", to: "/", icon: LayoutDashboardIcon },
+      { title: "Orders", to: "/orders", icon: ShoppingBagIcon },
+    ],
+  },
 ];

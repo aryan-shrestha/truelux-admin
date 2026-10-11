@@ -62,6 +62,8 @@ What is explicitly outside the scope?
 
 ## Planned
 
+- Add `productKeys.all` to `useTransitionOrder`'s `meta.invalidates`
+  (`src/features/orders/queries/orders.mutations.ts`): a cancel puts stock back.
 - `src/features/products/` — `products.repository.ts` (products, variants, images),
   `product.schema.ts`, `variant.schema.ts`, `image.schema.ts`, `products.queries.ts`
   (`productKeys`, `productQueries.list(filters)`, `.detail(id)`),

@@ -54,6 +54,8 @@ What is explicitly outside the scope?
 
 ## Planned
 
+- Add the stock-history keys to `useTransitionOrder`'s `meta.invalidates`
+  (`src/features/orders/queries/orders.mutations.ts`): a cancel records a movement.
 - `src/features/products/` (stock belongs to the variant) — `stock.repository.ts`
   (`adjustStock`, `setStockCount`, `listStockMovements`), `stock.schema.ts`
   (`stockChangeSchema`: `kind`, `quantity`, `note`; `STOCK_CHANGE_OPTIONS`;

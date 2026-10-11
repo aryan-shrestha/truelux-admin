@@ -40,6 +40,20 @@ describe("httpClient", () => {
     await expect(request).rejects.toMatchObject({ status: 404, code: "not_found" });
   });
 
+  it("repeats a key for each value of an array parameter, as DRF expects", async () => {
+    let sentSearch = "";
+    server.use(
+      http.get("*/api/v1/admin/orders/", ({ request }) => {
+        sentSearch = new URL(request.url).search;
+        return HttpResponse.json({ count: 0 });
+      }),
+    );
+
+    await httpClient.get("admin/orders/", { params: { status: ["pending", "confirmed"] } });
+
+    expect(sentSearch).toBe("?status=pending&status=confirmed");
+  });
+
   it("sends the stored access token, but not to the token endpoint", async () => {
     saveSession({ access: "a1", refresh: "r1" });
     const sent: (string | null)[] = [];

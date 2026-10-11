@@ -52,12 +52,15 @@ src/
         ui/           shadcn, generated
         layout/       app sidebar, top bar, page header, refresh button
         data-table/   DataTable for server-paginated lists
-        feedback/     route error, not-found and pending pages
+        feedback/     route error, not-found and pending pages, ConfirmDialog,
+                      EmptyState
     lib/
         repositories/ client.ts (the Axios instance), session.ts (the tokens),
                       errors.ts, pagination.ts
         env.ts        Zod-validated VITE_* variables (ADR 0004)
         freshness.ts  staleTime / polling classes every queryOptions spreads
+        money.ts      formatMoney: decimal strings, never floats
+        date.ts       dates and calendar days in the browser's zone
         theme.ts      applies the theme preference to <html>
         cn.ts         class-name helper used by shadcn
     stores/           ui.store.ts

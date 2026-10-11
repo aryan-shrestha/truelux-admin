@@ -76,8 +76,11 @@ document.
 
 - Route search params validated with Zod in `validateSearch`; filters, search and
   page write the URL with `navigate({ search, replace: true })`, and pagination with
-  a real `Link` so middle-click and new tabs work. A list keeps its old rows while the
-  new page loads (`placeholderData: keepPreviousData`).
+  a real `Link` so middle-click and new tabs work (`DataTable`'s pager does this). A
+  list keeps its old rows while the new page loads
+  (`placeholderData: keepPreviousData`), so its route starts the prefetch without
+  awaiting it: an awaited loader would hold the navigation and, after a second, show
+  the pending skeleton instead. Applied first by [orders.md](orders.md).
 - A filter object is part of the key; normalise it (order repeated statuses) so the
   same filters share one entry.
 - Optimistic updates only for image order, image alt text and the list's publish

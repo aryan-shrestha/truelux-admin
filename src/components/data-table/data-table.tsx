@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import {
   flexRender,
   getCoreRowModel,
@@ -8,6 +9,7 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import { ArrowDownIcon, ArrowUpIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,28 +24,45 @@ import {
 
 const SKELETON_ROWS = 5;
 
-// Pagination and sorting happen on the API, so the table only renders the current page
-// and reports state changes; the caller turns them into request parameters.
+// The table is shared, so the router cannot type a link relative to whichever route
+// renders it; every such route has a 1-based `page` search param (convention.md).
+function pageSearch(page: number) {
+  return ((previous: Record<string, unknown>) => ({ ...previous, page })) as never;
+}
+
+function PageLink({ page, label, children }: { page: number; label: string; children: ReactNode }) {
+  return (
+    <Button variant="outline" size="icon" asChild>
+      <Link to="." search={pageSearch(page)} aria-label={label}>
+        {children}
+      </Link>
+    </Button>
+  );
+}
+
+// Pagination and sorting happen on the API, so the table only renders the current page.
+// The page lives in the route's 1-based `page` search param, and the pager is made of
+// real links, so the back button, a reload and a middle-click all keep the page.
 export function DataTable<TData, TValue>({
   columns,
   data,
   rowCount,
   pagination,
-  onPaginationChange,
   sorting = [],
   onSortingChange,
   isLoading = false,
-  emptyMessage = "No results.",
+  isPlaceholderData = false,
+  empty = "No results.",
 }: {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   rowCount: number;
   pagination: PaginationState;
-  onPaginationChange: OnChangeFn<PaginationState>;
   sorting?: SortingState;
   onSortingChange?: OnChangeFn<SortingState>;
   isLoading?: boolean;
-  emptyMessage?: string;
+  isPlaceholderData?: boolean;
+  empty?: ReactNode;
 }) {
   // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table returns unstable functions by design; nothing here is memoised on them.
   const table = useReactTable({
@@ -51,7 +70,6 @@ export function DataTable<TData, TValue>({
     data,
     rowCount,
     state: { pagination, sorting },
-    onPaginationChange,
     onSortingChange,
     manualPagination: true,
     manualSorting: true,
@@ -60,6 +78,9 @@ export function DataTable<TData, TValue>({
   });
 
   const pageCount = Math.max(table.getPageCount(), 1);
+  const page = pagination.pageIndex + 1;
+  const firstRow = rowCount === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
+  const lastRow = Math.min(page * pagination.pageSize, rowCount);
 
   return (
     <div className="space-y-3">
@@ -100,7 +121,10 @@ export function DataTable<TData, TValue>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
+          <TableBody
+            aria-busy={isPlaceholderData}
+            className={isPlaceholderData ? "opacity-60" : undefined}
+          >
             {isLoading ? (
               Array.from({ length: SKELETON_ROWS }, (_, rowIndex) => (
                 <TableRow key={rowIndex}>
@@ -117,7 +141,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  {emptyMessage}
+                  {empty}
                 </TableCell>
               </TableRow>
             ) : (
@@ -134,28 +158,33 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end gap-2 text-sm">
-        <span className="text-muted-foreground">
-          Page {pagination.pageIndex + 1} of {pageCount}
-        </span>
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label="Previous page"
-          disabled={!table.getCanPreviousPage()}
-          onClick={() => table.previousPage()}
-        >
-          <ChevronLeftIcon />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label="Next page"
-          disabled={!table.getCanNextPage()}
-          onClick={() => table.nextPage()}
-        >
-          <ChevronRightIcon />
-        </Button>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+        <p aria-live="polite">
+          {rowCount === 0 ? "No results" : `${firstRow}–${lastRow} of ${rowCount}`}
+        </p>
+        <div className="flex items-center gap-2">
+          <span>
+            Page {page} of {pageCount}
+          </span>
+          {table.getCanPreviousPage() ? (
+            <PageLink page={page - 1} label="Previous page">
+              <ChevronLeftIcon />
+            </PageLink>
+          ) : (
+            <Button variant="outline" size="icon" aria-label="Previous page" disabled>
+              <ChevronLeftIcon />
+            </Button>
+          )}
+          {table.getCanNextPage() ? (
+            <PageLink page={page + 1} label="Next page">
+              <ChevronRightIcon />
+            </PageLink>
+          ) : (
+            <Button variant="outline" size="icon" aria-label="Next page" disabled>
+              <ChevronRightIcon />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -54,6 +54,9 @@ What is explicitly outside the scope?
   60 s while visible, refetched on focus).
 - `src/routes/_dashboard/index.tsx` — the loader ensures the query; the page composes
   the five sections.
+- Add `dashboardKeys.all` to `useTransitionOrder`'s `meta.invalidates` in
+  `src/features/orders/queries/orders.mutations.ts` (export the keys from the
+  dashboard's `index.ts`): an order move changes the KPIs and the status counts.
 - The route sets its own `pendingComponent`, a skeleton shaped like these sections.
   The router's default `PageSkeleton` ([app-shell.md](app-shell.md)) is a generic
   header, KPI row and table, and does not match the dashboard's layout.

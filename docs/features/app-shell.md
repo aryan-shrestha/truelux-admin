@@ -56,13 +56,14 @@ None. The pieces that need a page to exist are tracked by the feature that build
 that page:
 
 - Navigation entries, added to `src/config/navigation.ts` with their routes (`Link`'s
-  `to` is type-checked against the route tree): Orders in [orders.md](orders.md);
-  Brands, Categories, Shades, Sizes and Skin types in [taxonomy.md](taxonomy.md);
-  Products in [products.md](products.md); Settings → Shipping in
-  [shipping-settings.md](shipping-settings.md).
-- `ConfirmDialog` (on `alert-dialog`) and `EmptyState` (on shadcn `empty`), built
-  in `src/components/feedback/` with their first caller, [orders.md](orders.md), and
-  reused by the rest.
+  `to` is type-checked against the route tree): Brands, Categories, Shades, Sizes and
+  Skin types in [taxonomy.md](taxonomy.md); Products in [products.md](products.md);
+  Settings → Shipping in [shipping-settings.md](shipping-settings.md). Orders is in
+  place.
+- `ConfirmDialog` (on `alert-dialog`; the caller owns `open` and the mutation, and
+  closes it on success) and `EmptyState` (on shadcn `empty`) exist in
+  `src/components/feedback/`, built with [orders.md](orders.md); later features reuse
+  them.
 
 ---
 
@@ -73,7 +74,7 @@ that page:
   `@/features/auth` is passed as the sidebar's `footer`, because shared layout code
   may not import a feature (ADR 0003).
 - `src/config/navigation.ts` — `NAVIGATION` as groups (`{ label, items }`); today
-  **Shop → Dashboard**.
+  **Shop → Dashboard, Orders**.
 - `src/components/layout/app-sidebar.tsx` — `collapsible="icon"`, a "TL" tile and
   "TrueLux Admin" as the brand, a `SidebarGroupLabel` per group inside a
   `navigation` landmark named "Main", `aria-current="page"` and tooltips on the
