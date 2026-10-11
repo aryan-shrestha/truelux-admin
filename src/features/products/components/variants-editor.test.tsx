@@ -85,7 +85,7 @@ describe("variants", () => {
 
     expect(screen.queryByLabelText("Opening stock of LUM-SF-30-WB")).not.toBeInTheDocument();
     expect(save).toBeDisabled();
-    await user.clear(screen.getByLabelText("Price of LUM-SF-30-WB"));
+    await user.clear(screen.getByLabelText("Price override of LUM-SF-30-WB"));
     await user.click(save);
 
     expect(await screen.findByText("LUM-SF-30-WB saved")).toBeInTheDocument();
@@ -183,5 +183,60 @@ describe("variants", () => {
     ).toBeInTheDocument();
     expect(deleteRequests).toBe(1);
     expect(screen.getByLabelText("SKU of LUM-SF-30-WB")).toBeInTheDocument();
+  });
+
+  it("shows the API's discount only on a variant it marks on sale", async () => {
+    const onSale = {
+      ...SAVED_VARIANT,
+      id: "0e000000-0000-4000-8000-000000000002",
+      sku: "LUM-SF-50-WB",
+      compare_at_price: "3200.00",
+      on_sale: true,
+      discount_percent: 15,
+    };
+    server.use(http.get(PRODUCT_PATH, () => HttpResponse.json(product([SAVED_VARIANT, onSale]))));
+    renderApp(`/products/${PRODUCT_ID}?tab=variants`);
+
+    const saleRow = (await screen.findByLabelText("SKU of LUM-SF-50-WB")).closest(
+      "tr",
+    ) as HTMLElement;
+    const otherRow = screen.getByLabelText("SKU of LUM-SF-30-WB").closest("tr") as HTMLElement;
+
+    expect(within(saleRow).getByText("−15%")).toBeInTheDocument();
+    expect(within(otherRow).queryByText(/%$/)).not.toBeInTheDocument();
+    expect(within(otherRow).getByLabelText("Compare-at price of LUM-SF-30-WB")).toHaveAttribute(
+      "placeholder",
+      "Not on sale",
+    );
+  });
+
+  it("puts the API's compare-at error on the edited row only", async () => {
+    const user = userEvent.setup();
+    const second = {
+      ...SAVED_VARIANT,
+      id: "0e000000-0000-4000-8000-000000000002",
+      sku: "LUM-SF-50-WB",
+    };
+    server.use(
+      http.get(PRODUCT_PATH, () => HttpResponse.json(product([SAVED_VARIANT, second]))),
+      http.patch(`*/api/v1/admin/variants/${second.id}/`, () =>
+        errorEnvelope(400, "validation_error", {
+          compare_at_price: ["Must be greater than the price."],
+        }),
+      ),
+    );
+    renderApp(`/products/${PRODUCT_ID}?tab=variants`);
+    const field = await screen.findByLabelText("Compare-at price of LUM-SF-50-WB");
+
+    await user.type(field, "2000");
+    await user.click(screen.getByRole("button", { name: "Save LUM-SF-50-WB" }));
+
+    const secondRow = field.closest("tr") as HTMLElement;
+    const firstRow = screen.getByLabelText("SKU of LUM-SF-30-WB").closest("tr") as HTMLElement;
+    expect(
+      await within(secondRow).findByText("Must be greater than the price."),
+    ).toBeInTheDocument();
+    expect(field).toHaveAttribute("aria-invalid", "true");
+    expect(within(firstRow).queryByText("Must be greater than the price.")).not.toBeInTheDocument();
   });
 });

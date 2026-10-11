@@ -41,7 +41,9 @@ export function VariantsEditor({ product }: { product: Product }) {
         <CardTitle>Variants</CardTitle>
         <CardDescription>
           Each size and shade a product comes in. A blank price uses the base price,{" "}
-          {formatMoney(product.base_price)}. Opening stock is set when a variant is added.
+          {formatMoney(product.base_price)}. Opening stock is set when a variant is added. To put a
+          variant on sale, lower its price (or the base price), enter the old price as the
+          compare-at price, and save; clear the compare-at price to end the sale.
         </CardDescription>
         <CardAction>
           <Button variant="outline" onClick={addDraft}>
@@ -65,8 +67,8 @@ export function VariantsEditor({ product }: { product: Product }) {
                 <TableHead>Size</TableHead>
                 <TableHead>Shade</TableHead>
                 <TableHead className="text-right">Stock</TableHead>
-                <TableHead>Price (Rs)</TableHead>
-                <TableHead>Compare-at (Rs)</TableHead>
+                <TableHead>Price override (Rs)</TableHead>
+                <TableHead>Compare-at price (Rs)</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>

@@ -2,12 +2,14 @@ import { z } from "zod";
 
 import { MONEY_PATTERN } from "@/lib/money";
 
-// Empty means "use the product's price" / "not on sale"; the API's own rule that a
-// compare-at price exceeds the variant's price is left to the API.
+// Empty means "use the product's price" / "not on sale". Otherwise more than 0 (the
+// API's minimum is 0.01), checked on the string's digits, never as a float. Whether a
+// compare-at price exceeds the variant's price is the API's rule, not repeated here.
 const OPTIONAL_AMOUNT = z
   .string()
   .trim()
-  .refine((value) => value === "" || MONEY_PATTERN.test(value), "Enter an amount such as 1250.50.");
+  .refine((value) => value === "" || MONEY_PATTERN.test(value), "Enter an amount such as 1250.50.")
+  .refine((value) => value === "" || /[1-9]/.test(value), "Enter an amount above 0.");
 
 export const VARIANT_FORM_SCHEMA = z.object({
   sku: z.string().trim().min(1, "Enter a SKU.").max(64, "Use at most 64 characters."),

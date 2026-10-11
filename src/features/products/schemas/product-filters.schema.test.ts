@@ -1,6 +1,13 @@
 import { PRODUCT_FILTERS_SCHEMA } from "./product-filters.schema";
 
 describe("PRODUCT_FILTERS_SCHEMA", () => {
+  it.each(["yes", "1", "false", false])(
+    "drops on_sale=%s, which the API would refuse",
+    (on_sale) => {
+      expect(PRODUCT_FILTERS_SCHEMA.parse({ on_sale }).on_sale).toBeUndefined();
+    },
+  );
+
   it("keeps known values and drops the rest instead of failing", () => {
     const filters = PRODUCT_FILTERS_SCHEMA.parse({
       q: " silk ",

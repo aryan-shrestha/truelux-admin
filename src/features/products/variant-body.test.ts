@@ -34,3 +34,22 @@ describe("variant request bodies", () => {
     expect(VARIANT_FORM_SCHEMA.safeParse({ ...VALUES, stock_quantity: "2.5" }).success).toBe(false);
   });
 });
+
+describe("compare-at price", () => {
+  it("keeps a compare-at price as the string typed, whatever the price", () => {
+    const values = VARIANT_FORM_SCHEMA.parse({
+      ...VALUES,
+      price_override: "3200",
+      compare_at_price: "100.5",
+    });
+
+    expect(toVariantBody(values, false)).toMatchObject({
+      price_override: "3200",
+      compare_at_price: "100.5",
+    });
+  });
+
+  it.each(["0", "0.00", "-1", "3,200", "12.345", "abc"])("rejects %s", (compare_at_price) => {
+    expect(VARIANT_FORM_SCHEMA.safeParse({ ...VALUES, compare_at_price }).success).toBe(false);
+  });
+});

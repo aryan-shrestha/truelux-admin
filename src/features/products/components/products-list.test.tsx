@@ -66,6 +66,7 @@ describe("products list", () => {
     const toner = screen.getByRole("link", { name: "Rose Toner" }).closest("tr") as HTMLElement;
     expect(within(toner).getByText("Out")).toBeInTheDocument();
     expect(within(toner).getByText("Draft")).toBeInTheDocument();
+    expect(within(toner).queryByText("On sale")).not.toBeInTheDocument();
   });
 
   it("sends the URL's filters to the API in its own terms", async () => {

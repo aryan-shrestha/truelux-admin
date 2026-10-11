@@ -7,6 +7,7 @@ import type { z } from "zod";
 
 import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import { showApiError } from "@/components/form/show-api-error";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -226,7 +227,7 @@ export function VariantRow({
         <CellInput
           control={form.control}
           name="price_override"
-          label={`Price of ${label}`}
+          label={`Price override of ${label}`}
           placeholder={basePrice}
           inputMode="decimal"
         />
@@ -236,8 +237,15 @@ export function VariantRow({
           control={form.control}
           name="compare_at_price"
           label={`Compare-at price of ${label}`}
+          placeholder="Not on sale"
           inputMode="decimal"
         />
+        {/* The API decides a variant is on sale and by how much; nothing is compared here. */}
+        {variant?.on_sale && variant.discount_percent !== null && (
+          <Badge variant="info" className="mt-1">
+            −{variant.discount_percent}%
+          </Badge>
+        )}
       </TableCell>
       <TableCell className="w-28">
         <div className="flex justify-end gap-1">

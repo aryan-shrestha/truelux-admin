@@ -1,6 +1,6 @@
 # Sale prices
 
-Status: Planned
+Status: Implemented
 
 Last updated: 2026-10-11
 
@@ -51,35 +51,36 @@ What is explicitly outside the scope?
 
 ## Planned
 
-- `variant.schema.ts` — `compare_at_price` shares the optional-price rule with
-  `price_override`: trimmed, blank becomes `null`, decimal format, more than 0.
-- `variant-row.tsx` — the compare-at cell (placeholder "Not on sale", `aria-label`
-  "Compare-at price of {sku}") and the badge only when the saved variant's `on_sale`
-  is true. Both values come from the API; nothing is compared in the browser.
-- The API's `compare_at_price` field error lands on that row's cell, not another row
-  and not as a form alert.
-- Products route: `on_sale=true` in `validateSearch`, mapped to the API's
-  `on_sale=true`; other values dropped. `products-table.tsx`: an `info` "On sale"
-  badge when the list item's `on_sale` is true.
-
-Planned tests: a blank compare-at is `null`; a value is kept as a string whatever
-the price; `0`, `-1`, `3,200`, `12.345` and `abc` are rejected; `on_sale=true`
-reaches the API query and other values are dropped; the badge shows only for a
-variant the API marks `on_sale`; the field error lands on the edited row; only rows
-the API marks `on_sale` get the list badge; Playwright against the live API, restoring
-the variant afterwards.
+None.
 
 ---
 
 ## Implemented
 
-None.
+- `src/features/products/schemas/variant-form.schema.ts` — `compare_at_price` and
+  `price_override` share one optional-amount rule: trimmed, blank allowed (sent as
+  `null` by `variant-body.ts`), a decimal string with up to two places, more than 0
+  (checked on the digits, never as a float). Whether a compare-at exceeds the price is
+  left to the API.
+- `components/variant-row.tsx` — the **Compare-at price (Rs)** cell (placeholder "Not
+  on sale", labelled "Compare-at price of {sku}") beside **Price override (Rs)**, and
+  an `info` "−{discount_percent}%" badge only when the saved variant's `on_sale` is
+  true. Both values come from the API.
+- `components/variants-editor.tsx` — the help text: lower the price or set an
+  override, enter the old price as the compare-at, save; clear it to end the sale.
+- The API's `compare_at_price` field error lands on that row's cell, through the
+  row's own form (`showApiError`).
+- Built with [products.md](products.md) slice 1: `?on_sale=true` in the products
+  route's `validateSearch` (any other value dropped), sent as the API's
+  `on_sale=true`; an `info` "On sale" badge in `products-table.tsx` when the list item's
+  `on_sale` is true.
 
 ---
 
 ## Remaining
 
-- Everything in Planned. Depends on [products.md](products.md).
+- `e2e/sale-prices.spec.ts` has not been run against the live API (see
+  [staff-auth.md](staff-auth.md#remaining)).
 
 ---
 
@@ -136,17 +137,31 @@ Signed-in staff (the API).
 
 ## Tests
 
-None yet; see Planned.
+- `src/features/products/variant-body.test.ts` — a blank compare-at is `null`; a
+  value is kept as typed whatever the price; `0`, `0.00`, `-1`, `3,200`, `12.345` and
+  `abc` are rejected.
+- `src/features/products/schemas/product-filters.schema.test.ts` — `on_sale` other
+  than `true` (`yes`, `1`, `false`) is dropped; `products-list.test.tsx` — `on_sale=true`
+  reaches the API query, and only rows the API marks `on_sale` get the badge.
+- `src/features/products/components/variants-editor.test.tsx` — the discount badge
+  shows only on a variant the API marks on sale; the placeholder; the API's
+  compare-at error lands on the edited row only.
+- `e2e/sale-prices.spec.ts` — creates a product, puts its variant on sale, sees the
+  badge and the list filter, and deletes the product (live API; skipped without staff
+  credentials).
 
 ---
 
 ## Files
 
 ```text
-src/features/products/schemas/variant.schema.ts       planned
-src/features/products/components/variant-row.tsx      planned
-src/features/products/components/products-table.tsx  planned
-src/routes/_dashboard/products/index.tsx              planned
+src/features/products/schemas/variant-form.schema.ts
+src/features/products/variant-body.ts
+src/features/products/components/variant-row.tsx
+src/features/products/components/variants-editor.tsx
+src/features/products/components/products-table.tsx
+src/features/products/schemas/product-filters.schema.ts
+e2e/sale-prices.spec.ts
 ```
 
 ---

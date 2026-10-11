@@ -131,9 +131,11 @@ None.
 - `components/variants-editor.tsx`, `variant-row.tsx` — a table where each row is
   its own form (`values` keeps a saved row in step after the refetch): SKU, size,
   shade (swatches or "No shade"), stock (an input only on a draft), price (the base
-  price as placeholder), compare-at. **Save** is enabled only when a saved row
+  price as placeholder), compare-at ([sale-prices.md](sale-prices.md): placeholder,
+  discount badge, prices above 0). **Save** is enabled only when a saved row
   changed. Drafts are added and discarded locally; a saved variant is deleted after
-  a confirm. Every cell is labelled with the variant ("Price of LUM-SF-30-WB").
+  a confirm. Every cell is labelled with the variant ("Price override of
+  LUM-SF-30-WB").
   A save `409` reads "Another variant already has this SKU, or this size and shade."
   under the row; a delete `409` toasts that the variant has been ordered.
 - `src/features/dashboard/components/low-stock-table.tsx` — the product name links
