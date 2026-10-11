@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-const MAX_LOGO_BYTES = 5 * 1024 * 1024;
-const LOGO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+import { IMAGE_FILE_SCHEMA } from "@/lib/image-upload";
 
 export const HEX_PATTERN = /^#[0-9A-Fa-f]{6}$/;
 
@@ -28,11 +27,7 @@ export const BRAND_FORM_SCHEMA = z.object({
   name: nameField(150),
   slug: SLUG_FIELD,
   description: z.string(),
-  logo: z
-    .instanceof(File)
-    .refine((file) => LOGO_TYPES.includes(file.type), "Use a JPEG, PNG or WebP image.")
-    .refine((file) => file.size <= MAX_LOGO_BYTES, "Images must be 5 MB or smaller.")
-    .nullable(),
+  logo: IMAGE_FILE_SCHEMA.nullable(),
   is_active: z.boolean(),
   sort_order: SORT_ORDER_FIELD,
 });

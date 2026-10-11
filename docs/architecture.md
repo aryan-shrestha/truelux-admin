@@ -60,7 +60,8 @@ src/
                       errors.ts, pagination.ts
         env.ts        Zod-validated VITE_* variables (ADR 0004)
         freshness.ts  staleTime / polling classes every queryOptions spreads
-        money.ts      formatMoney: decimal strings, never floats
+        money.ts      formatMoney and MONEY_PATTERN: decimal strings, never floats
+        image-upload.ts  the API's image rules (type, 5 MB) for uploads
         date.ts       dates in the browser's zone; the shop's Kathmandu days
         theme.ts      applies the theme preference to <html>
         cn.ts         class-name helper used by shadcn

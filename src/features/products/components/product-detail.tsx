@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { productQueries } from "../queries/products.queries";
 import type { ProductTab } from "../schemas/product-tab.schema";
 import { ProductForm } from "./product-form";
+import { ImagesManager } from "./images-manager";
 import { VariantsEditor } from "./variants-editor";
 
 export function ProductDetail({
@@ -44,12 +45,16 @@ export function ProductDetail({
         <TabsList>
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="variants">Variants</TabsTrigger>
+          <TabsTrigger value="images">Images</TabsTrigger>
         </TabsList>
         <TabsContent value="details">
           <ProductForm key={product.id} product={product} />
         </TabsContent>
         <TabsContent value="variants">
           <VariantsEditor product={product} />
+        </TabsContent>
+        <TabsContent value="images">
+          <ImagesManager product={product} />
         </TabsContent>
       </Tabs>
     </div>

@@ -5,8 +5,10 @@ import type { ProductFilters } from "../schemas/product-filters.schema";
 import {
   PRODUCT_LIST_ITEM_SCHEMA,
   PRODUCT_SCHEMA,
+  IMAGE_SCHEMA,
   VARIANT_SCHEMA,
   type Product,
+  type ProductImage,
   type Variant,
 } from "../schemas/product.schema";
 
@@ -63,4 +65,20 @@ export async function updateVariant(id: string, body: object): Promise<Variant> 
 
 export async function deleteVariant(id: string): Promise<void> {
   await httpClient.delete(`admin/variants/${id}/`);
+}
+
+// Multipart only: the API answers anything else with 415. The browser sets the
+// boundary, so no Content-Type is given here.
+export async function uploadImage(productId: string, form: FormData): Promise<ProductImage> {
+  const response = await httpClient.post(`admin/products/${productId}/images/`, form);
+  return IMAGE_SCHEMA.parse(response.data);
+}
+
+export async function updateImage(id: string, body: object): Promise<ProductImage> {
+  const response = await httpClient.patch(`admin/images/${id}/`, body);
+  return IMAGE_SCHEMA.parse(response.data);
+}
+
+export async function deleteImage(id: string): Promise<void> {
+  await httpClient.delete(`admin/images/${id}/`);
 }

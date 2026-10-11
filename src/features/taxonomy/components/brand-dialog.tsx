@@ -6,6 +6,7 @@ import { TextareaField } from "@/components/form/textarea-field";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { IMAGE_ACCEPT } from "@/lib/image-upload";
 
 import { BRAND_FORM_SCHEMA } from "../schemas/taxonomy-form.schema";
 import type { Brand } from "../schemas/taxonomy.schema";
@@ -79,7 +80,7 @@ function LogoField({ currentUrl, name }: { currentUrl: string | null; name: stri
             <Input
               id="field-logo"
               type="file"
-              accept="image/jpeg,image/png,image/webp"
+              accept={IMAGE_ACCEPT}
               name={field.name}
               ref={field.ref}
               onBlur={field.onBlur}

@@ -1,6 +1,6 @@
 # Products
 
-Status: In progress
+Status: Implemented
 
 Last updated: 2026-10-11
 
@@ -62,29 +62,7 @@ What is explicitly outside the scope?
 
 ## Planned
 
-Built in four slices. Slices 1 (list), 2 (Details) and 3 (Variants) are implemented; this remains:
-
-**Slice 4: Images**
-
-- Upload several (JPEG/PNG/WebP, ≤ 5 MB each), validated in the browser and by the
-  API; one request per file, in sequence; the first image becomes primary when none
-  is.
-- An **Images** tab (`?tab=images`, added to `PRODUCT_TAB_SCHEMA`).
-- A grid with alt text (optimistic, rolled back on failure), make primary (not
-  optimistic: the API clears the old primary), move earlier/later (renumbers
-  `sort_order` from the displayed order and PATCHes only the images that changed;
-  optimistic), delete after a confirm. Reorder buttons are labelled with the
-  position; images carry the API's `alt_text` (`alt=""` when empty).
-
-Error treatment still to build:
-
-| `code`                   | Treatment                                                       |
-| ------------------------ | --------------------------------------------------------------- |
-| `unsupported_media_type` | Form alert on the upload (a non-multipart body reached the API) |
-
-Planned tests: an upload leaves as `multipart/form-data; boundary=…`; reorder
-renumbers colliding orders; Playwright: create, add a variant, upload an image,
-choose skin types, publish, find it in the list, delete it.
+None.
 
 ---
 
@@ -161,11 +139,32 @@ choose skin types, publish, find it in the list, delete it.
 - `src/features/dashboard/components/low-stock-table.tsx` — the product name links
   to `/products/$productId?tab=variants`.
 
+**Slice 4: Images**
+
+- `?tab=images` (`PRODUCT_TAB_SCHEMA`); `components/images-manager.tsx` and
+  `image-card.tsx`.
+- Upload: several files at once, each checked first against `IMAGE_FILE_SCHEMA`
+  (`src/lib/image-upload.ts`, shared with brand logos: JPEG/PNG/WebP, ≤ 5 MB; a
+  rejected file is toasted by name and never sent). `useUploadImages` sends one
+  multipart request per file, in sequence; the first becomes primary when the
+  product has none. A failure shows as an alert above the grid, and the product is
+  refetched, because files sent before it are kept.
+- Each card: the image with the API's `alt_text` (`alt=""` when empty), a Primary
+  badge, alt text with **Save** (optimistic, rolled back and refetched on failure),
+  move earlier/later (optimistic; `image-order.ts` renumbers from the displayed order
+  and PATCHes only the images whose `sort_order` changed, in sequence), **Primary**
+  (not optimistic: the API demotes the old primary in the same step) and delete after
+  a confirm. Buttons are labelled with the position ("Move image 2 earlier").
+- Image changes invalidate the product and the product lists (thumbnails).
+- `e2e/products.spec.ts` — create, add a variant, upload an image, publish, find it in
+  the list, delete it (against the live API, skipped without staff credentials).
+
 ---
 
 ## Remaining
 
-- Slice 4 (Images) in Planned.
+- `e2e/products.spec.ts` has not been run against the live API (see
+  [staff-auth.md](staff-auth.md#remaining)).
 - A delete `409` on an ordered variant cannot yet suggest setting its stock to 0:
   saved stock changes come with [stock-ledger.md](stock-ledger.md).
 - The stock history keys join `useTransitionOrder`'s and the variant mutations'
@@ -264,6 +263,13 @@ Signed-in staff (the API).
   stock and replaced by the saved row; a draft is discarded without a request; a
   save `409` is explained on the row; a delete needs the confirmation and a `409`
   keeps the row.
+- `image-order.test.ts` — a move renumbers from the new position and reports only
+  the changed images, including colliding stored numbers.
+- `components/images-manager.test.tsx` — uploads go one at a time, the first primary
+  when there is none; a GIF is refused without a request; new alt text shows at once
+  and is put back on failure; a move shows at once and sends only the changed
+  numbers, in order; **Primary** sends `is_primary` and shows the API's answer; a
+  delete needs the confirmation.
 
 ---
 

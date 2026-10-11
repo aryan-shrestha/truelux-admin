@@ -65,8 +65,9 @@ None.
     schema, the kind being the API path segment) and `TaxonomyEntry<K>`
   - `schemas/taxonomy-form.schema.ts` — form schemas sharing field rules: name
     (required, ≤ 150 for brands and categories, ≤ 50 otherwise), slug (empty or
-    `a-z0-9-`), sort order (whole number ≥ 0), hex (`#RRGGBB`), logo (JPEG/PNG/WebP,
-    ≤ 5 MB), `parent_id`
+    `a-z0-9-`), sort order (whole number ≥ 0), hex (`#RRGGBB`), logo
+    (`IMAGE_FILE_SCHEMA` from `src/lib/image-upload.ts`: JPEG/PNG/WebP, ≤ 5 MB),
+    `parent_id`
   - `schemas/taxonomy-search.schema.ts` — `?q=` for the five routes
   - `taxonomy-body.ts` — form values → request: a blank slug is left out, the hex
     is uppercased, and a brand with a new logo becomes `FormData` (JSON otherwise)
