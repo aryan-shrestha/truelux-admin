@@ -1,6 +1,6 @@
 # Shipping settings
 
-Status: Planned
+Status: Implemented
 
 Last updated: 2026-10-11
 
@@ -45,45 +45,41 @@ What is explicitly outside the scope?
 
 ## Planned
 
-- `src/features/settings/` — `shipping-settings.repository.ts`
-  (`getShippingSettings`, `updateShippingSettings`), `shipping-settings.schema.ts`
-  (response, and the form schema), `settings.queries.ts`
-  (`["settings", "shipping"]`), `settings.mutations.ts`, `components/shipping-settings-form.tsx`.
-- `src/routes/_dashboard/settings/shipping.tsx` — loader ensures the query.
-- Form schema: both fees match `^\d+(\.\d{1,2})?$` (so ≥ 0); `has_free_shipping`
-  boolean; while it is on, the threshold is required, matches the pattern and has a
-  non-zero digit (> 0 without parsing the amount).
-- The PATCH body maps `has_free_shipping: false` to `free_shipping_threshold: null`,
-  whatever the threshold field holds.
-- Each amount has an `Rs` `InputGroupAddon`, so the currency is visible and not part
-  of the value. The threshold field is removed, not disabled, while the switch is off.
-- On success the form resets to the saved values.
-- `src/config/navigation.ts` — a **Settings** group with Shipping; from
-  [app-shell.md](app-shell.md).
-- The save mutation's `meta.invalidates` is the shipping settings key
-  ([tanstack-query.md](tanstack-query.md#rules-for-features)).
-- Add shadcn `switch` and `input-group` when building.
-
-Error treatment: `validation_error` details land on the matching field; anything
-else (such as `throttled`) is a form alert.
-
-Planned tests: fees accept `0` and reject negatives, commas and three decimals; with
-the switch on the threshold rejects empty, `0`, `0.00` and negatives; with it off the
-threshold is ignored; the PATCH carries `null` when off and the trimmed string when
-on; API field errors land on the field; Playwright: change the threshold, reload, see
-it kept, then restore the original values.
+None.
 
 ---
 
 ## Implemented
 
-None.
+- `src/features/settings/`:
+  - `schemas/shipping-settings.schema.ts` — the API's shape, amounts as strings
+  - `schemas/shipping-form.schema.ts` — both fees `MONEY_PATTERN` (so ≥ 0);
+    `has_free_shipping`; while it is on, the threshold matches the pattern and has a
+    non-zero digit (above 0, judged on the digits, never as a float); while it is off,
+    the threshold is not checked
+  - `shipping-body.ts` — `free_shipping_threshold: null` when off, whatever the field
+    holds; the trimmed amount when on
+  - `repositories/shipping-settings.repository.ts` — `getShippingSettings`,
+    `updateShippingSettings`
+  - `queries/settings.queries.ts` — `settingsKeys` (`["settings", "shipping"]`),
+    `settingsQueries.shipping()` (`reference`)
+  - `queries/settings.mutations.ts` — `useUpdateShippingSettings` writes the PATCH's
+    answer into the cache (nothing else in the admin shows the fees, so nothing is
+    invalidated)
+  - `components/shipping-settings-form.tsx` — the fees and the threshold in `Rs`
+    input groups, the **Free shipping** switch (the threshold field is removed while
+    off and keeps its value for turning it back on), the help text, "Last updated" from
+    `updated_at`; on success a "Shipping settings saved" toast and a reset to the saved
+    values; the API's field errors under their fields (`showApiError`)
+- `src/routes/_dashboard/settings/shipping.tsx` — awaits the settings in the loader.
+- `src/config/navigation.ts` — the **Settings** group with **Shipping**.
 
 ---
 
 ## Remaining
 
-- Everything in Planned.
+- `e2e/shipping-settings.spec.ts` has not been run against the live API (see
+  [staff-auth.md](staff-auth.md#remaining)).
 
 ---
 
@@ -140,15 +136,25 @@ Signed-in staff (the API).
 
 ## Tests
 
-None yet; see Planned.
+- `shipping-body.test.ts` — fees accept `0` and reject `-1`, `1,500` and `150.505`;
+  with the switch on, the threshold rejects empty, `0`, `0.00` and `-5`; with it off
+  the threshold is ignored; the body carries `null` when off and the trimmed string
+  when on.
+- `components/shipping-settings-form.test.tsx` — starts from the API's settings and
+  shows "Last updated"; switching off removes the threshold field and sends `null`;
+  off and on again keeps the typed threshold; a threshold of 0 is refused without a
+  request; the API's field error lands on its field.
+- `e2e/shipping-settings.spec.ts` — change the threshold, reload, see it kept, then
+  restore the original values (live API; skipped without staff credentials).
 
 ---
 
 ## Files
 
 ```text
-src/features/settings/                         planned
-src/routes/_dashboard/settings/shipping.tsx    planned
+src/features/settings/
+src/routes/_dashboard/settings/shipping.tsx
+e2e/shipping-settings.spec.ts
 ```
 
 ---

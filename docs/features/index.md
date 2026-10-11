@@ -19,7 +19,7 @@ keeps the staff JWT in `localStorage` (ADR 0005). It replaces the Next.js admin 
 | 8   | taxonomy           | Implemented | `features/taxonomy.md`           | 5, 6        | 2026-10-11   |
 | 9   | products           | Implemented | `features/products.md`           | 5, 6, 8     | 2026-10-11   |
 | 10  | orders             | Implemented | `features/orders.md`             | 4, 5, 6     | 2026-10-11   |
-| 11  | shipping-settings  | Planned     | `features/shipping-settings.md`  | 4, 5, 6     | 2026-10-11   |
+| 11  | shipping-settings  | Implemented | `features/shipping-settings.md`  | 4, 5, 6     | 2026-10-12   |
 | 12  | sale-prices        | Implemented | `features/sale-prices.md`        | 9           | 2026-10-11   |
 | 13  | stock-ledger       | Implemented | `features/stock-ledger.md`       | 9           | 2026-10-11   |
 | 14  | deployment         | Blocked     | `features/deployment.md`         | 6           | 2026-10-11   |
@@ -36,9 +36,9 @@ already provides is under each document's **Implemented**, everything else under
 
 ## Implementation order
 
-Done: 6, 3, 4, 5, 10, 7, 8, 9, 12, 13. Next: 11, with 14 once its host is chosen. The shell's navigation entries, `ConfirmDialog`, `EmptyState`, list state and
-optimistic updates are built by the features that first need them; each feature
-document lists its share.
+Done: 6, 3, 4, 5, 10, 7, 8, 9, 12, 13, 11. Only deployment (14) remains, blocked on
+the choice of host. The shell's navigation entries, `ConfirmDialog`, `EmptyState`,
+list state and optimistic updates were built by the features that first needed them.
 
 Orders before the dashboard, because the dashboard links into them and shows their
 status badge. Orders is the reference slice for lists in
@@ -63,9 +63,10 @@ status badge. Orders is the reference slice for lists in
   stored files, which the admin cannot load. Decided: the back-end will return
   absolute URLs; until it does, brand logos (and product images) do not show in
   development ([taxonomy.md](taxonomy.md#remaining)).
-- **Sign-in has not been checked against the live API**: `e2e/auth.spec.ts` needs
-  the API running with this origin in `DJANGO_CORS_ALLOWED_ORIGINS`
-  ([staff-auth.md](staff-auth.md#remaining)).
+- **Nothing has been checked against the live API**: the Playwright specs for
+  sign-in, orders, products, sale prices and shipping settings need the API running
+  with this origin in `DJANGO_CORS_ALLOWED_ORIGINS` and `E2E_STAFF_EMAIL` /
+  `E2E_STAFF_PASSWORD` ([staff-auth.md](staff-auth.md#remaining)).
 
 ## Differences from `../admin`
 

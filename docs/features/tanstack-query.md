@@ -72,7 +72,7 @@ document.
   | variant add/save/delete, stock change | as a product change, plus the dashboard (low stock) and stock history                |
   | image upload/move/alt/primary/delete  | its detail, product lists                                                            |
   | order transition                      | order lists, the dashboard, all products and stock history (a cancel restores stock) |
-  | shipping settings                     | shipping settings                                                                    |
+  | shipping settings                     | shipping settings (written from the PATCH's answer)                                  |
 
 - Route search params validated with Zod in `validateSearch`; filters, search and
   page write the URL with `navigate({ search, replace: true })`, and pagination with

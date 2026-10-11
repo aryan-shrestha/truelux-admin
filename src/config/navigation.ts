@@ -8,6 +8,7 @@ import {
   RulerIcon,
   ShoppingBagIcon,
   TagIcon,
+  TruckIcon,
   type LucideIcon,
 } from "lucide-react";
 
@@ -41,5 +42,9 @@ export const NAVIGATION: readonly NavigationGroup[] = [
       { title: "Sizes", to: "/sizes", icon: RulerIcon },
       { title: "Skin types", to: "/skin-types", icon: DropletsIcon },
     ],
+  },
+  {
+    label: "Settings",
+    items: [{ title: "Shipping", to: "/settings/shipping", icon: TruckIcon }],
   },
 ];

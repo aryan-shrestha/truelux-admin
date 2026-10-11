@@ -14,8 +14,9 @@ stock, staff accounts — is the back-end's
 admin app staff use for it. This file covers what is particular to running this
 app.
 
-Today staff can sign in, see the shell and the dashboard placeholder, and sign out.
-The business screens are still to come ([features/index.md](features/index.md)).
+Staff sign in and work the dashboard, the order queue, the catalogue (products with
+their variants, images, sale prices and stock, and the five taxonomy lists) and the
+shipping settings ([features/index.md](features/index.md)). Nothing is deployed yet.
 
 ---
 
@@ -38,6 +39,8 @@ The business screens are still to come ([features/index.md](features/index.md)).
 - `http://localhost:5173` redirects to `/login`.
 - Signing in lands on the dashboard, and the user menu in the sidebar footer shows
   the staff email.
+- Brand logos and product images show their placeholder in development until the
+  back-end returns absolute media URLs ([features/taxonomy.md](features/taxonomy.md#remaining)).
 
 ---
 

@@ -52,17 +52,11 @@ What is explicitly outside the scope?
 
 ## Planned
 
-None. The pieces that need a page to exist are tracked by the feature that builds
-that page:
-
-- Navigation entries, added to `src/config/navigation.ts` with their routes (`Link`'s
-  `to` is type-checked against the route tree): Settings → Shipping in
-  [shipping-settings.md](shipping-settings.md). Orders and the Catalogue group
-  (Products, Brands, Categories, Shades, Sizes, Skin types) are in place.
-- `ConfirmDialog` (on `alert-dialog`; the caller owns `open` and the mutation, and
-  closes it on success) and `EmptyState` (on shadcn `empty`) exist in
-  `src/components/feedback/`, built with [orders.md](orders.md); later features reuse
-  them.
+None. Every navigation entry is in place, each added with its route (`Link`'s `to`
+is type-checked against the route tree). `ConfirmDialog` (on `alert-dialog`; the
+caller owns `open` and the mutation, and closes it on success) and `EmptyState` (on
+shadcn `empty`) live in `src/components/feedback/`, built with
+[orders.md](orders.md).
 
 ---
 
@@ -73,8 +67,8 @@ that page:
   `@/features/auth` is passed as the sidebar's `footer`, because shared layout code
   may not import a feature (ADR 0003).
 - `src/config/navigation.ts` — `NAVIGATION` as groups (`{ label, items }`); today
-  **Shop → Dashboard, Orders** and **Catalogue → Products, Brands, Categories,
-  Shades, Sizes, Skin types**.
+  **Shop → Dashboard, Orders**, **Catalogue → Products, Brands, Categories, Shades,
+  Sizes, Skin types** and **Settings → Shipping**.
 - `src/components/layout/app-sidebar.tsx` — `collapsible="icon"`, a "TL" tile and
   "TrueLux Admin" as the brand, a `SidebarGroupLabel` per group inside a
   `navigation` landmark named "Main", `aria-current="page"` and tooltips on the

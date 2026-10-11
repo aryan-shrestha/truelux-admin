@@ -23,6 +23,7 @@ import { Route as DashboardOrdersOrderIdRouteImport } from './routes/_dashboard/
 import { Route as DashboardProductsIndexRouteImport } from './routes/_dashboard/products/index'
 import { Route as DashboardProductsProductIdRouteImport } from './routes/_dashboard/products/$productId'
 import { Route as DashboardProductsNewRouteImport } from './routes/_dashboard/products/new'
+import { Route as DashboardSettingsShippingRouteImport } from './routes/_dashboard/settings/shipping'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
@@ -93,6 +94,12 @@ const DashboardProductsNewRoute = DashboardProductsNewRouteImport.update({
   path: '/products/new',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardSettingsShippingRoute =
+  DashboardSettingsShippingRouteImport.update({
+    id: '/settings/shipping',
+    path: '/settings/shipping',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/orders/$orderId': typeof DashboardOrdersOrderIdRoute
   '/products/$productId': typeof DashboardProductsProductIdRoute
   '/products/new': typeof DashboardProductsNewRoute
+  '/settings/shipping': typeof DashboardSettingsShippingRoute
   '/orders/': typeof DashboardOrdersIndexRoute
   '/products/': typeof DashboardProductsIndexRoute
 }
@@ -119,6 +127,7 @@ export interface FileRoutesByTo {
   '/orders/$orderId': typeof DashboardOrdersOrderIdRoute
   '/products/$productId': typeof DashboardProductsProductIdRoute
   '/products/new': typeof DashboardProductsNewRoute
+  '/settings/shipping': typeof DashboardSettingsShippingRoute
   '/orders': typeof DashboardOrdersIndexRoute
   '/products': typeof DashboardProductsIndexRoute
 }
@@ -136,6 +145,7 @@ export interface FileRoutesById {
   '/_dashboard/orders/$orderId': typeof DashboardOrdersOrderIdRoute
   '/_dashboard/products/$productId': typeof DashboardProductsProductIdRoute
   '/_dashboard/products/new': typeof DashboardProductsNewRoute
+  '/_dashboard/settings/shipping': typeof DashboardSettingsShippingRoute
   '/_dashboard/orders/': typeof DashboardOrdersIndexRoute
   '/_dashboard/products/': typeof DashboardProductsIndexRoute
 }
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/products/$productId'
     | '/products/new'
+    | '/settings/shipping'
     | '/orders/'
     | '/products/'
   fileRoutesByTo: FileRoutesByTo
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/products/$productId'
     | '/products/new'
+    | '/settings/shipping'
     | '/orders'
     | '/products'
   id:
@@ -182,6 +194,7 @@ export interface FileRouteTypes {
     | '/_dashboard/orders/$orderId'
     | '/_dashboard/products/$productId'
     | '/_dashboard/products/new'
+    | '/_dashboard/settings/shipping'
     | '/_dashboard/orders/'
     | '/_dashboard/products/'
   fileRoutesById: FileRoutesById
@@ -291,6 +304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProductsNewRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/settings/shipping': {
+      id: '/_dashboard/settings/shipping'
+      path: '/settings/shipping'
+      fullPath: '/settings/shipping'
+      preLoaderRoute: typeof DashboardSettingsShippingRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
@@ -314,6 +334,7 @@ interface DashboardRouteChildren {
   DashboardOrdersOrderIdRoute: typeof DashboardOrdersOrderIdRoute
   DashboardProductsProductIdRoute: typeof DashboardProductsProductIdRoute
   DashboardProductsNewRoute: typeof DashboardProductsNewRoute
+  DashboardSettingsShippingRoute: typeof DashboardSettingsShippingRoute
   DashboardOrdersIndexRoute: typeof DashboardOrdersIndexRoute
   DashboardProductsIndexRoute: typeof DashboardProductsIndexRoute
 }
@@ -328,6 +349,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardOrdersOrderIdRoute: DashboardOrdersOrderIdRoute,
   DashboardProductsProductIdRoute: DashboardProductsProductIdRoute,
   DashboardProductsNewRoute: DashboardProductsNewRoute,
+  DashboardSettingsShippingRoute: DashboardSettingsShippingRoute,
   DashboardOrdersIndexRoute: DashboardOrdersIndexRoute,
   DashboardProductsIndexRoute: DashboardProductsIndexRoute,
 }

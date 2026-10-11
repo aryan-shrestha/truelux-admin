@@ -44,10 +44,14 @@ stops the app with one error naming all of them. No variable may be a secret:
 
 ## Routes
 
-| Path     | Page                                              |
-| -------- | ------------------------------------------------- |
-| `/`      | Dashboard (placeholder), inside the sidebar shell |
-| `/login` | Staff sign-in                                     |
+| Path                                                         | Page                                        |
+| ------------------------------------------------------------ | ------------------------------------------- |
+| `/login`                                                     | Staff sign-in                               |
+| `/`                                                          | Dashboard                                   |
+| `/orders`, `/orders/$orderId`                                | Order queue and order detail                |
+| `/products`, `/products/new`, `/products/$productId`         | Products; Details, Variants and Images tabs |
+| `/brands`, `/categories`, `/shades`, `/sizes`, `/skin-types` | The taxonomy lists                          |
+| `/settings/shipping`                                         | Shipping fees and free-shipping threshold   |
 
 ## Architecture
 
