@@ -1,0 +1,11 @@
+dist
+node_modules
+.yarn
+yarn.lock
+playwright-report
+test-results
+src/components/ui
+src/routeTree.gen.ts
+docs/features/_TEMPLATE.md
+docs/decisions/_TEMPLATE.md
+src/hooks/use-mobile.ts
