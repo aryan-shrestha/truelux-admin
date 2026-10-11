@@ -11,7 +11,8 @@ See [architecture.md](architecture.md) for layer responsibilities and system
 constraints. This file covers how the code is written, not how it is arranged.
 
 The examples for repositories, queries and schemas show the pattern every feature
-follows. No feature exists yet; the first one becomes the reference implementation
+follows. `src/features/auth/` is the first real slice (repository, query keys,
+mutations, schemas, a form); the first list feature becomes the reference for lists
 and replaces these examples with links.
 
 ---
@@ -140,9 +141,9 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Pr
 }
 ```
 
-Paths are relative to `/bff/api/` and **end with a slash**; Django redirects a path
-without one, and the redirect turns a `POST` into a `GET`. Uploads send
-`FormData`; every other write is JSON.
+Paths are relative to `{VITE_API_URL}/api/v1/` and **end with a slash**; Django
+redirects a path without one, and the redirect turns a `POST` into a `GET`. Uploads
+send `FormData`; every other write is JSON.
 
 ---
 
@@ -264,8 +265,12 @@ The `ApiError` codes and status table are in
 
 ## Testing
 
-Vitest with Testing Library and MSW. Two projects in `vitest.config.ts`: `web`
-(jsdom, `src/**/*.test.ts(x)`) and `bff` (node, `server/**/*.test.ts`).
+Vitest with Testing Library and MSW, in jsdom (`src/**/*.test.ts(x)`). In tests the
+page and the API share the origin `http://admin.test` (`vitest.config.ts`), so
+jsdom sends no CORS preflight; handlers match `*/api/v1/...`.
+`src/test/render-app.tsx` renders the whole app at a path; `src/test/staff.ts` holds
+the signed-in staff user and its `me` handler. A test that needs a session calls
+`saveSession(...)` and clears `localStorage` afterwards.
 
 ### Network
 
@@ -325,9 +330,8 @@ Repository-specific rules beyond the tooling config:
 
 ## Type checking
 
-`tsc -b` over three projects: `tsconfig.app.json` (`src/`), `tsconfig.server.json`
-(`server/`) and `tsconfig.node.json` (tool configs and `e2e/`). All are `strict`;
-the app and the BFF add `noUncheckedIndexedAccess`.
+`tsc -b` over two projects: `tsconfig.app.json` (`src/`) and `tsconfig.node.json`
+(tool configs and `e2e/`). Both are `strict`; the app adds `noUncheckedIndexedAccess`.
 
 - Types come from Zod schemas via `z.infer`. A hand-written interface for an API
   shape is a second source of truth.
@@ -344,7 +348,7 @@ The default is no comment (see `CLAUDE.md`). The exceptions:
 
 - **A non-obvious constraint**: why the proxy resolves the URL before the
   allow-list check, why the router plugin must come before the React plugin.
-- **Security reasons**: why a cookie has the `__Host-` prefix.
+- **Security reasons**: why the tokens go only through `session.ts`.
 - **`eslint-disable`** carries a rule name and a reason.
 
 Everything else — narrating a line, restating a type, sectioning a file with banner
@@ -354,10 +358,9 @@ comments — is removed in review.
 
 ## Other conventions
 
-**Environment.** The BFF reads every variable through `readServerEnv` in
-`server/env.ts` and nowhere else. Every variable is required and has no default
-(ADR 0004). The SPA has no environment variables today; one added later goes
-through a Zod schema in `src/lib/env.ts` and must not be a secret.
+**Environment.** The SPA reads every variable through `env` in `src/lib/env.ts` and
+nowhere else. Every variable is required, has no default (ADR 0004) and is a
+`VITE_*` variable, so none may be a secret.
 
 **Money** is a decimal string from the API (`"125000.00"`) and stays a string to the
 pixel. It is displayed as `Rs 1,25,000.00`, grouped from the string's digits without

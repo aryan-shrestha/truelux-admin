@@ -11,30 +11,26 @@ tutorial for the entire codebase.
 
 ## System overview
 
-TrueLux admin v2: the staff back office for a multi-brand cosmetics store. A React
-single-page app and a small backend-for-frontend (BFF) served on one origin. The BFF
-holds the staff JWT and forwards calls to the TrueLux Django API
-(`../back-end`), which owns every piece of data (ADR 0001).
+TrueLux admin v2: the staff back office for a multi-brand cosmetics store. A static
+React single-page app that calls the TrueLux Django API (`../back-end`) from the
+browser. The API owns every piece of data (ADR 0005).
 
 ```text
-Browser (React SPA)
-  │  same origin, cookies only, never a token
-  ↓
-BFF (Hono, server/)
-  ├── /bff/health
-  ├── /bff/auth/*        sign-in, refresh, sign-out        (staff-auth, Planned)
-  └── /bff/api/*         allow-listed proxy, adds Authorization: Bearer
+Browser (React SPA, static files)
+  │  Authorization: Bearer <access>, CORS
   ↓
 TrueLux API (Django REST Framework)
-  └── /api/v1/admin/*, /api/v1/auth/*
+  ├── /api/v1/auth/token/, /token/refresh/, /logout/, /me/
+  └── /api/v1/admin/*
 ```
 
 Three properties define this architecture:
 
-- **The browser never holds a credential.** The BFF keeps the access and refresh
-  tokens in `__Host-` httpOnly cookies on the admin origin. This is exactly the
-  arrangement back-end ADR 0012 requires of "the admin app's server", so the API
-  needs no CORS entry and no cookie auth.
+- **One module holds the credentials.** The access and refresh tokens live in
+  `localStorage`, read and written only through `src/lib/repositories/session.ts`.
+  The HTTP client attaches and refreshes the access token, and the auth repository
+  stores the pair on sign-in and revokes it on sign-out; nothing else sees either
+  token. This is back-end ADR 0020's arrangement, with its XSS trade-off.
 - **The admin owns no data.** Prices, stock, totals, order state and allowed
   transitions come from the API. The admin renders them and never computes a
   substitute.
@@ -47,12 +43,6 @@ Three properties define this architecture:
 ## Application structure
 
 ```text
-server/
-    app.ts            createApp(): the Hono routes
-    proxy.ts          /bff/api/* → API_URL/api/v1/*, allow-listed
-    session.ts        cookie names and reads
-    env.ts            Zod-validated environment (ADR 0004)
-    serve.ts          Node entry point for development
 src/
     main.tsx          applies the theme, creates the query client and router, renders
     app/              providers, router, query client: wiring only
@@ -60,27 +50,23 @@ src/
     features/         one folder per domain (ADR 0003)
     components/
         ui/           shadcn, generated
-        layout/       app sidebar, top bar, page header, theme toggle
+        layout/       app sidebar, top bar, page header, refresh button
         data-table/   DataTable for server-paginated lists
-        feedback/     route error and not-found pages
+        feedback/     route error, not-found and pending pages
     lib/
-        repositories/ client.ts (the Axios instance), errors.ts, pagination.ts
+        repositories/ client.ts (the Axios instance), session.ts (the tokens),
+                      errors.ts, pagination.ts
+        env.ts        Zod-validated VITE_* variables (ADR 0004)
+        freshness.ts  staleTime / polling classes every queryOptions spreads
         theme.ts      applies the theme preference to <html>
         cn.ts         class-name helper used by shadcn
     stores/           ui.store.ts
     config/           navigation.ts
-    styles/           globals.css: Tailwind v4 and the shadcn theme tokens
+    styles/           globals.css: Tailwind v4 and the theme tokens
     test/             Vitest setup and the MSW server
 e2e/                  Playwright specs
 docs/
 ```
-
-### `server/`
-
-The BFF. It owns the staff session and the only route from the browser to the API.
-It contains no business logic and no data: it authenticates, forwards, and returns
-the API's response unchanged apart from headers. See
-[features/bff.md](features/bff.md).
 
 ### `src/features/<domain>`
 
@@ -107,11 +93,11 @@ Query (queryOptions from the feature's key factory)
     ↓
 Repository (path, params, Zod parse)
     ↓
-httpClient (Axios, baseURL /bff/api/)
-    ↓
-BFF proxy (allow-list, cookie → bearer)
+httpClient (Axios, baseURL {VITE_API_URL}/api/v1/, adds the bearer token)
     ↓
 TrueLux API
+    ↓
+401 → one shared refresh per tab, then one retry
     ↓
 ApiError on failure / parsed data on success
     ↓
@@ -120,10 +106,10 @@ TanStack Query cache → component
 
 Deviations from this flow:
 
-- **Sign-in, refresh and sign-out** go to `/bff/auth/*`, which the BFF answers
-  itself after calling the API's token endpoints. These never pass through the
-  proxy (staff-auth, Planned).
-- **`/bff/health`** is answered by the BFF without calling the API.
+- **Sign-in and sign-out** are repository calls in `src/features/auth/` that also
+  write or clear the stored tokens.
+- **The token endpoints** (`auth/token/`, `auth/token/refresh/`) get no bearer token
+  and never trigger a refresh.
 
 ---
 
@@ -180,31 +166,34 @@ persisted to `localStorage`).
 
 ## Authentication and authorization
 
-**Authentication.** Staff sign in with email and password through the BFF, which
-calls `POST /api/v1/auth/token/` and stores the pair in `__Host-` httpOnly, Secure,
-`SameSite=Lax` cookies (staff-auth, Planned). On every proxied call the BFF reads
-the access cookie and sends `Authorization: Bearer <access>`. Today only that read
-is implemented, so every proxied call is anonymous and the API answers 401.
+**Authentication.** Staff sign in with email and password: the SPA calls
+`POST /api/v1/auth/token/` and stores the returned pair in `localStorage`
+(`session.ts`). Every other call carries `Authorization: Bearer <access>`.
 
-**The proxy refuses token endpoints.** It forwards only `/api/v1/admin/*` and
-`/api/v1/auth/me/`. The path is resolved before the check, so `..` and `%2e%2e`
-cannot reach `auth/token/`. A token response must never travel to the browser.
+**Refresh.** The access token lives 15 minutes. A 401 makes the client's response
+interceptor call `POST /api/v1/auth/token/refresh/` once for every waiting request
+in the tab, store the rotated pair and retry each request once. Refresh tokens
+rotate and the old one is blacklisted, so before refreshing, and after a refused
+refresh, the client checks whether another tab has already stored a newer pair and
+uses it. A refused refresh or a 403 clears the tokens and loads
+`/login?expired=1&next=…`.
 
 **Authorization** belongs to the API: every `/api/v1/admin/` route requires an
 active staff user, and there are no finer roles (back-end `staff-auth.md`). The
-admin does not hide or show features by role.
+admin does not hide or show features by role. The `_dashboard` route guard is
+navigation, not authorization.
 
 ---
 
 ## State ownership
 
-| State                                | Owner                                  |
-| ------------------------------------ | -------------------------------------- |
-| Anything the API returns             | TanStack Query cache                   |
-| Page, page size, sort, filters, tabs | URL search params, validated with Zod  |
-| Form drafts and validation           | React Hook Form + Zod                  |
-| Sidebar open, theme preference       | Zustand (`ui.store.ts`), persisted     |
-| Staff session                        | httpOnly cookies, read only by the BFF |
+| State                                | Owner                                 |
+| ------------------------------------ | ------------------------------------- |
+| Anything the API returns             | TanStack Query cache                  |
+| Page, page size, sort, filters, tabs | URL search params, validated with Zod |
+| Form drafts and validation           | React Hook Form + Zod                 |
+| Sidebar open, theme preference       | Zustand (`ui.store.ts`), persisted    |
+| Staff tokens                         | `localStorage`, `session.ts` only     |
 
 See [ADR 0002](decisions/0002-server-state-lives-in-tanstack-query.md).
 
@@ -227,10 +216,8 @@ class ApiError extends Error {
 | Condition                                        | `status` | `code`                |
 | ------------------------------------------------ | -------- | --------------------- |
 | The API answered with its error envelope         | as sent  | the API's `code`      |
-| The BFF refused the path                         | 404      | `not_found`           |
-| The BFF could not reach the API                  | 502      | `bad_gateway`         |
 | A response that is not the envelope (proxy HTML) | as sent  | `unexpected_response` |
-| No response at all (offline, DNS, aborted)       | 0        | `network_error`       |
+| No response at all (offline, DNS, CORS refusal)  | 0        | `network_error`       |
 
 Rules:
 
@@ -238,7 +225,9 @@ Rules:
   catches Axios errors.
 - TanStack Query retries network errors and 5xx at most twice, and never a 4xx.
 - The route error page shows `message` and `requestId`; the request id is what lets
-  a developer find the failure in the API's logs.
+  a developer find the failure in the API's logs. The API exposes `X-Request-ID` to
+  the admin's origin through CORS.
+- `describeError` maps a `code` to the sentence staff see in toasts and alerts.
 - Branch on `code`, never on `message`. The API's codes are listed in
   `back-end/docs/architecture.md#error-handling`.
 
@@ -248,9 +237,9 @@ See [features/api-error-contract.md](features/api-error-contract.md).
 
 ## External systems
 
-| System      | Purpose                 | Integration point                 | Important constraint                                                                                     |
-| ----------- | ----------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| TrueLux API | All data and all writes | `server/proxy.ts`, over `API_URL` | `/api/v1/` paths end in a slash; lists use limit/offset pagination (max 100); admin routes are JWT only. |
+| System      | Purpose                 | Integration point                                     | Important constraint                                                                                                                                                |
+| ----------- | ----------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TrueLux API | All data and all writes | `src/lib/repositories/client.ts`, over `VITE_API_URL` | `/api/v1/` paths end in a slash; lists use limit/offset pagination (max 100); admin routes are JWT only; the admin origin must be in `DJANGO_CORS_ALLOWED_ORIGINS`. |
 
 The contract is summarised in
 [integrations/truelux-api.md](integrations/truelux-api.md); the back-end's own
@@ -262,10 +251,9 @@ documents are authoritative.
 
 Future implementation must preserve these:
 
-- **No token in the browser.** Not in memory, not in storage, not in a response
-  body. Only the BFF reads the session cookies.
-- **The proxy is an allow-list.** A new API area is opened by adding its prefix to
-  `ALLOWED_API_PATHS`, deliberately, never by widening it to `/api/v1/`.
+- **Tokens go through `session.ts` only**, called by the HTTP client and the auth
+  repository. Never log, render, or put them in a URL or query key; never add `dangerouslySetInnerHTML` or a runtime third-party script,
+  because any script on the origin can read them (ADR 0005).
 - **Every API response is parsed with Zod** in a repository before it reaches a
   component.
 - **Only repositories call the HTTP client**, and only `src/lib/repositories/`
@@ -280,13 +268,12 @@ Future implementation must preserve these:
 
 ## Known architectural limitations
 
-- **Sign-in does not exist yet.** The shell renders without a session and every API
-  call returns 401 until the staff-auth feature lands.
-- **The BFF has no production host.** `server/serve.ts` is a development entry
-  point; the deployment shape (one Node service serving `dist/` and the BFF, or
-  static hosting plus a function) is undecided.
-- **One extra hop per call.** Every API request passes through the BFF. Acceptable
-  for a back office, as back-end ADR 0012 already accepts.
+- **An XSS can steal the session.** Both tokens are readable by script on the admin
+  origin, and a stolen refresh token that keeps being refreshed does not expire
+  (back-end ADR 0020). Deactivating the user or removing `is_staff` ends it.
+- **Each environment needs a CORS entry.** The admin's origin must be in the API's
+  `DJANGO_CORS_ALLOWED_ORIGINS`; otherwise every call is a `network_error` that
+  never reaches the API's logs.
 - **The main bundle is about 530 kB (170 kB gzipped)**, mostly React, the router,
   Query and Radix. Vite warns about it on every build. Route-level code splitting is
   on; vendor chunking has not been needed yet.

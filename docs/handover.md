@@ -14,8 +14,8 @@ stock, staff accounts — is the back-end's
 admin app staff use for it. This file covers what is particular to running this
 app.
 
-Today the app is a shell: it starts, shows the sidebar and placeholder pages, and
-reaches the API through the BFF. Staff cannot sign in yet (staff-auth, Planned).
+Today staff can sign in, see the shell and the dashboard placeholder, and sign out.
+The business screens are still to come ([features/index.md](features/index.md)).
 
 ---
 
@@ -23,37 +23,56 @@ reaches the API through the BFF. Staff cannot sign in yet (staff-auth, Planned).
 
 1. Start the API: `cd ../back-end && docker compose up -d && make run`
    (see its README). It listens on `http://localhost:8000`.
-2. In this repository: `cp .env.example .env`, `yarn install`, `yarn dev`.
-3. Open `http://localhost:5173`.
-
-`yarn dev` runs two processes, labelled `web` (Vite) and `bff` (the Hono server on
-8787). If either exits, both stop.
+2. In the back-end's `.env`, add `http://localhost:5173` to
+   `DJANGO_CORS_ALLOWED_ORIGINS` and restart it. Its `.env.example` lists only the
+   storefront's ports.
+3. For a staff login, run `make seed-staff` in the back-end (`DEMO_STAFF_EMAIL`,
+   `DEMO_STAFF_PASSWORD`).
+4. In this repository: `cp .env.example .env`, `yarn install`, `yarn dev`.
+5. Open `http://localhost:5173` and sign in.
 
 ---
 
 ## Checking it is healthy
 
-- `http://localhost:5173/bff/health` returns `{"status": "ok"}`: the BFF is up and
-  Vite is proxying to it.
-- `http://localhost:5173/bff/api/admin/dashboard/` returns the API's
-  `401 authentication_failed` envelope: the BFF reaches the API. A
-  `502 bad_gateway` means the API is not running or `API_URL` is wrong.
+- `http://localhost:5173` redirects to `/login`.
+- Signing in lands on the dashboard, and the user menu in the sidebar footer shows
+  the staff email.
 
 ---
 
 ## When something goes wrong
 
-- **The BFF does not start and names a variable**: it is missing or malformed in
-  `.env`. Every variable in `.env.example` is required (ADR 0004).
-- **Port 5173 or 8787 is in use**: both ports are fixed; stop the other process.
-  Vite will not move to another port, because the BFF and Playwright expect 5173.
+- **The page is blank and the console names `VITE_API_URL`**: it is missing or
+  malformed in `.env` (or on the host at build time). Every variable in
+  `.env.example` is required (ADR 0004).
+- **Sign-in says "The server could not be reached" and the API's logs show
+  nothing**: the browser refused the call. Either the API is not running, or this
+  origin is missing from the API's `DJANGO_CORS_ALLOWED_ORIGINS`; the browser's
+  console names a CORS failure in the second case.
+- **Port 5173 is in use**: the port is fixed; stop the other process. Vite will not
+  move to another port, because Playwright and the CORS entry expect 5173.
 - **A screen shows "Something went wrong" with a reference**: the reference is the
   API's `X-Request-ID`. Search the API's logs for it.
+- **Staff are sent back to sign-in with "Your session has ended"**: their refresh
+  token was refused (expired after 7 days, revoked, or the account lost staff
+  rights). Signing in again starts a new session.
+- **A staff member's token may have been stolen**: deactivate the user or remove
+  `is_staff` in `/django-admin/`. A password change does not revoke tokens
+  (back-end ADR 0020).
 - **Types complain about a route that exists**: run `yarn dev` or `yarn build` once
   to regenerate `src/routeTree.gen.ts`.
 
 ---
 
+## End-to-end tests
+
+`yarn e2e` starts `yarn dev` and runs Playwright. The sign-in specs
+(`e2e/auth.spec.ts`) run only with `E2E_STAFF_EMAIL` and `E2E_STAFF_PASSWORD` set
+and the API running as above; otherwise they are skipped.
+
+---
+
 ## Deploying
 
-Not set up. See [features/scaffold.md](features/scaffold.md#remaining).
+Not set up. See [features/deployment.md](features/deployment.md).

@@ -1,36 +1,47 @@
-import { createMemoryHistory } from "@tanstack/react-router";
-import { render, screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 
-import { Providers } from "./providers";
-import { createQueryClient } from "./query-client";
-import { createAppRouter } from "./router";
+import { saveSession } from "@/lib/repositories/session";
+import { server } from "@/test/msw-server";
+import { renderApp } from "@/test/render-app";
+import { meHandler } from "@/test/staff";
 
-function renderAt(path: string) {
-  const queryClient = createQueryClient();
-  const router = createAppRouter({
-    queryClient,
-    history: createMemoryHistory({ initialEntries: [path] }),
-  });
-  render(<Providers queryClient={queryClient} router={router} />);
-}
+afterEach(() => localStorage.clear());
 
 describe("route tree", () => {
-  it("renders the dashboard inside the sidebar shell", async () => {
-    renderAt("/");
+  it("renders the dashboard inside the sidebar shell for a signed-in user", async () => {
+    saveSession({ access: "a1", refresh: "r1" });
+    server.use(meHandler);
+
+    renderApp("/");
 
     expect(await screen.findByRole("heading", { name: "Dashboard" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
+    const navigation = screen.getByRole("navigation", { name: "Main" });
+    expect(within(navigation).getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 
-  it("renders the sign-in page without the sidebar", async () => {
-    renderAt("/login");
+  it("sends an anonymous visit to the sign-in page without the sidebar", async () => {
+    const { router } = renderApp("/");
 
     expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Dashboard" })).not.toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/login");
+    expect(screen.queryByRole("navigation", { name: "Main" })).not.toBeInTheDocument();
+  });
+
+  it("sends a signed-in user on from the sign-in page to the next path", async () => {
+    saveSession({ access: "a1", refresh: "r1" });
+    server.use(meHandler);
+
+    const { router } = renderApp("/login?next=%2F");
+
+    expect(await screen.findByRole("heading", { name: "Dashboard" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/");
   });
 
   it("renders the not-found page for an unknown path", async () => {
-    renderAt("/no-such-page");
+    renderApp("/no-such-page");
 
     expect(await screen.findByRole("heading", { name: "Page not found" })).toBeInTheDocument();
   });

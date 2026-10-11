@@ -9,6 +9,7 @@ export const Route = createFileRoute("/_dashboard/")({
 function DashboardPage() {
   return (
     <PageHeader
+      crumbs={[{ label: "Dashboard" }]}
       title="Dashboard"
       description="Orders, revenue and stock arrive with the dashboard feature."
     />

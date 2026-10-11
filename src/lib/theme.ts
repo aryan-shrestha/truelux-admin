@@ -1,5 +1,3 @@
-import { useSyncExternalStore } from "react";
-
 import { useUiStore, type ThemePreference } from "@/stores/ui.store";
 
 const DARK_QUERY = "(prefers-color-scheme: dark)";
@@ -21,19 +19,4 @@ export function syncThemeWithDocument(): void {
   applyTheme();
   useUiStore.subscribe(applyTheme);
   window.matchMedia(DARK_QUERY).addEventListener("change", applyTheme);
-}
-
-function subscribeToSystemTheme(onChange: () => void): () => void {
-  const media = window.matchMedia(DARK_QUERY);
-  media.addEventListener("change", onChange);
-  return () => media.removeEventListener("change", onChange);
-}
-
-export function useIsDarkTheme(): boolean {
-  const theme = useUiStore((state) => state.theme);
-  const prefersDark = useSyncExternalStore(
-    subscribeToSystemTheme,
-    () => window.matchMedia(DARK_QUERY).matches,
-  );
-  return theme === "dark" || (theme === "system" && prefersDark);
 }

@@ -15,7 +15,7 @@ export default defineConfig({
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
     command: "yarn dev",
-    url: `${BASE_URL}/bff/health`,
+    url: BASE_URL,
     reuseExistingServer: !process.env.CI,
   },
 });

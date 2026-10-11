@@ -1,13 +1,21 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import "@fontsource-variable/noto-sans";
+@import "@fontsource/belleza";
+@import "@fontsource-variable/noto-sans-mono";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: "Geist Variable", sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Noto Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Noto Sans Mono Variable", ui-monospace, monospace;
+  --font-heading: "Belleza", "Optima", "Candara", ui-serif, serif;
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -37,84 +45,92 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --color-foreground: var(--foreground);
-  --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-sm: 0.125rem;
+  --radius-md: 0.125rem;
+  --radius-lg: 0.125rem;
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
+  --radius-4xl: var(--radius);
 }
 
+/* The storefront's tokens (front-end/app/globals.css), plus the admin's status
+   hues and a greige sidebar, as in ../admin. Keep the shared values in step with the
+   storefront. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: #fdfdfb;
+  --foreground: #333333;
+  --card: #ffffff;
+  --card-foreground: #333333;
+  --popover: #ffffff;
+  --popover-foreground: #333333;
+  --primary: #333333;
+  --primary-foreground: #ffffff;
+  --secondary: #e8e6dd;
+  --secondary-foreground: #333333;
+  --muted: #f3f2ee;
+  --muted-foreground: #66655f;
+  --accent: #f3f2ee;
+  --accent-foreground: #333333;
+  --destructive: #a3392f;
+  --success: #3f6546;
+  --warning: #86591a;
+  --info: #3f5a78;
+  --border: #d6d5cf;
+  /* A control boundary needs 3:1 against the page and the sidebar (WCAG 1.4.11). */
+  --input: #8a8983;
+  --ring: #333333;
+  --chart-1: #333333;
+  --chart-2: #8a7556;
+  --chart-3: #5e7a6a;
+  --chart-4: #a5776a;
+  --chart-5: #62708a;
+  --radius: 0.375rem;
+  --sidebar: #f3f2ee;
+  --sidebar-foreground: #333333;
+  --sidebar-primary: #333333;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8e6dd;
+  --sidebar-accent-foreground: #333333;
+  --sidebar-border: #d6d5cf;
+  --sidebar-ring: #333333;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #1b1b1a;
+  --foreground: #ecebe6;
+  --card: #232322;
+  --card-foreground: #ecebe6;
+  --popover: #232322;
+  --popover-foreground: #ecebe6;
+  --primary: #ecebe6;
+  --primary-foreground: #1b1b1a;
+  --secondary: #2e2d2a;
+  --secondary-foreground: #ecebe6;
+  --muted: #252523;
+  --muted-foreground: #a9a8a1;
+  --accent: #2e2d2a;
+  --accent-foreground: #ecebe6;
+  --destructive: #e0776b;
+  --success: #93b99a;
+  --warning: #d9ae6c;
+  --info: #9db4cf;
+  --border: #3a3936;
+  --input: #7d7c76;
+  --ring: #ecebe6;
+  --chart-1: #ecebe6;
+  --chart-2: #c2a878;
+  --chart-3: #8fb09c;
+  --chart-4: #d09a8a;
+  --chart-5: #9aa7c2;
+  --sidebar: #202020;
+  --sidebar-foreground: #ecebe6;
+  --sidebar-primary: #ecebe6;
+  --sidebar-primary-foreground: #1b1b1a;
+  --sidebar-accent: #2e2d2a;
+  --sidebar-accent-foreground: #ecebe6;
+  --sidebar-border: #3a3936;
+  --sidebar-ring: #ecebe6;
 }
 
 @layer base {
@@ -123,6 +139,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "tnum" 1;
   }
   html {
     @apply font-sans;

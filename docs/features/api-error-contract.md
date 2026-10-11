@@ -8,8 +8,8 @@ Last updated: 2026-10-11
 
 ## Goal
 
-Turn every failed request — an API error, a BFF error, an unexpected body, or no
-response at all — into one typed `ApiError`, so screens branch on one shape.
+Turn every failed request — an API error, an unexpected body, or no response at
+all — into one typed `ApiError`, so screens branch on one shape.
 
 ---
 
@@ -22,10 +22,14 @@ What is included in this implementation?
 - The Axios response interceptor that converts every failure
 - `ApiError` as TanStack Query's default error type, and the retry rule built on it
 - The route error page showing the message and request id
+- `describeError`: one map from `code` to the sentence staff see, used by toasts and
+  form alerts
+- `fieldErrors`: a `validation_error`'s `details` as one message per field, for forms
+  to apply with `setError`
 
 What is explicitly outside the scope?
 
-- Mapping `validation_error` details onto form fields: each form does it (see
+- Which form field a given API field maps to: each form decides (see
   [../convention.md](../convention.md#forms))
 - Redirecting to sign-in on 401: staff-auth
 
@@ -36,14 +40,14 @@ What is explicitly outside the scope?
 The API's envelope and its codes are defined in
 `back-end/docs/architecture.md#error-handling` and
 `back-end/docs/features/api-error-contract.md`. The API sets `X-Request-ID` on every
-response and logs with it. The BFF returns the same envelope for its own 404 and
-502 ([bff.md](bff.md)).
+response, logs with it, and exposes the header to the admin's origin through CORS
+(`CORS_EXPOSE_HEADERS`).
 
 ---
 
 ## Planned
 
-- Everything in Scope.
+None.
 
 ---
 
@@ -63,6 +67,34 @@ response and logs with it. The BFF returns the same envelope for its own 404 and
   most twice and never on a 4xx.
 - `src/components/feedback/route-error.tsx` — the root `errorComponent`: message,
   request id when there is one, and a retry button.
+- `describeError(error)` in `errors.ts`, ported from `../admin/lib/api/errors.ts`:
+  - `validation_error` → the API's own `message`
+  - a known code → its sentence, from one `MESSAGES` map
+  - anything else → "Something went wrong (ref <requestId>)." or, without a request
+    id, "Something went wrong."
+
+  | `code`                      | Sentence                                                                                          |
+  | --------------------------- | ------------------------------------------------------------------------------------------------- |
+  | `network_error`             | The server could not be reached. Check your connection and try again.                             |
+  | `authentication_failed`     | Your session has ended. Sign in again.                                                            |
+  | `permission_denied`         | Your account does not have access to this.                                                        |
+  | `not_found`                 | That record no longer exists.                                                                     |
+  | `conflict`                  | This duplicates an existing record. Check the name, slug or SKU, or the variant's size and shade. |
+  | `throttled`                 | Too many requests. Wait a moment and try again.                                                   |
+  | `invalid_refresh_token`     | Your session had already ended.                                                                   |
+  | `product_has_no_variants`   | Add at least one variant before publishing.                                                       |
+  | `invalid_status_transition` | The order cannot move to that status from where it is now.                                        |
+  | `order_already_shipped`     | The order has already shipped, so it can no longer be changed that way.                           |
+  | `order_not_cancellable`     | Only pending or confirmed orders can be cancelled.                                                |
+
+  A feature may override a sentence where the context says more (staff-auth's
+  sign-in message; taxonomy's in-use message for a delete `conflict`). Used by the
+  query cache's refetch toast ([tanstack-query.md](tanstack-query.md)) and the login
+  form.
+
+- `fieldErrors(error)` in `errors.ts`: for each `details` entry, the first string of
+  an array or the string itself; anything else is skipped. No caller yet: the first
+  form that maps a `validation_error` onto fields (taxonomy or products) uses it.
 
 ---
 
@@ -99,6 +131,9 @@ message and the request id if present.
   `code`.
 - `status` 0 means no response; check `code === "network_error"` rather than the
   status.
+- A refused CORS preflight (the admin's origin missing from the API's
+  `DJANGO_CORS_ALLOWED_ORIGINS`) also arrives without a response, so it is a
+  `network_error` too, and never reaches the API's logs.
 
 ---
 
@@ -135,9 +170,11 @@ None.
 ## Tests
 
 - `src/lib/repositories/errors.test.ts` — the envelope, an unexpected body, and no
-  response.
+  response; each code maps to its sentence; `validation_error` keeps the API's
+  message; an unknown code carries the request id; `fieldErrors` takes the first
+  message and skips values that are not messages.
 - `src/lib/repositories/client.test.ts` — a real request through `httpClient` to
-  `/bff/api/...` rejects with `ApiError` carrying the API's status and code (MSW).
+  `/api/v1/...` rejects with `ApiError` carrying the API's status and code (MSW).
 
 ---
 

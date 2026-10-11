@@ -7,6 +7,12 @@ export interface NavigationItem {
   icon: LucideIcon;
 }
 
-export const NAVIGATION: readonly NavigationItem[] = [
-  { title: "Dashboard", to: "/", icon: LayoutDashboardIcon },
+export interface NavigationGroup {
+  label: string;
+  items: readonly NavigationItem[];
+}
+
+// An entry is added when its route exists: `to` is type-checked against the route tree.
+export const NAVIGATION: readonly NavigationGroup[] = [
+  { label: "Shop", items: [{ title: "Dashboard", to: "/", icon: LayoutDashboardIcon }] },
 ];

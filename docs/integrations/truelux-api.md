@@ -29,20 +29,21 @@ back-end/docs/features/inventory.md     stock adjustments and the ledger
 back-end/apps/core/pagination.py        pagination
 ```
 
-Checked against the running API on 2026-10-11 through the BFF: an anonymous
-`/admin/dashboard/` and `/auth/me/` return `401 authentication_failed` with an
-`X-Request-ID`.
+Checked against the running API on 2026-10-11: an anonymous `/admin/dashboard/`
+and `/auth/me/` return `401 authentication_failed` with an `X-Request-ID`. Back-end
+ADR 0020 (2026-10-11) is the contract for how the admin authenticates.
 
 ---
 
 ## Base URL and versioning
 
 ```text
-API:        {API_URL}/api/v1/...
-Admin SPA:  /bff/api/...   → the BFF forwards to /api/v1/...
+API:        {VITE_API_URL}/api/v1/...
+Admin SPA:  httpClient paths are relative to it: "admin/orders/"
 ```
 
-Local development: `API_URL=http://localhost:8000`.
+Local development: `VITE_API_URL=http://localhost:8000`, with
+`http://localhost:5173` in the API's `DJANGO_CORS_ALLOWED_ORIGINS`.
 
 Every route ends in a **trailing slash**. Django redirects one that does not, and
 the redirect turns a `POST` into a `GET`.
@@ -54,7 +55,8 @@ arrives as `/api/v2/`.
 
 ## Authentication
 
-SimpleJWT, **staff only** (`staff-auth.md`). Called by the BFF only (ADR 0001).
+SimpleJWT, **staff only** (`staff-auth.md`). Called from the browser; the tokens are
+kept in `localStorage` (back-end ADR 0020, admin ADR 0005).
 
 | Method | Path                          | Purpose                                     |
 | ------ | ----------------------------- | ------------------------------------------- |
@@ -129,4 +131,22 @@ Paginated lists use DRF's limit/offset envelope
 Codes and statuses: `back-end/docs/architecture.md#error-handling`. What the admin
 does with them: [../architecture.md](../architecture.md#error-handling).
 
-Every response carries `X-Request-ID`; the BFF passes it through.
+Every response carries `X-Request-ID`, exposed to the admin's origin through CORS
+(`CORS_EXPOSE_HEADERS`).
+
+---
+
+## Open questions
+
+Raised by `../admin` (its `docs/integrations/backend-api.md`) and still relevant here,
+checked against `../back-end` on 2026-10-11:
+
+| Question                                                                                       | Current behaviour                                                                                                               | Where it matters                                                         |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Could a just-rotated refresh token be accepted again for a few seconds (a reuse grace period)? | Reuse is a 401 at once; mitigated here, because tabs share the stored pair and a tab that loses the race picks up the winner's  | [staff-auth](../features/staff-auth.md)                                  |
+| Could the API expose a change feed (`GET admin/changes/?since=<cursor>`)?                      | None; the admin refetches by freshness class                                                                                    | [tanstack-query](../features/tanstack-query.md)                          |
+| Could image and logo URLs be absolute in every environment?                                    | Relative `/media/…` with local storage (development), absolute on Cloudinary; the SPA could resolve them against `VITE_API_URL` | [products](../features/products.md), [taxonomy](../features/taxonomy.md) |
+
+Resolved: `created_after`/`created_before` now compare `Asia/Kathmandu` days
+(`back-end/docs/features/admin-api.md` § Gotchas), so dashboard links and order date
+filters agree with the revenue figures.

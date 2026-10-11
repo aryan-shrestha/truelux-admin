@@ -9,10 +9,10 @@ architecture knowledge, feature state, and decisions belong in `docs/`.
 
 ## Project
 
-TrueLux admin v2: the staff back office for a multi-brand cosmetics store. A React
-single-page app served with a small backend-for-frontend (BFF) on the same origin. It
-consumes the Django REST API in `../back-end` (`/api/v1/admin/`, JWT) and owns no
-data of its own. It replaces the Next.js app in `../admin`.
+TrueLux admin v2: the staff back office for a multi-brand cosmetics store. A static
+React single-page app that calls the Django REST API in `../back-end`
+(`/api/v1/admin/`, JWT) from the browser and owns no data of its own (ADR 0005). It
+replaces the Next.js app in `../admin`.
 
 - React 19, Vite 8, TypeScript 6 (`strict`, `noUncheckedIndexedAccess`)
 - Tailwind CSS v4, configured in CSS (`src/styles/globals.css`)
@@ -21,7 +21,6 @@ data of its own. It replaces the Next.js app in `../admin`.
 - Zod 4 for every boundary; React Hook Form with `@hookform/resolvers/zod` for forms
 - Axios for HTTP, one instance: `src/lib/repositories/client.ts`
 - Zustand for UI state only (ADR 0002)
-- Hono for the BFF in `server/` (ADR 0001)
 - Yarn 4, `nodeLinker: node-modules`
 
 `yarn` is the package manager. shadcn components are added with
@@ -35,11 +34,11 @@ data of its own. It replaces the Next.js app in `../admin`.
 
 ```bash
 yarn install
-yarn dev            # Vite on http://localhost:5173 + the BFF on :8787
+yarn dev            # Vite on http://localhost:5173
 yarn build
 yarn lint
 yarn typecheck
-yarn test           # Vitest: the "web" (jsdom) and "bff" (node) projects
+yarn test           # Vitest (jsdom)
 yarn e2e            # Playwright; starts yarn dev unless it is already running
 yarn format
 ```
@@ -120,7 +119,6 @@ implements.
 ## Architecture
 
 ```text
-server/                 the BFF: holds the staff JWT, proxies /bff/api/* to the API
 src/
     app/                providers, router, query client: wiring only
     routes/             TanStack Router file routes: thin
@@ -132,7 +130,7 @@ src/
         hooks/
         index.ts        the feature's public surface
     components/         ui/ (shadcn, generated), layout/, data-table/, feedback/
-    lib/                repositories/ (HTTP client, errors, pagination), theme, cn
+    lib/                repositories/ (HTTP client, session, errors, pagination), env, theme, cn
     stores/             Zustand, UI state only
     config/             navigation
 ```
@@ -400,7 +398,7 @@ For screens and components, normally test:
 - the empty and error states
 - validation messages and what is submitted
 
-For repositories and the BFF, test:
+For repositories and the HTTP client, test:
 
 - the request that is sent
 - the parse of a real response shape
@@ -418,13 +416,17 @@ query style (`getByRole` first), setup, and assertion style.
 
 ## Security
 
-- The browser never sees a JWT. Tokens live in `__Host-` httpOnly cookies set by the
-  BFF, and the proxy refuses every token endpoint (ADR 0001).
+- The staff tokens live in `localStorage`, read and written only through
+  `src/lib/repositories/session.ts`, which only the HTTP client and the auth
+  repository call (ADR 0005). Tokens are never logged, rendered, or put in a URL or
+  query key.
 - No secret is ever a `VITE_*` variable: everything with that prefix ships to the
   browser.
-- Never render API or user-supplied HTML with `dangerouslySetInnerHTML`.
+- Never render API or user-supplied HTML with `dangerouslySetInnerHTML`, and load no
+  third-party script at runtime: any script on the origin can read the tokens.
 - Never put tokens, passwords or customer personal data in URLs, query keys that are
-  logged, `localStorage`, or console output.
+  logged, or console output. `localStorage` holds only the session tokens and UI
+  preferences.
 - Validate every external input with Zod: API responses, form input, URL search
   params, environment.
 - Hiding a control is not authorization. The API decides; the admin reflects its 401,

@@ -36,6 +36,7 @@ export default defineConfig([
     "playwright-report",
     "test-results",
     ".yarn",
+    ".claude",
   ]),
   {
     files: ["**/*.{ts,tsx}"],

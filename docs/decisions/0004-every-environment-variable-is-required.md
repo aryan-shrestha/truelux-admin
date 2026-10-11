@@ -10,33 +10,34 @@ Supersedes: None
 
 ## Context
 
-The BFF needs to know where the API is. A default such as
-`http://localhost:8000` makes a misconfigured deployment start and then fail on every
-request, far from the cause. The back-end made the same choice for the same reason
+The SPA needs to know where the API is. A default such as `http://localhost:8000`
+makes a misconfigured deployment build and then fail on every request, far from the
+cause. The back-end made the same choice for the same reason
 ([back-end ADR 0008](../../../back-end/docs/decisions/0008-every-environment-variable-is-required.md)).
+
+This decision first governed the BFF's environment. Since ADR 0005 removed the BFF,
+it governs the SPA's `VITE_*` variables.
 
 ---
 
 ## Decision
 
-Every environment variable is required and has no default. The BFF reads them once,
-through `readServerEnv` in `server/env.ts`, which validates them with Zod and throws
-one error naming every missing or invalid variable. Nothing else reads
-`process.env`.
+Every environment variable is required and has no default. The SPA reads them once,
+through `src/lib/env.ts`, which validates `import.meta.env` with Zod and throws one
+error naming every missing or invalid variable. Nothing else reads
+`import.meta.env.VITE_*`.
 
-`.env.example` lists every variable. Locally, `yarn dev` loads `.env` with
-`tsx --env-file`.
+`.env.example` lists every variable. Vite loads `.env` in development and at build
+time; tests set their own values in `vitest.config.ts`.
 
-The SPA has no environment variables. If one is ever needed it is read through a Zod
-schema in `src/lib/env.ts`, and it must not be a secret, because every `VITE_*`
-variable is embedded in the bundle.
+No variable is a secret: every `VITE_*` variable is embedded in the bundle.
 
 ---
 
 ## Reason
 
-A configuration mistake stops startup with a message that names it, instead of
-surfacing as a 502 on the first request.
+A configuration mistake stops the app with a message that names it, instead of
+surfacing as a failed request against the wrong host.
 
 ---
 
@@ -53,7 +54,7 @@ when a deployment forgets the variable.
 
 ### Positive
 
-- A deployment is either fully configured or does not start.
+- A deployment is either fully configured or fails at once, naming the variable.
 
 ### Negative
 
@@ -61,17 +62,19 @@ when a deployment forgets the variable.
 
 ### Constraints introduced
 
-- Never call `process.env` outside `server/env.ts`.
-- A new variable goes into the schema, `.env.example` and the README together.
+- Never read `import.meta.env.VITE_*` outside `src/lib/env.ts`.
+- A new variable goes into the schema, `.env.example`, `vitest.config.ts` and the
+  README together.
+- Never put a secret in a `VITE_*` variable.
 
 ---
 
 ## Implementation
 
 ```text
-server/env.ts
+src/lib/env.ts
 .env.example
-package.json        dev script: tsx --env-file=.env
+vitest.config.ts    test.env
 ```
 
 ---

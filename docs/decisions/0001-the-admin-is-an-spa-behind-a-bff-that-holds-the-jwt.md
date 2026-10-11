@@ -1,6 +1,6 @@
 # ADR 0001: The admin is an SPA behind a BFF that holds the JWT
 
-Status: Accepted
+Status: Superseded by [ADR 0005](0005-the-admin-is-a-static-spa-that-keeps-jwt-in-local-storage.md)
 
 Date: 2026-10-11
 

@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { createRouter, type RouterHistory } from "@tanstack/react-router";
 
+import { PageSkeleton } from "@/components/feedback/page-skeleton";
 import { routeTree } from "@/routeTree.gen";
 
 export interface RouterContext {
@@ -21,6 +22,7 @@ export function createAppRouter({
     defaultPreload: "intent",
     // TanStack Query owns freshness, so the router must not cache loader results itself.
     defaultPreloadStaleTime: 0,
+    defaultPendingComponent: PageSkeleton,
     scrollRestoration: true,
   });
 }

@@ -28,8 +28,8 @@ What is included in this implementation?
 - Shared infrastructure: the HTTP client, `ApiError`, limit/offset pagination
   helpers, a server-paginated `DataTable`
 - ESLint with the import-boundary rules (ADR 0003), Prettier, strict TypeScript
-- Vitest (`web` and `bff` projects) with MSW; Playwright smoke tests
-- The BFF's health route and proxy ([bff.md](bff.md))
+- Vitest with MSW; Playwright smoke tests
+- A BFF health route and proxy, since removed by ADR 0005
 - Documentation mirroring `../back-end`
 
 What is explicitly outside the scope?
@@ -61,9 +61,8 @@ decisions worth porting (money as a decimal string).
 - `package.json`, `.yarnrc.yml` — Yarn 4.12, `node-modules` linker; scripts `dev`,
   `build`, `typecheck`, `lint`, `format`, `test`, `e2e`.
 - `vite.config.ts` — router plugin (before React), React, Tailwind, `@` alias, dev
-  server on 5173 with `/bff` proxied to 8787.
-- `tsconfig.app.json`, `tsconfig.server.json`, `tsconfig.node.json` — three strict
-  projects built by `tsc -b`.
+  server on 5173.
+- `tsconfig.app.json`, `tsconfig.node.json` — strict projects built by `tsc -b`.
 - `eslint.config.js` — recommended TypeScript, React Hooks, React Refresh, TanStack
   Query and Router rules, plus the `no-restricted-imports` boundaries of ADR 0003.
 - `prettier.config.mjs` — width 100, Tailwind class sorting against
@@ -82,7 +81,8 @@ decisions worth porting (money as a decimal string).
   `_dashboard/index.tsx` — the shell and placeholder pages. `src/routeTree.gen.ts`
   is generated and committed.
 - `src/components/layout/` — `AppSidebar` (driven by `src/config/navigation.ts`),
-  `Topbar`, `PageHeader`, `ThemeToggle`.
+  `Topbar`, `PageHeader`. Its `ThemeToggle` became the user menu's theme choice
+  ([app-shell.md](app-shell.md)).
 - `src/components/feedback/` — `RouteError` (shows the request id of an `ApiError`)
   and `NotFound`.
 - `src/components/data-table/data-table.tsx` — `DataTable` for one server page:
@@ -95,17 +95,17 @@ decisions worth porting (money as a decimal string).
 - `src/test/setup.ts`, `src/test/msw-server.ts` — jest-dom, MSW with unhandled
   requests as errors, `matchMedia` and `scrollTo` stubs for jsdom.
 - `playwright.config.ts`, `e2e/shell.spec.ts` — runs against `yarn dev`.
-- `src/features/` — empty; the first feature defines the reference slice.
+- `src/features/` — empty at the time; `auth` became the first slice
+  ([staff-auth.md](staff-auth.md)).
 
 ---
 
 ## Remaining
 
-- Staff sign-in, sign-out, session refresh, and the `_dashboard` route guard: the
-  staff-auth feature. Until then every API call through the proxy returns 401.
-- Deployment: choose the host for the SPA and the BFF (one Node service serving
-  `dist/` and `server/app.ts`, or static hosting plus a function), set security
-  headers (CSP, `frame-ancestors 'none'`, `Referrer-Policy`), and wire CI.
+- Deployment: choose a static host for the SPA, list its origin in the API's
+  `DJANGO_CORS_ALLOWED_ORIGINS`, set security headers (CSP,
+  `frame-ancestors 'none'`, `Referrer-Policy`), and wire CI
+  ([deployment.md](deployment.md)).
 - `EmptyState`, `ConfirmDialog` and a money formatter were left out until a feature
   needs them; the convention for each is in [../convention.md](../convention.md).
 - Vendor chunking: the main bundle is about 530 kB (170 kB gzipped) and Vite warns
@@ -184,7 +184,7 @@ typecheck` sees it.
 
 ## API
 
-None. See [bff.md](bff.md) for the routes the BFF serves.
+None.
 
 ---
 
@@ -197,21 +197,21 @@ None. See [bff.md](bff.md) for the routes the BFF serves.
 
 ## Permissions
 
-None yet. The shell renders without a session until staff-auth adds the guard.
+None of its own; [staff-auth.md](staff-auth.md) guards `_dashboard`.
 
 ---
 
 ## Tests
 
 - `src/app/router.test.tsx` — the dashboard renders in the sidebar shell with its
-  link marked current; `/login` renders without the sidebar; an unknown path renders
-  the not-found page.
+  link marked current; an unknown path renders the not-found page. (Staff-auth added
+  the guard cases.)
 - `src/components/data-table/data-table.test.tsx` — rows, the empty message, and the
   next-page request computed from the API's row count.
 - `src/lib/repositories/pagination.test.ts` — limit/offset, the 100 cap, DRF
   ordering.
-- `e2e/shell.spec.ts` — the shell in a real browser; `/bff/health` through the Vite
-  proxy.
+- `e2e/shell.spec.ts` — the app in a real browser (since staff-auth: a visit
+  without a session lands on `/login`).
 
 Verified on 2026-10-11: `yarn lint`, `yarn typecheck`, `yarn test` (23 tests),
 `yarn build`, `yarn e2e` (2 tests) all pass. Checked by hand in a browser with the
