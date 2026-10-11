@@ -26,6 +26,8 @@ import { useDeleteVariant, useSaveVariant } from "../queries/products.mutations"
 import type { Variant } from "../schemas/product.schema";
 import { VARIANT_FORM_SCHEMA, type VariantFormValues } from "../schemas/variant-form.schema";
 import { toVariantBody } from "../variant-body";
+import { StockDialog } from "./stock-dialog";
+import { StockHistory } from "./stock-history";
 
 type FormInput = z.input<typeof VARIANT_FORM_SCHEMA>;
 
@@ -144,7 +146,7 @@ export function VariantRow({
         setIsDeleting(false);
         toast.error(
           error.code === "conflict"
-            ? `${variant.sku} has been ordered, so it cannot be deleted.`
+            ? `${variant.sku} has been ordered, so it cannot be deleted. Set its stock to 0 instead.`
             : describeError(error),
         );
       },
@@ -211,7 +213,7 @@ export function VariantRow({
           )}
         />
       </TableCell>
-      <TableCell className="w-28">
+      <TableCell className="w-40">
         {isNew ? (
           <CellInput
             control={form.control}
@@ -220,7 +222,14 @@ export function VariantRow({
             inputMode="numeric"
           />
         ) : (
-          <span className="block py-2 text-right tabular-nums">{variant.stock_quantity}</span>
+          <div className="flex items-center justify-end gap-1">
+            <span className="tabular-nums">
+              <span className="sr-only">Stock of {variant.sku}: </span>
+              {variant.stock_quantity}
+            </span>
+            <StockDialog productId={productId} variant={variant} />
+            <StockHistory variant={variant} />
+          </div>
         )}
       </TableCell>
       <TableCell className="w-36">

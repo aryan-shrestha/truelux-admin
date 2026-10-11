@@ -1,6 +1,6 @@
 # Stock ledger
 
-Status: Planned
+Status: Implemented
 
 Last updated: 2026-10-11
 
@@ -54,55 +54,53 @@ What is explicitly outside the scope?
 
 ## Planned
 
-- Add the stock-history keys to `afterVariantChange` in
-  `src/features/products/queries/products.mutations.ts` (variant saves and deletes),
-  and let a variant delete `409` suggest setting its stock to 0 instead.
-- Add the stock-history keys to `useTransitionOrder`'s `meta.invalidates`
-  (`src/features/orders/queries/orders.mutations.ts`): a cancel records a movement.
-- `src/features/products/` (stock belongs to the variant) — `stock.repository.ts`
-  (`adjustStock`, `setStockCount`, `listStockMovements`), `stock.schema.ts`
-  (`stockChangeSchema`: `kind`, `quantity`, `note`; `STOCK_CHANGE_OPTIONS`;
-  `toStockChange`, the one place a sign is applied), `stock-movement.schema.ts`,
-  `stock.queries.ts` (`["stock-movements", variantId]`, `volatile`),
-  `stock-reasons.ts` (labels), `components/stock-dialog.tsx`,
-  `components/stock-history.tsx`.
-- `count` maps to an absolute `stock_quantity` and may be 0; every other kind needs
-  at least 1. **Note** is hidden for a count, because the PATCH carries none.
-- The API's `quantity_change` or `stock_quantity` error is shown on the form's
-  **How many** field.
-- The history sheet fetches when it opens (no prefetch): a skeleton, an error alert,
-  or an empty state; columns when, what (the order number linked to `/orders/{id}`,
-  and the note), the signed change, the balance after, and who (the API's email, or
-  "Customer" for a sale); "Showing the latest N of M changes." when there are more.
-- A saved row shows the figure, preceded by visually hidden "Stock of {SKU}:", with
-  two icon buttons named "Change stock of {SKU}" and "Stock history of {SKU}".
-- A stock change invalidates the product, product lists, the dashboard and that
-  variant's history; an order transition invalidates every history.
-- Add shadcn `sheet` (exists), `select`, `textarea` when building.
-
-Error treatment: `validation_error` on `quantity_change`/`stock_quantity` on **How
-many**, other fields or a message as the form alert; `not_found` (variant deleted) as
-a form alert.
-
-Planned tests: each kind's reason and sign; a count of 0; 0 refused for an
-adjustment, and NaN, fractions, negatives and order reasons refused; what is sent for
-a removal and for a count; the API's error lands on the quantity; invalid input sends
-nothing; the variant update body drops `stock_quantity`; the history's signed
-changes, order link, actor, truncation line and empty state.
+None.
 
 ---
 
 ## Implemented
 
-None.
+All in `src/features/products/` (stock belongs to the variant):
+
+- `schemas/stock-change.schema.ts` — `STOCK_CHANGE_SCHEMA` (`kind`, `quantity`,
+  `note` ≤ 500), `STOCK_CHANGE_OPTIONS` (received, returned, damaged, expired, tester
+  or sample, correction adds/removes, counted the shelf) and `toStockChange`, the one
+  place a sign is applied. A count may be 0; every adjustment needs at least 1; a
+  quantity is a whole number ≥ 0. Order-only reasons (sale, cancellation) and
+  stocktake cannot be chosen.
+- `schemas/stock-movement.schema.ts` — `STOCK_MOVEMENT_SCHEMA` and
+  `STOCK_REASON_LABEL`.
+- `repositories/products.repository.ts` — `adjustStock`
+  (`POST variants/{id}/stock-adjustments/`), `listStockMovements`
+  (`GET stock-movements/?variant=&limit=50`); a count is `updateVariant` with
+  `stock_quantity`.
+- `queries/products.queries.ts` — `stockKeys` (`["stock-movements", variantId]`),
+  `stockQueries.variant` (`volatile`).
+- `queries/products.mutations.ts` — `useChangeStock`: an adjustment or a count,
+  invalidating the product, product lists, the dashboard and that variant's history.
+  Variant saves and deletes (`afterVariantChange`) and order moves
+  (`useTransitionOrder`) now also invalidate every history.
+- `components/stock-dialog.tsx` — **Change stock of {SKU}**: what happened, how many,
+  a note (hidden for a count, which carries none). For a count, the quantity's help
+  says it replaces the stock, so a sale made since counting is lost. The API's
+  `quantity_change` or `stock_quantity` error lands on **How many**; anything else is
+  a form alert (`not_found`: "This variant no longer exists.").
+- `components/stock-history.tsx` — **Stock history of {SKU}** in a `sheet`, fetched
+  when opened: a skeleton, an error alert or an empty state; when, what (reason, the
+  order number linked to the order, the note), the signed change, the balance after,
+  who (the API's email, or "Customer" for a sale); "Showing the latest N of M
+  changes." when there are more.
+- `components/variant-row.tsx` — a saved row shows its stock (with a visually hidden
+  "Stock of {SKU}:") and the two icon buttons; a delete `409` now suggests setting its
+  stock to 0 instead.
 
 ---
 
 ## Remaining
 
-- Everything in Planned. Depends on [products.md](products.md).
-- A count is absolute, so it replaces any sale made between counting and saving. The
-  dialog must say so; adjustments do not have the problem.
+- A live-API Playwright check has not been written: changing stock records real
+  movements, and the products and sale-price specs already create and delete their
+  own data.
 
 ---
 
@@ -175,16 +173,28 @@ Signed-in staff (the API).
 
 ## Tests
 
-None yet; see Planned.
+- `schemas/stock-change.schema.test.ts` — each kind's reason and sign; a count of 0;
+  0 refused for an adjustment; `abc`, `1.5` and `-2` refused; sale, cancellation and
+  stocktake refused.
+- `components/stock.test.tsx` — a removal is a negative adjustment with its reason
+  and note, and the row shows the refetched stock; a count sends only
+  `stock_quantity`, hides the note and warns that a count overwrites sales; the
+  API's quantity error lands on **How many**; nothing is sent without a reason or
+  with 0; the history's signed changes, order link, note, "Customer", actor email and
+  truncation line, sent for that variant; the empty history.
+- `variants-editor.test.tsx` — a saved row's save sends no `stock_quantity`; the
+  delete `409` message.
 
 ---
 
 ## Files
 
 ```text
-src/features/products/repositories/stock.repository.ts   planned
-src/features/products/components/stock-dialog.tsx        planned
-src/features/products/components/stock-history.tsx       planned
+src/features/products/schemas/stock-change.schema.ts
+src/features/products/schemas/stock-movement.schema.ts
+src/features/products/components/stock-dialog.tsx
+src/features/products/components/stock-history.tsx
+src/features/products/components/variant-row.tsx
 ```
 
 ---

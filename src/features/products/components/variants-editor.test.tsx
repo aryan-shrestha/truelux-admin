@@ -179,7 +179,9 @@ describe("variants", () => {
     await user.click(within(dialog).getByRole("button", { name: "Delete" }));
 
     expect(
-      await screen.findByText("LUM-SF-30-WB has been ordered, so it cannot be deleted."),
+      await screen.findByText(
+        "LUM-SF-30-WB has been ordered, so it cannot be deleted. Set its stock to 0 instead.",
+      ),
     ).toBeInTheDocument();
     expect(deleteRequests).toBe(1);
     expect(screen.getByLabelText("SKU of LUM-SF-30-WB")).toBeInTheDocument();

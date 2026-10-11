@@ -72,8 +72,8 @@ None.
   - `queries/orders.queries.ts` — `orderKeys`; `orderQueries.list(filters)` (`live`,
     `keepPreviousData`) and `.detail(id)` (`live`)
   - `queries/orders.mutations.ts` — `useTransitionOrder`: writes the returned order
-    into its detail key, invalidates order lists and the dashboard
-    (`meta.invalidates`), toasts
+    into its detail key, invalidates order lists, the dashboard, products and stock
+    history (`meta.invalidates`), toasts
     "TL-… is now <status>"; on failure toasts `describeError` and refetches the detail
   - `components/` — `orders-list` (tabs, search, date range and table, given the
     filters and a change handler by the route; search through the shared
@@ -99,8 +99,6 @@ None.
 
 - `e2e/orders.spec.ts` has not been run against the live API; it needs the staff
   credentials (see [staff-auth.md](staff-auth.md#remaining)).
-- Stock history is added to `useTransitionOrder`'s `meta.invalidates` by
-  [stock-ledger.md](stock-ledger.md). The dashboard and products are in place.
 
 ---
 

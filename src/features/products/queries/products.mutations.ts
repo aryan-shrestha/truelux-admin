@@ -5,6 +5,7 @@ import { taxonomyKeys } from "@/features/taxonomy";
 
 import { moveImage } from "../image-order";
 import {
+  adjustStock,
   createProduct,
   createVariant,
   deleteImage,
@@ -16,7 +17,8 @@ import {
   uploadImage,
 } from "../repositories/products.repository";
 import type { Product, ProductImage, ProductListItem } from "../schemas/product.schema";
-import { productKeys } from "./products.queries";
+import { toStockChange, type StockChangeValues } from "../schemas/stock-change.schema";
+import { productKeys, stockKeys } from "./products.queries";
 
 type ProductPage = { count: number; results: ProductListItem[] };
 
@@ -75,10 +77,16 @@ export function useDeleteProduct() {
 }
 
 // A variant changes its product, the lists (variant count, stock), the size and shade
-// counts in taxonomy, and the dashboard's low-stock list. Stock history joins this
-// with the stock-ledger feature.
+// counts in taxonomy, the dashboard's low-stock list and stock history (an opening
+// stock is a movement).
 function afterVariantChange(productId: string) {
-  return [productKeys.detail(productId), productKeys.lists(), taxonomyKeys.all, dashboardKeys.all];
+  return [
+    productKeys.detail(productId),
+    productKeys.lists(),
+    taxonomyKeys.all,
+    dashboardKeys.all,
+    stockKeys.all,
+  ];
 }
 
 export function useSaveVariant(productId: string, variantId: string | null) {
@@ -184,5 +192,25 @@ export function useDeleteImage(productId: string) {
   return useMutation({
     mutationFn: (id: string) => deleteImage(id),
     meta: { invalidates: afterImageChange(productId) },
+  });
+}
+
+// An adjustment is relative, so it cannot overwrite a sale made meanwhile; a count is
+// the variant's absolute stock, recorded by the API as a stocktake.
+export function useChangeStock(productId: string, variantId: string) {
+  return useMutation({
+    mutationFn: async (values: StockChangeValues) => {
+      const change = toStockChange(values);
+      if (change.kind === "count") await updateVariant(variantId, change.body);
+      else await adjustStock(variantId, change.body);
+    },
+    meta: {
+      invalidates: [
+        productKeys.detail(productId),
+        productKeys.lists(),
+        dashboardKeys.all,
+        stockKeys.variant(variantId),
+      ],
+    },
   });
 }

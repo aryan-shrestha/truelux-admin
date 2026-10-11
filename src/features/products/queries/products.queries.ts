@@ -2,7 +2,7 @@ import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 
 import { FRESHNESS } from "@/lib/freshness";
 
-import { getProduct, listProducts } from "../repositories/products.repository";
+import { getProduct, listProducts, listStockMovements } from "../repositories/products.repository";
 import type { ProductFilters } from "../schemas/product-filters.schema";
 
 export const productKeys = {
@@ -25,6 +25,20 @@ export const productQueries = {
     queryOptions({
       queryKey: productKeys.detail(id),
       queryFn: () => getProduct(id),
+      ...FRESHNESS.volatile,
+    }),
+};
+
+export const stockKeys = {
+  all: ["stock-movements"] as const,
+  variant: (variantId: string) => [...stockKeys.all, variantId] as const,
+};
+
+export const stockQueries = {
+  variant: (variantId: string) =>
+    queryOptions({
+      queryKey: stockKeys.variant(variantId),
+      queryFn: () => listStockMovements(variantId),
       ...FRESHNESS.volatile,
     }),
 };

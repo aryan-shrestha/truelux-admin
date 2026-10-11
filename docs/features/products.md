@@ -167,10 +167,6 @@ None.
 
 - `e2e/products.spec.ts` has not been run against the live API (see
   [staff-auth.md](staff-auth.md#remaining)).
-- A delete `409` on an ordered variant cannot yet suggest setting its stock to 0:
-  saved stock changes come with [stock-ledger.md](stock-ledger.md).
-- The stock history keys join `useTransitionOrder`'s and the variant mutations'
-  `meta.invalidates` with [stock-ledger.md](stock-ledger.md).
 - Product images in development: as for logos, the back-end is to return absolute
   URLs ([taxonomy.md](taxonomy.md#remaining)).
 

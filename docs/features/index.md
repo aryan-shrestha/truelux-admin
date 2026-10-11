@@ -21,7 +21,7 @@ keeps the staff JWT in `localStorage` (ADR 0005). It replaces the Next.js admin 
 | 10  | orders             | Implemented | `features/orders.md`             | 4, 5, 6     | 2026-10-11   |
 | 11  | shipping-settings  | Planned     | `features/shipping-settings.md`  | 4, 5, 6     | 2026-10-11   |
 | 12  | sale-prices        | Implemented | `features/sale-prices.md`        | 9           | 2026-10-11   |
-| 13  | stock-ledger       | Planned     | `features/stock-ledger.md`       | 9           | 2026-10-11   |
+| 13  | stock-ledger       | Implemented | `features/stock-ledger.md`       | 9           | 2026-10-11   |
 | 14  | deployment         | Blocked     | `features/deployment.md`         | 6           | 2026-10-11   |
 
 `Depends on` refers to the `#` column of this table. Row 2 stays so the numbering
@@ -36,8 +36,7 @@ already provides is under each document's **Implemented**, everything else under
 
 ## Implementation order
 
-Done: 6, 3, 4, 5, 10, 7, 8, 9, 12. Next: 13 → 11, with 14 once its host is
-chosen. The shell's navigation entries, `ConfirmDialog`, `EmptyState`, list state and
+Done: 6, 3, 4, 5, 10, 7, 8, 9, 12, 13. Next: 11, with 14 once its host is chosen. The shell's navigation entries, `ConfirmDialog`, `EmptyState`, list state and
 optimistic updates are built by the features that first need them; each feature
 document lists its share.
 

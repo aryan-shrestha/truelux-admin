@@ -2,6 +2,7 @@ import { httpClient } from "@/lib/repositories/client";
 import { DEFAULT_PAGE_SIZE, paginatedSchema, toListParams } from "@/lib/repositories/pagination";
 
 import type { ProductFilters } from "../schemas/product-filters.schema";
+import { STOCK_MOVEMENT_SCHEMA } from "../schemas/stock-movement.schema";
 import {
   PRODUCT_LIST_ITEM_SCHEMA,
   PRODUCT_SCHEMA,
@@ -81,4 +82,20 @@ export async function updateImage(id: string, body: object): Promise<ProductImag
 
 export async function deleteImage(id: string): Promise<void> {
   await httpClient.delete(`admin/images/${id}/`);
+}
+
+// A relative change with its reason; the API keeps the ledger.
+export async function adjustStock(variantId: string, body: object): Promise<void> {
+  await httpClient.post(`admin/variants/${variantId}/stock-adjustments/`, body);
+}
+
+const STOCK_HISTORY_SIZE = 50;
+const STOCK_MOVEMENT_PAGE_SCHEMA = paginatedSchema(STOCK_MOVEMENT_SCHEMA);
+
+// The latest movements, newest first (the API's order).
+export async function listStockMovements(variantId: string) {
+  const response = await httpClient.get("admin/stock-movements/", {
+    params: { variant: variantId, limit: STOCK_HISTORY_SIZE },
+  });
+  return STOCK_MOVEMENT_PAGE_SCHEMA.parse(response.data);
 }
