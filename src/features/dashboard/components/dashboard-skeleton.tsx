@@ -4,7 +4,6 @@ import {
   CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -56,7 +55,7 @@ export function DashboardSkeleton() {
         <div className="flex flex-col gap-6">
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
             {Array.from({ length: KPI_COUNT }, (_, index) => (
-              <Card key={index}>
+              <Card key={index} className="gap-3">
                 <CardHeader>
                   <CardDescription>
                     <Skeleton className="h-4 w-24" />
@@ -65,9 +64,9 @@ export function DashboardSkeleton() {
                     <Skeleton className="h-8 w-32" />
                   </CardTitle>
                 </CardHeader>
-                <CardFooter className="border-t">
-                  <Skeleton className="h-4 w-28" />
-                </CardFooter>
+                <CardContent>
+                  <Skeleton className="h-5 w-28" />
+                </CardContent>
               </Card>
             ))}
           </div>
@@ -84,9 +83,9 @@ export function DashboardSkeleton() {
               <CardHeader>
                 <CardHeading />
               </CardHeader>
-              <CardContent className="flex flex-wrap gap-2">
+              <CardContent className="flex flex-col gap-1">
                 {Array.from({ length: STATUS_COUNT }, (_, index) => (
-                  <Skeleton key={index} className="h-9 w-28" />
+                  <Skeleton key={index} className="h-9 w-full" />
                 ))}
               </CardContent>
             </Card>

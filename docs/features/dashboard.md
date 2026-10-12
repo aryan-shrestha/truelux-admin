@@ -20,8 +20,10 @@ What is included in this implementation?
   action (`pending` + `confirmed`), each linking to the matching filtered orders list
 - A 30-day sales chart (shadcn `chart`, an area chart of revenue per day, with the
   order count in the tooltip)
-- Orders by status: a linked `badge` per status with its count, to
-  `/orders?status=…`
+- Orders by status: a horizontal bar chart, one row per status in lifecycle order
+  (pending, confirmed, shipped, delivered, cancelled), each row a link to
+  `/orders?status=…` with the status `badge`, a bar scaled to the largest count and
+  the count
 - Recent orders: a `table` of the 5 latest, linked to the order
 - Low stock: a `table` of up to 10 variants (product, SKU, size/shade, stock), `Out`
   at zero. The product name links to the product's Variants tab once products exists
@@ -65,20 +67,25 @@ None.
   - `components/kpi-cards.tsx` — revenue today, 7 and 30 days, and awaiting action
     (pending + confirmed, a count). Each links to the orders list with typed
     filters: `from`/`to` from `shopDaysAgo` (Kathmandu days), or
-    `status: [pending, confirmed]`. Link text names the destination.
+    `status: [pending, confirmed]`. Link text names the destination. The link sits in
+    the card body under the figure (no footer), with a 12px card gap (`gap-3`).
   - `components/sales-chart.tsx` + `sales-points.ts` — an area chart (shadcn
     `chart`, Recharts); `toSalesPoints` makes one point per day with
     `toChartNumber` for geometry and the API's amount, formatted, for the tooltip.
     Y ticks are compact numbers.
-  - `components/status-summary.tsx` — a link per status to `/orders?status=…`,
-    `OrderStatusBadge` plus the count
+  - `components/status-summary.tsx` — the bar chart, built in HTML rather than
+    Recharts so each row stays a keyboard-reachable link (named "{Status} {count}"):
+    `OrderStatusBadge`, a bar in `--chart-1` (one colour: the badge already names the
+    row, and status hues are kept for badges) at `count / largest` of the track, 4px
+    rounded at its end and at least 4px wide when the count is not zero, and the
+    count. The rows spread to fill the card when it stands beside the sales chart.
   - `components/recent-orders.tsx` — the five latest, linked to the order; empty state
   - `components/low-stock-table.tsx` — product (linked to its Variants tab), SKU,
     size and shade, stock as a badge (`Out` at zero); empty state ("Stock is
     healthy")
   - `components/dashboard-view.tsx`, `dashboard-skeleton.tsx` — the layout, and a
-    skeleton built from the same `Card`s, header, footer and grid gaps (KPI cards with
-    footers, the chart card beside the status card, the two table cards, the page
+    skeleton built from the same `Card`s, header and grid gaps (KPI cards with the link
+    in the body, the chart card beside the status card, the two table cards, the page
     header with its **Refresh data** button), so nothing shifts when the figures
     arrive.
 - `src/routes/_dashboard/index.tsx` — awaits the dashboard in the loader;
@@ -165,8 +172,8 @@ Signed-in staff (the API).
 
 - `components/dashboard-view.test.tsx` — the API's revenue formatted and awaiting
   action as pending + confirmed; the awaiting card opens `/orders` with both
-  statuses; the today card opens today's Kathmandu range; a status count opens its
-  queue; recent orders link to the order; low stock shows size and shade and `Out` at
+  statuses; the today card opens today's Kathmandu range; the status bars come in
+  lifecycle order, each scaled to the largest count; a status row opens its queue; recent orders link to the order; low stock shows size and shade and `Out` at
   zero; both empty states.
 - `components/sales-points.test.ts` — 30 points; values and labels.
 - `components/dashboard-skeleton.test.tsx` — the eight cards of the layout.

@@ -107,6 +107,26 @@ describe("dashboard", () => {
     await vi.waitFor(() => expect(router.state.location.search).toEqual({ status: ["cancelled"] }));
   });
 
+  it("draws each status as a bar scaled to the largest count, in lifecycle order", async () => {
+    server.use(dashboardHandler(FIGURES));
+    renderApp("/");
+
+    const card = (await screen.findByText("Orders by status")).closest(
+      "[data-slot=card]",
+    ) as HTMLElement;
+    const rows = within(card).getAllByRole("link");
+    expect(rows.map((row) => row.textContent)).toEqual([
+      "Pending 4",
+      "Confirmed 2",
+      "Shipped 3",
+      "Delivered 40",
+      "Cancelled 1",
+    ]);
+    const barWidth = (row: HTMLElement) =>
+      (row.querySelector("[aria-hidden] > span") as HTMLElement).style.width;
+    expect(rows.map(barWidth)).toEqual(["10%", "5%", "7.5%", "100%", "2.5%"]);
+  });
+
   it("lists recent orders and low stock, with Out at zero", async () => {
     server.use(dashboardHandler(FIGURES));
 

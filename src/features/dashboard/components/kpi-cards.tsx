@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { OrderFilters } from "@/features/orders";
 import { shopDaysAgo } from "@/lib/date";
 import { formatMoney } from "@/lib/money";
@@ -55,18 +55,18 @@ export function KpiCards({
   return (
     <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
       {kpis.map((kpi) => (
-        <Card key={kpi.label}>
+        <Card key={kpi.label} className="gap-3">
           <CardHeader>
             <CardDescription>{kpi.label}</CardDescription>
             <CardTitle className="font-sans text-2xl tabular-nums">{kpi.value}</CardTitle>
           </CardHeader>
-          <CardFooter className="border-t">
-            <Button asChild variant="link" size="sm" className="px-0">
+          <CardContent>
+            <Button asChild variant="link" className="h-auto p-0">
               <Link to="/orders" search={kpi.search}>
                 {kpi.link}
               </Link>
             </Button>
-          </CardFooter>
+          </CardContent>
         </Card>
       ))}
     </div>
