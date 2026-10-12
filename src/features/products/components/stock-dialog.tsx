@@ -3,6 +3,7 @@ import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
 
+import { ComboboxField } from "@/components/form/combobox-field";
 import { showApiError } from "@/components/form/show-api-error";
 import { TextField } from "@/components/form/text-field";
 import { TextareaField } from "@/components/form/textarea-field";
@@ -10,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -26,7 +28,6 @@ import {
   STOCK_CHANGE_SCHEMA,
   type StockChangeValues,
 } from "../schemas/stock-change.schema";
-import { SelectField } from "./select-field";
 
 type FormInput = z.input<typeof STOCK_CHANGE_SCHEMA>;
 
@@ -98,33 +99,40 @@ function StockForm({
 
   return (
     <FormProvider {...form}>
-      <form noValidate onSubmit={form.handleSubmit(handleSubmit)}>
-        <FieldGroup>
-          {rootError && (
-            <Alert variant="destructive" aria-live="polite">
-              <AlertDescription>{rootError}</AlertDescription>
-            </Alert>
-          )}
-          <SelectField
-            name="kind"
-            label="What happened"
-            placeholder="Choose"
-            options={STOCK_CHANGE_OPTIONS}
-          />
-          <TextField
-            name="quantity"
-            label={isCount ? "How many are on the shelf" : "How many"}
-            inputMode="numeric"
-            description={
-              isCount
-                ? "This replaces the stock, so a sale made since you counted is lost. Save straight after counting."
-                : undefined
-            }
-          />
-          {/* A count is the variant's new total; it carries no note. */}
-          {!isCount && <TextareaField name="note" label="Note" description="Optional." />}
-        </FieldGroup>
-        <DialogFooter className="mt-6">
+      <form
+        noValidate
+        className="flex min-h-0 flex-col gap-6"
+        onSubmit={form.handleSubmit(handleSubmit)}
+      >
+        <DialogBody>
+          <FieldGroup>
+            {rootError && (
+              <Alert variant="destructive" aria-live="polite">
+                <AlertDescription>{rootError}</AlertDescription>
+              </Alert>
+            )}
+            <ComboboxField
+              name="kind"
+              label="What happened"
+              placeholder="Choose what happened"
+              emptyMessage="No reasons match."
+              options={STOCK_CHANGE_OPTIONS}
+            />
+            <TextField
+              name="quantity"
+              label={isCount ? "How many are on the shelf" : "How many"}
+              inputMode="numeric"
+              description={
+                isCount
+                  ? "This replaces the stock, so a sale made since you counted is lost. Save straight after counting."
+                  : undefined
+              }
+            />
+            {/* A count is the variant's new total; it carries no note. */}
+            {!isCount && <TextareaField name="note" label="Note" description="Optional." />}
+          </FieldGroup>
+        </DialogBody>
+        <DialogFooter>
           <Button type="submit" disabled={change.isPending}>
             {change.isPending && <Spinner aria-hidden data-icon="inline-start" />}
             Save change

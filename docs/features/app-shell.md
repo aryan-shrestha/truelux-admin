@@ -44,8 +44,8 @@ What is explicitly outside the scope?
 ## Context
 
 - Requirements ported from `../admin/docs/features/app-shell.md` (Implemented there),
-  including its fonts (Noto Sans, Belleza, Noto Sans Mono) and radius scale. The
-  colours follow the logo instead (see Decisions).
+  including its fonts and radius scale. The colours follow the logo instead, and the
+  type, radius and spacing were since loosened (see Decisions).
 - The shell itself came with [scaffold.md](scaffold.md); this document tracks what
   is still to build on it.
 - The user menu and sign-out come from [staff-auth.md](staff-auth.md).
@@ -92,8 +92,10 @@ shadcn `empty`) live in `src/components/feedback/`, built with
   [../convention.md](../convention.md#page-layout-and-scrolling).
 - `src/components/layout/page-header.tsx` — a `breadcrumb` from `crumbs`, rendered
   into the top bar through `TopbarBreadcrumb`, then the title
-  (heading face), description, **Refresh data**
-  ([tanstack-query.md](tanstack-query.md)) and the `actions` slot.
+  (semibold), description, **Refresh data**
+  ([tanstack-query.md](tanstack-query.md)) and the `actions` slot, right of Refresh.
+  `leadingActions` sit left of Refresh; only the product page's **Publish** uses
+  it, at the owner's request (2026-10-12): every other action stays on the right.
 - `src/components/feedback/page-skeleton.tsx` — skeletons shaped like a page header,
   a KPI row and a table, in an `aria-busy` wrapper with a `role="status"` "Loading"
   label; the router's `defaultPendingComponent`. A route whose layout differs sets its
@@ -109,13 +111,14 @@ shadcn `empty`) live in `src/components/feedback/`, built with
   `errorComponent` (message, request id, retry) and `notFoundComponent`.
 - `src/app/providers.tsx` — `Toaster` and `TooltipProvider` mounted.
 - `src/styles/globals.css` — tokens from the logo (see [Theme tokens](#theme-tokens)),
-  `--success`, `--warning`, `--info`, the radius scale (2px controls, 0.375rem cards),
+  `--success`, `--warning`, `--info`, the radius scale (from `--radius` 6px: 6px controls, 10px cards, dialogs and sheets),
   tabular figures on `body`, the `animate-indeterminate` keyframes, and themed
   scrollbars: thin, on a transparent track, the thumb `--primary` mixed at 50% (70% on
   hover), so green in light and gold in dark, at least 3:1 against every surface.
   Chrome and Firefox read `scrollbar-color` / `scrollbar-width`; Safari reads the
   `::-webkit-scrollbar` rules. Fonts from
-  Fontsource: Noto Sans (UI), Belleza (headings), Noto Sans Mono.
+  Fontsource: Instrument Sans (UI and headings: `--font-heading` is `--font-sans`)
+  and Noto Sans Mono (SKUs, slugs, codes).
 - `src/components/layout/brand-logo.tsx` — `BrandLogo`, the logo as a decorative image
   (the name is always written beside it): the sidebar header, the sign-in card and
   the Authenticating screen. `index.html` uses the logo as the favicon (Vite's
@@ -155,7 +158,10 @@ least 3:1: input border on a card 3.6:1 (3.9:1), focus ring on the page 3.6:1
 
 ## Remaining
 
-None.
+- A keyboard path to row actions. They open only on right-click or long-press
+  (see Decisions), which keyboard and screen-reader users cannot do. Not built
+  because the owner asked for right-click only; raise it before relying on the admin
+  for staff who do not use a mouse.
 
 ---
 
@@ -194,9 +200,79 @@ darker, quieter green and a gold that stands out on it.
 **Consequence**
 
 The admin no longer mirrors `../front-end/app/globals.css`; a storefront palette
-change does not need a change here. Fonts and the radius scale are still the
-storefront's. A new token must keep the contrast floors above (4.5:1 text, 3:1
-controls).
+change does not need a change here. A new token must keep the contrast floors
+above (4.5:1 text, 3:1 controls).
+
+### One sans family, a graded radius and looser spacing
+
+**Decision**
+
+- Type: Instrument Sans for everything, headings in semibold with tight tracking. It
+  replaced Noto Sans (UI) and Belleza (headings), the storefront's fonts.
+- Radius: one `--radius` (0.375rem) with a scale around it: `lg` 6px for controls,
+  `xl` 10px for cards, dialogs and sheets. It replaced 2px controls.
+- Spacing: `Page` is `p-5 md:p-8` with `gap-8` between sections; card grids `gap-6`;
+  cards pad 24px (`--card-spacing` 6; `size="sm"` 16px); default controls are 36px
+  (`h-9`, small 32px); table rows have `py-3` cells under an `h-11` header; dialogs
+  and sheets pad 24px; field groups `gap-6`. The top bar is `h-16` with the page's
+  gutter.
+
+**Reason**
+
+The owner found the layout tight and the serif headings hard to read on a dashboard
+(2026-10-12). Instrument Sans was picked over Hanken Grotesk, IBM Plex Sans and
+Public Sans because it has tabular figures (`tnum`, which `body` turns on) for the
+price and stock columns.
+
+**Consequence**
+
+- `button`, `input`, `input-group`, `select`, `command`, `tabs`, `card`, `table`,
+  `dialog`, `alert-dialog`, `sheet` and `field` in `components/ui/` carry
+  these sizes; re-adding one with the shadcn CLI brings back Nova's compact sizes.
+- Table cells keep shadcn's 8px horizontal padding: wider cells push the products
+  table (nine columns) past a 1440px window with the sidebar open.
+
+### Every single choice is the Radix combobox
+
+**Decision**
+
+Every single choice (form fields and the product list's filters) is a searchable
+combobox from `src/components/form/combobox.tsx`: shadcn's Radix recipe, `popover` +
+`command`, a trigger button showing the choice (and a shade's swatch) and a search box
+in the popover. `ComboboxField` binds it to a form. shadcn's `select` is no longer
+used, and its Base UI `combobox` (and `@base-ui/react`) was removed.
+
+**Reason**
+
+The owner asked for a combobox on every select (2026-10-12). The Base UI combobox,
+used by the product form until then, renders its list outside a Radix dialog or
+sheet, which blocks pointer events there, so its options could not be clicked in
+the variant sheet or a dialog. Radix popovers nest inside Radix modals.
+
+**Consequence**
+
+`components/ui/select.tsx` stays generated but unused. cmdk matches an option on
+its `value`, so a `CommandItem`'s value is the label, not the id (whose hex digits
+would match).
+
+### Row actions only on right-click
+
+**Decision**
+
+A table row's actions (products, variants, the five catalogue kinds) open only from
+shadcn's `context-menu` on right-clicking or long-pressing the row (`RowMenu`). The
+⋯ `dropdown-menu` button and the actions column were removed.
+
+**Reason**
+
+The owner asked for it (2026-10-12): the right-click menu does the same job.
+
+**Consequence**
+
+Rows are not focusable, so a keyboard or screen-reader user cannot reach Publish,
+Delete, Change stock and the rest (a product's Edit is still its name link), and
+nothing on screen says the menu exists. Restoring a keyboard path (a focusable row
+that opens the menu, or the ⋯ button) is listed under Remaining.
 
 ---
 
@@ -211,6 +287,13 @@ controls).
   no breadcrumb. The page skeletons have no breadcrumb placeholder.
 - shadcn's `BreadcrumbPage` renders `role="link"` with `aria-current="page"`, so a
   test looking for the sidebar's current link must scope to the "Main" navigation.
+- `SidebarInset` is `min-w-0`: as a flex item it otherwise grows to its widest child,
+  so a wide table stretched the page sideways instead of scrolling in its container.
+- `DialogContent` is a flex column capped at the window's height
+  (`max-h-[calc(100svh-2rem)]`); only `DialogBody` (a local addition to `dialog.tsx`)
+  scrolls, so the header and footer stay put. A form inside needs `flex min-h-0
+flex-col gap-6`, or the body cannot shrink. `DialogBody` runs to the dialog's edges
+  with 4px vertical padding so focus rings are not clipped.
 - `badge.tsx` and `sidebar.tsx` carry local edits; re-adding them with the shadcn CLI
   drops the status variants and the sheet copy.
 

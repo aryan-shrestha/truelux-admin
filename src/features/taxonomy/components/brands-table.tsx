@@ -1,4 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
+import type { ReactNode } from "react";
 
 import { DataTable } from "@/components/data-table/data-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -42,21 +43,21 @@ const COLUMNS: ColumnDef<Brand>[] = [
   },
   sortOrderColumn<Brand>(),
   usageColumn<Brand, "product_count">("product_count", "Products"),
-  {
-    id: "actions",
-    cell: ({ row }) => (
-      <div className="text-right">
-        <RowActions
-          kind="brands"
-          id={row.original.id}
-          name={row.original.name}
-          inUseMessage={`In use by ${row.original.product_count} products. Deactivate or reassign them first.`}
-          editDialog={(state) => <BrandDialog brand={row.original} {...state} />}
-        />
-      </div>
-    ),
-  },
 ];
+
+function BrandRowActions({ row, children }: { row: Brand; children: ReactNode }) {
+  return (
+    <RowActions
+      kind="brands"
+      id={row.id}
+      name={row.name}
+      inUseMessage={`In use by ${row.product_count} products. Deactivate or reassign them first.`}
+      editDialog={(state) => <BrandDialog brand={row} {...state} />}
+    >
+      {children}
+    </RowActions>
+  );
+}
 
 export function BrandsTable({ query }: { query: string | undefined }) {
   const brands = useTaxonomySearch("brands", query);
@@ -64,6 +65,7 @@ export function BrandsTable({ query }: { query: string | undefined }) {
     <DataTable
       columns={COLUMNS}
       data={brands}
+      rowActions={BrandRowActions}
       empty={<TaxonomyEmpty noun="brands" query={query} />}
     />
   );

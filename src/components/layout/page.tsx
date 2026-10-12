@@ -21,7 +21,7 @@ export function Page({
   return (
     <div
       className={cn(
-        "relative flex flex-col gap-6 p-4 md:min-h-0 md:flex-1 md:p-6",
+        "relative flex flex-col gap-8 p-5 md:min-h-0 md:flex-1 md:p-8",
         isScrollable && "md:overflow-y-auto",
       )}
     >

@@ -87,6 +87,16 @@ decisions worth porting (money as a decimal string).
   and `NotFound`.
 - `src/components/data-table/data-table.tsx` — `DataTable` for one server page:
   manual pagination and sorting, skeleton rows while loading, an empty message.
+  Sorting is on when the list passes `onSortingChange`: one column at a time, never
+  cleared (ascending ↔ descending), the header a full-width button with ↑, ↓ or a
+  muted ↕, and `aria-sort` on the sorted header. A column without an accessor, or
+  with `enableSorting: false`, has no sort. `rowActions` is a component that wraps
+  each row (see `row-menu.tsx` below).
+- `src/components/data-table/row-menu.tsx` — `RowMenu` takes a row's actions
+  (label, icon, `onSelect`, `isDestructive` for the last one after a separator) and
+  offers them as shadcn's `context-menu` on right-clicking (or long-pressing) the row
+  it wraps, which is tinted while the menu is open; the menu is named "Actions for
+  {row}". The component that builds the actions also renders the row's dialogs.
 - `src/lib/repositories/` — `client.ts`, `errors.ts`
   ([api-error-contract.md](api-error-contract.md)) and `pagination.ts`
   (`paginatedSchema`, `toListParams`, page size capped at the API's 100).

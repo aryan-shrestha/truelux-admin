@@ -5,6 +5,7 @@ import { http, HttpResponse } from "msw";
 import { saveSession } from "@/lib/repositories/session";
 import { server } from "@/test/msw-server";
 import { renderApp } from "@/test/render-app";
+import { chooseRowAction } from "@/test/row-menu";
 import { meHandler } from "@/test/staff";
 
 const SKIN_TYPES_PATH = "*/api/v1/admin/skin-types/";
@@ -31,8 +32,7 @@ afterEach(() => localStorage.clear());
 
 async function askToDelete(name: string) {
   const user = userEvent.setup();
-  await user.click(await screen.findByRole("button", { name: `Actions for ${name}` }));
-  await user.click(await screen.findByRole("menuitem", { name: "Delete" }));
+  await chooseRowAction(user, name, "Delete");
   return { user, dialog: await screen.findByRole("alertdialog") };
 }
 

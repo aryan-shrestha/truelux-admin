@@ -7,8 +7,14 @@ import {
   type OnChangeFn,
   type SortingState,
 } from "@tanstack/react-table";
-import { ArrowDownIcon, ArrowUpIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import {
+  ArrowDownIcon,
+  ArrowUpDownIcon,
+  ArrowUpIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "lucide-react";
+import type { ComponentType, ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,13 +56,15 @@ interface Pagination {
 // page lives in the route's 1-based
 // `page` search param, and the pager is made of real links, so the back button, a
 // reload and a middle-click all keep the page. A whole-array list passes none and gets
-// no pager.
+// no pager. A list with row actions passes `rowActions`, which wraps each row (a
+// `RowMenu` with the row's dialogs, see row-menu.tsx).
 export function DataTable<TData, TValue>({
   columns,
   data,
   pagination,
   sorting = [],
   onSortingChange,
+  rowActions: RowActions,
   isLoading = false,
   isPlaceholderData = false,
   empty = "No results.",
@@ -66,6 +74,7 @@ export function DataTable<TData, TValue>({
   pagination?: Pagination;
   sorting?: SortingState;
   onSortingChange?: OnChangeFn<SortingState>;
+  rowActions?: ComponentType<{ row: TData; children: ReactNode }>;
   isLoading?: boolean;
   isPlaceholderData?: boolean;
   empty?: ReactNode;
@@ -78,13 +87,18 @@ export function DataTable<TData, TValue>({
     onSortingChange,
     manualSorting: true,
     enableSorting: onSortingChange !== undefined,
+    // One column at a time, toggling between ascending and descending: the API's
+    // `ordering` lives in a single URL param, and an unsorted list is still in the
+    // API's default order.
+    enableMultiSort: false,
+    enableSortingRemoval: false,
     getCoreRowModel: getCoreRowModel(),
   });
 
   // The body scrolls inside the bordered box under a sticky header row, while the
   // pager stays below it; the box shrinks only when the rows outgrow the page.
   return (
-    <div className="flex flex-col gap-3 md:min-h-0">
+    <div className="flex flex-col gap-4 md:min-h-0">
       <div className="flex flex-col overflow-hidden rounded-md border md:min-h-0 md:[&>[data-slot=table-container]]:min-h-0 md:[&>[data-slot=table-container]]:overflow-auto">
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-background">
@@ -106,12 +120,15 @@ export function DataTable<TData, TValue>({
                       {header.isPlaceholder ? null : header.column.getCanSort() ? (
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1"
+                          className="flex w-full items-center gap-1 hover:text-foreground"
                           onClick={header.column.getToggleSortingHandler()}
                         >
                           {flexRender(header.column.columnDef.header, header.getContext())}
                           {sortDirection === "asc" && <ArrowUpIcon className="size-3.5" />}
                           {sortDirection === "desc" && <ArrowDownIcon className="size-3.5" />}
+                          {sortDirection === false && (
+                            <ArrowUpDownIcon className="size-3.5 text-muted-foreground" />
+                          )}
                         </button>
                       ) : (
                         flexRender(header.column.columnDef.header, header.getContext())
@@ -146,15 +163,24 @@ export function DataTable<TData, TValue>({
                 </TableCell>
               </TableRow>
             ) : (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              table.getRowModel().rows.map((row) => {
+                const tableRow = (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+                return RowActions === undefined ? (
+                  tableRow
+                ) : (
+                  <RowActions key={row.id} row={row.original}>
+                    {tableRow}
+                  </RowActions>
+                );
+              })
             )}
           </TableBody>
         </Table>

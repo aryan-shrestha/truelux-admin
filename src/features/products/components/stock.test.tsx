@@ -6,6 +6,7 @@ import { saveSession } from "@/lib/repositories/session";
 import { BRAND, CATEGORY, catalogueHandlers, SHADE, SIZE } from "@/test/catalogue";
 import { server } from "@/test/msw-server";
 import { renderApp } from "@/test/render-app";
+import { chooseRowAction } from "@/test/row-menu";
 import { meHandler } from "@/test/staff";
 
 const PRODUCT_ID = "0d000000-0000-4000-8000-000000000001";
@@ -72,8 +73,7 @@ afterEach(() => localStorage.clear());
 
 async function openStockDialog() {
   const user = userEvent.setup();
-  await user.click(await screen.findByRole("button", { name: "Actions for LUM-SF-30-WB" }));
-  await user.click(await screen.findByRole("menuitem", { name: "Change stock" }));
+  await chooseRowAction(user, "LUM-SF-30-WB", "Change stock");
   const dialog = await screen.findByRole("dialog");
   return { user, dialog };
 }
@@ -215,8 +215,7 @@ describe("stock history", () => {
     );
     renderApp(`/products/${PRODUCT_ID}?tab=variants`);
 
-    await user.click(await screen.findByRole("button", { name: "Actions for LUM-SF-30-WB" }));
-    await user.click(await screen.findByRole("menuitem", { name: "Stock history" }));
+    await chooseRowAction(user, "LUM-SF-30-WB", "Stock history");
 
     const sheet = await screen.findByRole("dialog");
     expect(await within(sheet).findByText("+6")).toBeInTheDocument();
@@ -242,8 +241,7 @@ describe("stock history", () => {
     );
     renderApp(`/products/${PRODUCT_ID}?tab=variants`);
 
-    await user.click(await screen.findByRole("button", { name: "Actions for LUM-SF-30-WB" }));
-    await user.click(await screen.findByRole("menuitem", { name: "Stock history" }));
+    await chooseRowAction(user, "LUM-SF-30-WB", "Stock history");
 
     expect(await screen.findByText("No stock changes yet")).toBeInTheDocument();
   });

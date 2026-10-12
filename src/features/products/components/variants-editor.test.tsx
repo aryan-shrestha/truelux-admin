@@ -6,6 +6,7 @@ import { saveSession } from "@/lib/repositories/session";
 import { BRAND, CATEGORY, catalogueHandlers, SHADE, SIZE } from "@/test/catalogue";
 import { server } from "@/test/msw-server";
 import { renderApp } from "@/test/render-app";
+import { chooseRowAction } from "@/test/row-menu";
 import { meHandler } from "@/test/staff";
 
 const PRODUCT_ID = "0d000000-0000-4000-8000-000000000001";
@@ -62,8 +63,7 @@ function rowOf(sku: string) {
 }
 
 async function openAction(user: ReturnType<typeof userEvent.setup>, sku: string, action: string) {
-  await user.click(await screen.findByRole("button", { name: `Actions for ${sku}` }));
-  await user.click(await screen.findByRole("menuitem", { name: action }));
+  await chooseRowAction(user, sku, action);
 }
 
 describe("variants", () => {
@@ -142,6 +142,8 @@ describe("variants", () => {
     await user.type(within(sheet).getByLabelText("SKU"), "LUM-SF-30-WB");
     await user.click(within(sheet).getByLabelText("Size"));
     await user.click(await screen.findByRole("option", { name: SIZE.name }));
+    await user.click(within(sheet).getByLabelText("Shade"));
+    await user.click(await screen.findByRole("option", { name: SHADE.name }));
     await user.clear(within(sheet).getByLabelText("Opening stock"));
     await user.type(within(sheet).getByLabelText("Opening stock"), "12");
     await user.click(within(sheet).getByRole("button", { name: "Add variant" }));
@@ -150,7 +152,7 @@ describe("variants", () => {
     expect(sentBody).toEqual({
       sku: "LUM-SF-30-WB",
       size_id: SIZE.id,
-      shade_id: null,
+      shade_id: SHADE.id,
       price_override: null,
       compare_at_price: null,
       stock_quantity: 12,
@@ -282,5 +284,19 @@ describe("variants", () => {
 
     expect(await within(sheet).findByText("Must be greater than the price.")).toBeInTheDocument();
     expect(field).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("opens a variant's actions on right-click", async () => {
+    const user = userEvent.setup();
+    server.use(http.get(PRODUCT_PATH, () => HttpResponse.json(product())));
+    renderApp(`/products/${PRODUCT_ID}?tab=variants`);
+    await screen.findByRole("cell", { name: "LUM-SF-30-WB" });
+
+    await user.pointer({ keys: "[MouseRight]", target: rowOf("LUM-SF-30-WB") });
+    await user.click(await screen.findByRole("menuitem", { name: "Change stock" }));
+
+    expect(
+      await screen.findByRole("dialog", { name: "Change stock of LUM-SF-30-WB" }),
+    ).toBeInTheDocument();
   });
 });

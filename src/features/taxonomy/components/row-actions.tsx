@@ -1,16 +1,9 @@
-import { MoreHorizontalIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import { PencilIcon, Trash2Icon } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { RowMenu } from "@/components/data-table/row-menu";
 import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { describeError } from "@/lib/repositories/errors";
 
 import { useDeleteTaxonomy } from "../queries/taxonomy.mutations";
@@ -23,6 +16,7 @@ export function RowActions({
   inUseMessage,
   deleteDescription = "This cannot be undone.",
   editDialog,
+  children,
 }: {
   kind: TaxonomyKind;
   id: string;
@@ -31,6 +25,8 @@ export function RowActions({
   inUseMessage: string;
   deleteDescription?: string;
   editDialog: (state: { open: boolean; onOpenChange: (open: boolean) => void }) => ReactNode;
+  // The table row, which right-clicking opens the actions on.
+  children: ReactNode;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -51,24 +47,20 @@ export function RowActions({
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label={`Actions for ${name}`}>
-            <MoreHorizontalIcon />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => setIsEditing(true)}>
-            <PencilIcon />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onSelect={() => setIsDeleting(true)}>
-            <Trash2Icon />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <RowMenu
+        label={`Actions for ${name}`}
+        actions={[
+          { label: "Edit", icon: PencilIcon, onSelect: () => setIsEditing(true) },
+          {
+            label: "Delete",
+            icon: Trash2Icon,
+            onSelect: () => setIsDeleting(true),
+            isDestructive: true,
+          },
+        ]}
+      >
+        {children}
+      </RowMenu>
       {editDialog({ open: isEditing, onOpenChange: setIsEditing })}
       <ConfirmDialog
         title={`Delete ${name}?`}

@@ -1,4 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
+import type { ReactNode } from "react";
 
 import { DataTable } from "@/components/data-table/data-table";
 
@@ -32,21 +33,21 @@ const COLUMNS: ColumnDef<Shade>[] = [
   slugColumn<Shade>(),
   sortOrderColumn<Shade>(),
   usageColumn<Shade, "variant_count">("variant_count", "Variants"),
-  {
-    id: "actions",
-    cell: ({ row }) => (
-      <div className="text-right">
-        <RowActions
-          kind="shades"
-          id={row.original.id}
-          name={row.original.name}
-          inUseMessage={`In use by ${row.original.variant_count} variants. Change their shade first.`}
-          editDialog={(state) => <ShadeDialog shade={row.original} {...state} />}
-        />
-      </div>
-    ),
-  },
 ];
+
+function ShadeRowActions({ row, children }: { row: Shade; children: ReactNode }) {
+  return (
+    <RowActions
+      kind="shades"
+      id={row.id}
+      name={row.name}
+      inUseMessage={`In use by ${row.variant_count} variants. Change their shade first.`}
+      editDialog={(state) => <ShadeDialog shade={row} {...state} />}
+    >
+      {children}
+    </RowActions>
+  );
+}
 
 export function ShadesTable({ query }: { query: string | undefined }) {
   const shades = useTaxonomySearch("shades", query);
@@ -54,6 +55,7 @@ export function ShadesTable({ query }: { query: string | undefined }) {
     <DataTable
       columns={COLUMNS}
       data={shades}
+      rowActions={ShadeRowActions}
       empty={<TaxonomyEmpty noun="shades" query={query} />}
     />
   );

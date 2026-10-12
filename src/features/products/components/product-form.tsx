@@ -4,8 +4,8 @@ import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
 
+import { ComboboxField } from "@/components/form/combobox-field";
 import { showApiError } from "@/components/form/show-api-error";
-import { SwitchField } from "@/components/form/switch-field";
 import { TextField } from "@/components/form/text-field";
 import { TextareaField } from "@/components/form/textarea-field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -20,7 +20,6 @@ import { useSaveProduct } from "../queries/products.mutations";
 import { PRODUCT_FORM_SCHEMA, type ProductFormValues } from "../schemas/product-form.schema";
 import type { Product } from "../schemas/product.schema";
 import { MultiSelectField } from "./multi-select-field";
-import { ComboboxField } from "./combobox-field";
 
 // A child category is shown with its parent ("Lips › Gloss"), alphabetically.
 function categoryOptions(categories: readonly Category[]) {
@@ -48,7 +47,6 @@ function toFormValues(product: Product | undefined): ProductFormValues {
     skin_type_ids: product?.skin_types.map((skinType) => skinType.id) ?? [],
     skin_feel: product?.skin_feel ?? "",
     key_ingredients: product?.key_ingredients ?? "",
-    is_published: product?.is_published ?? false,
   };
 }
 
@@ -80,18 +78,10 @@ export function ProductForm({
         toast.success("Product saved");
         form.reset(toFormValues(saved));
       },
-      onError: (error) => {
-        // Publishing needs a variant first; the API says so on the Published switch.
-        if (error.code === "product_has_no_variants") {
-          form.setError("is_published", {
-            message: "Add at least one variant before publishing.",
-          });
-          return;
-        }
+      onError: (error) =>
         showApiError(form, error, {
           conflict: "This duplicates an existing product. Check the name and the slug.",
-        });
-      },
+        }),
     });
   }
 
@@ -160,11 +150,6 @@ export function ProductForm({
                 <TextField name="skin_feel" label="Skin feel" description="Up to 200 characters." />
                 <TextareaField name="key_ingredients" label="Key ingredients" />
               </div>
-              <SwitchField
-                name="is_published"
-                label="Published"
-                description="Shown on the storefront. Needs at least one variant."
-              />
             </FieldGroup>
           </CardContent>
           <CardFooter className="justify-end border-t">

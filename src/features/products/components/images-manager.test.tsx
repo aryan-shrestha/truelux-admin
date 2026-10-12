@@ -85,6 +85,32 @@ describe("product images", () => {
     expect(await screen.findAllByLabelText(/^Alt text of image/)).toHaveLength(2);
   });
 
+  it("shows a skeleton for each file while the upload runs", async () => {
+    const user = userEvent.setup();
+    let uploaded: unknown[] = [];
+    server.use(
+      http.get(PRODUCT_PATH, () => HttpResponse.json(product(uploaded))),
+      http.post(`${PRODUCT_PATH}images/`, async () => {
+        await delay(100);
+        const created = image(uploaded.length + 1);
+        uploaded = [...uploaded, created];
+        return HttpResponse.json(created, { status: 201 });
+      }),
+    );
+    renderApp(`/products/${PRODUCT_ID}?tab=images`);
+
+    await user.upload(await screen.findByLabelText("Upload images"), [
+      new File(["a"], "front.jpg", { type: "image/jpeg" }),
+      new File(["b"], "back.png", { type: "image/png" }),
+    ]);
+
+    expect(screen.getByRole("status", { name: "Uploading front.jpg" })).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "Uploading back.png" })).toBeInTheDocument();
+    expect(screen.queryByText("No images yet")).not.toBeInTheDocument();
+    expect(await screen.findByRole("img", { name: "Photo 2" })).toBeInTheDocument();
+    expect(screen.queryByRole("status", { name: /^Uploading/ })).not.toBeInTheDocument();
+  });
+
   it("refuses a file the API would reject without sending it", async () => {
     const user = userEvent.setup({ applyAccept: false });
     let uploads = 0;

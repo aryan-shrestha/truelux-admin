@@ -44,7 +44,7 @@ export function StockHistory({
           <SheetDescription>{variant.stock_quantity} in stock. Newest first.</SheetDescription>
         </SheetHeader>
         {/* Fetched only when opened: most rows' histories are never looked at. */}
-        <div className="overflow-y-auto px-4 pb-4">
+        <div className="overflow-y-auto px-6 pb-6">
           {open && <Movements variantId={variant.id} />}
         </div>
       </SheetContent>

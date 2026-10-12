@@ -5,6 +5,7 @@ import { http, HttpResponse } from "msw";
 import { saveSession } from "@/lib/repositories/session";
 import { server } from "@/test/msw-server";
 import { renderApp } from "@/test/render-app";
+import { chooseRowAction } from "@/test/row-menu";
 import { meHandler } from "@/test/staff";
 
 const BRANDS_PATH = "*/api/v1/admin/brands/";
@@ -173,8 +174,7 @@ describe("brands", () => {
     );
     renderApp("/brands");
 
-    await user.click(await screen.findByRole("button", { name: "Actions for Lumière" }));
-    await user.click(await screen.findByRole("menuitem", { name: "Delete" }));
+    await chooseRowAction(user, "Lumière", "Delete");
     await user.click(
       within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Delete" }),
     );
@@ -183,5 +183,17 @@ describe("brands", () => {
       await screen.findByText("In use by 7 products. Deactivate or reassign them first."),
     ).toBeInTheDocument();
     expect(screen.getByRole("cell", { name: /Lumière/ })).toBeInTheDocument();
+  });
+
+  it("opens a brand's actions on right-click", async () => {
+    const user = userEvent.setup();
+    server.use(http.get(BRANDS_PATH, () => HttpResponse.json([brand("Lumière")])));
+    renderApp("/brands");
+    const row = (await screen.findByText("Lumière")).closest("tr") as HTMLElement;
+
+    await user.pointer({ keys: "[MouseRight]", target: row });
+    await user.click(await screen.findByRole("menuitem", { name: "Edit" }));
+
+    expect(await screen.findByRole("dialog", { name: "Edit Lumière" })).toBeInTheDocument();
   });
 });

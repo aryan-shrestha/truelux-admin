@@ -1,4 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
+import type { ReactNode } from "react";
 
 import { DataTable } from "@/components/data-table/data-table";
 
@@ -18,21 +19,21 @@ const COLUMNS: ColumnDef<Size>[] = [
   slugColumn<Size>(),
   sortOrderColumn<Size>(),
   usageColumn<Size, "variant_count">("variant_count", "Variants"),
-  {
-    id: "actions",
-    cell: ({ row }) => (
-      <div className="text-right">
-        <RowActions
-          kind="sizes"
-          id={row.original.id}
-          name={row.original.name}
-          inUseMessage={`In use by ${row.original.variant_count} variants. Change their size first.`}
-          editDialog={(state) => <SizeDialog size={row.original} {...state} />}
-        />
-      </div>
-    ),
-  },
 ];
+
+function SizeRowActions({ row, children }: { row: Size; children: ReactNode }) {
+  return (
+    <RowActions
+      kind="sizes"
+      id={row.id}
+      name={row.name}
+      inUseMessage={`In use by ${row.variant_count} variants. Change their size first.`}
+      editDialog={(state) => <SizeDialog size={row} {...state} />}
+    >
+      {children}
+    </RowActions>
+  );
+}
 
 export function SizesTable({ query }: { query: string | undefined }) {
   const sizes = useTaxonomySearch("sizes", query);
@@ -40,6 +41,7 @@ export function SizesTable({ query }: { query: string | undefined }) {
     <DataTable
       columns={COLUMNS}
       data={sizes}
+      rowActions={SizeRowActions}
       empty={<TaxonomyEmpty noun="sizes" query={query} />}
     />
   );

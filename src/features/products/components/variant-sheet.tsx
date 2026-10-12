@@ -1,21 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { Controller, FormProvider, useForm, useFormContext } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
 
+import { ComboboxField } from "@/components/form/combobox-field";
 import { showApiError } from "@/components/form/show-api-error";
 import { TextField } from "@/components/form/text-field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FieldGroup } from "@/components/ui/field";
 import {
   Sheet,
   SheetContent,
@@ -31,12 +25,8 @@ import { useSaveVariant } from "../queries/products.mutations";
 import type { Variant } from "../schemas/product.schema";
 import { VARIANT_FORM_SCHEMA, type VariantFormValues } from "../schemas/variant-form.schema";
 import { toVariantBody } from "../variant-body";
-import { SelectField } from "./select-field";
 
 type FormInput = z.input<typeof VARIANT_FORM_SCHEMA>;
-
-// A Select item cannot have an empty value, so "no shade" needs a stand-in.
-const NO_SHADE = "no-shade";
 
 // Adds a variant (POST) or edits a saved one (PATCH). Stock is an input only when
 // adding; a saved variant's stock changes through Change stock.
@@ -90,6 +80,7 @@ function VariantForm({
 }) {
   const isNew = variant === undefined;
   const { data: sizes = [] } = useQuery(taxonomyQueries.list("sizes"));
+  const { data: shades = [] } = useQuery(taxonomyQueries.list("shades"));
   const save = useSaveVariant(productId, variant?.id ?? null);
   const form = useForm<FormInput, unknown, VariantFormValues>({
     resolver: zodResolver(VARIANT_FORM_SCHEMA),
@@ -124,20 +115,31 @@ function VariantForm({
         className="flex min-h-0 flex-1 flex-col"
         onSubmit={form.handleSubmit(handleSubmit)}
       >
-        <FieldGroup className="overflow-y-auto px-4">
+        <FieldGroup className="overflow-y-auto px-6">
           {rootError && (
             <Alert variant="destructive" aria-live="polite">
               <AlertDescription>{rootError}</AlertDescription>
             </Alert>
           )}
           <TextField name="sku" label="SKU" />
-          <SelectField
+          <ComboboxField
             name="size_id"
             label="Size"
-            placeholder="Choose"
+            placeholder="Choose a size"
+            emptyMessage="No sizes match."
             options={sizes.map((size) => ({ value: size.id, label: size.name }))}
           />
-          <ShadeField />
+          <ComboboxField
+            name="shade_id"
+            label="Shade"
+            emptyMessage="No shades match."
+            noneLabel="No shade"
+            options={shades.map((shade) => ({
+              value: shade.id,
+              label: shade.name,
+              swatch: shade.hex_code,
+            }))}
+          />
           {isNew && <TextField name="stock_quantity" label="Opening stock" inputMode="numeric" />}
           <TextField
             name="price_override"
@@ -162,44 +164,5 @@ function VariantForm({
         </SheetFooter>
       </form>
     </FormProvider>
-  );
-}
-
-function ShadeField() {
-  const { control } = useFormContext<FormInput>();
-  const { data: shades = [] } = useQuery(taxonomyQueries.list("shades"));
-
-  return (
-    <Controller
-      name="shade_id"
-      control={control}
-      render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <FieldLabel htmlFor="field-shade_id">Shade</FieldLabel>
-          <Select
-            value={field.value ?? NO_SHADE}
-            onValueChange={(value) => field.onChange(value === NO_SHADE ? null : value)}
-          >
-            <SelectTrigger id="field-shade_id" aria-invalid={fieldState.invalid}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={NO_SHADE}>No shade</SelectItem>
-              {shades.map((shade) => (
-                <SelectItem key={shade.id} value={shade.id}>
-                  <span
-                    aria-hidden
-                    className="size-3 rounded-sm border"
-                    style={{ backgroundColor: shade.hex_code }}
-                  />
-                  {shade.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FieldError errors={[fieldState.error]} />
-        </Field>
-      )}
-    />
   );
 }

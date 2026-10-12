@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef, OnChangeFn, SortingState } from "@tanstack/react-table";
 import { ImageIcon, PackageIcon } from "lucide-react";
 
 import { DataTable } from "@/components/data-table/data-table";
@@ -31,7 +31,8 @@ const COLUMNS: ColumnDef<ProductListItem>[] = [
     accessorKey: "name",
     header: "Product",
     cell: ({ row }) => (
-      <div className="min-w-0">
+      // A long name wraps instead of widening the table past the page.
+      <div className="max-w-80 min-w-48 whitespace-normal">
         <Link
           to="/products/$productId"
           params={{ productId: row.original.id }}
@@ -39,7 +40,7 @@ const COLUMNS: ColumnDef<ProductListItem>[] = [
         >
           {row.original.name}
         </Link>
-        <div className="font-mono text-xs text-muted-foreground">{row.original.slug}</div>
+        <div className="truncate font-mono text-xs text-muted-foreground">{row.original.slug}</div>
       </div>
     ),
   },
@@ -47,16 +48,18 @@ const COLUMNS: ColumnDef<ProductListItem>[] = [
   { id: "category", header: "Category", cell: ({ row }) => row.original.category.name },
   {
     accessorKey: "base_price",
-    header: () => <div className="text-right">Price</div>,
+    header: () => <div className="flex-1 text-right">Price</div>,
     cell: ({ row }) => <div className="text-right">{formatMoney(row.original.base_price)}</div>,
   },
   {
     accessorKey: "variant_count",
+    enableSorting: false,
     header: () => <div className="text-right">Variants</div>,
     cell: ({ row }) => <div className="text-right">{row.original.variant_count}</div>,
   },
   {
     accessorKey: "total_stock",
+    enableSorting: false,
     header: () => <div className="text-right">Stock</div>,
     cell: ({ row }) => (
       <div className="text-right">
@@ -70,6 +73,7 @@ const COLUMNS: ColumnDef<ProductListItem>[] = [
   },
   {
     accessorKey: "is_published",
+    enableSorting: false,
     header: "Status",
     cell: ({ row }) => (
       <div className="flex flex-wrap gap-1">
@@ -82,14 +86,6 @@ const COLUMNS: ColumnDef<ProductListItem>[] = [
       </div>
     ),
   },
-  {
-    id: "actions",
-    cell: ({ row }) => (
-      <div className="text-right">
-        <ProductRowActions product={row.original} />
-      </div>
-    ),
-  },
 ];
 
 export function ProductsTable({
@@ -97,6 +93,8 @@ export function ProductsTable({
   count,
   pageIndex,
   pageSize,
+  sorting,
+  onSortingChange,
   isFiltered,
   isLoading,
   isPlaceholderData,
@@ -105,6 +103,8 @@ export function ProductsTable({
   count: number;
   pageIndex: number;
   pageSize: number;
+  sorting: SortingState;
+  onSortingChange: OnChangeFn<SortingState>;
   isFiltered: boolean;
   isLoading: boolean;
   isPlaceholderData: boolean;
@@ -114,6 +114,9 @@ export function ProductsTable({
       columns={COLUMNS}
       data={products}
       pagination={{ pageIndex, pageSize, rowCount: count }}
+      sorting={sorting}
+      onSortingChange={onSortingChange}
+      rowActions={ProductRowActions}
       isLoading={isLoading}
       isPlaceholderData={isPlaceholderData}
       empty={

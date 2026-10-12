@@ -39,7 +39,7 @@ function DashboardLayout() {
     // decides what does (Page).
     <SidebarProvider open={isSidebarOpen} onOpenChange={setSidebarOpen} className="md:h-svh">
       <AppSidebar footer={<UserMenu />} />
-      <SidebarInset className="md:min-h-0">
+      <SidebarInset className="min-w-0 md:min-h-0">
         <Topbar>
           <div className="flex flex-1 flex-col md:min-h-0">
             <Outlet />

@@ -75,14 +75,15 @@ describe("new product", () => {
     renderApp("/products/new");
     const brand = await screen.findByRole("combobox", { name: "Brand" });
 
-    await user.type(brand, "mai");
+    await user.click(brand);
+    await user.type(await screen.findByPlaceholderText("Search brand"), "mai");
     expect(await screen.findByRole("option", { name: "Maison" })).toBeInTheDocument();
     expect(screen.queryByRole("option", { name: BRAND.name })).not.toBeInTheDocument();
     await user.click(screen.getByRole("option", { name: "Maison" }));
-    expect(brand).toHaveValue("Maison");
+    expect(brand).toHaveTextContent("Maison");
 
-    await user.clear(brand);
-    await user.type(brand, "zzz");
+    await user.click(brand);
+    await user.type(await screen.findByPlaceholderText("Search brand"), "zzz");
     expect(await screen.findByText("No brand matches.")).toBeInTheDocument();
   });
 
@@ -118,7 +119,6 @@ describe("new product", () => {
       skin_type_ids: [],
       skin_feel: "",
       key_ingredients: "",
-      is_published: false,
     });
   });
 });
@@ -148,7 +148,27 @@ describe("product details", () => {
     expect(sentBody.slug).toBe("silk-foundation");
   });
 
-  it("explains on the Published switch why a product without variants cannot go live", async () => {
+  it("publishes from the header and then offers Unpublish", async () => {
+    const user = userEvent.setup();
+    let sentBody: unknown;
+    server.use(
+      http.get(`*/api/v1/admin/products/${PRODUCT_ID}/`, () => HttpResponse.json(product())),
+      http.patch(`*/api/v1/admin/products/${PRODUCT_ID}/`, async ({ request }) => {
+        sentBody = await request.json();
+        return HttpResponse.json(product({ is_published: true }));
+      }),
+    );
+    renderApp(`/products/${PRODUCT_ID}`);
+
+    await user.click(await screen.findByRole("button", { name: "Publish" }));
+
+    expect(await screen.findByText("Silk Foundation published")).toBeInTheDocument();
+    expect(sentBody).toEqual({ is_published: true });
+    expect(await screen.findByRole("button", { name: "Unpublish" })).toBeInTheDocument();
+    expect(screen.queryByRole("switch", { name: "Published" })).not.toBeInTheDocument();
+  });
+
+  it("says why a product without variants cannot be published", async () => {
     const user = userEvent.setup();
     server.use(
       http.get(`*/api/v1/admin/products/${PRODUCT_ID}/`, () => HttpResponse.json(product())),
@@ -158,16 +178,22 @@ describe("product details", () => {
     );
     renderApp(`/products/${PRODUCT_ID}`);
 
-    await user.click(await screen.findByRole("switch", { name: "Published" }));
-    await user.click(screen.getByRole("button", { name: "Save product" }));
+    await user.click(await screen.findByRole("button", { name: "Publish" }));
 
     expect(
       await screen.findByText("Add at least one variant before publishing."),
     ).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: "Published" })).toHaveAttribute(
-      "aria-invalid",
-      "true",
+    expect(screen.getByRole("button", { name: "Publish" })).toBeEnabled();
+  });
+
+  it("counts the variants in the Variants tab", async () => {
+    server.use(
+      http.get(`*/api/v1/admin/products/${PRODUCT_ID}/`, () => HttpResponse.json(product())),
     );
+    renderApp(`/products/${PRODUCT_ID}`);
+
+    expect(await screen.findByRole("tab", { name: "Variants (0)" })).toBeInTheDocument();
+    expect(screen.queryByText("Draft")).not.toBeInTheDocument();
   });
 
   it("puts the API's field message under the field", async () => {

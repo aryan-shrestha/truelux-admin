@@ -1,23 +1,23 @@
-import { Link } from "@tanstack/react-router";
-import { EyeIcon, EyeOffIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon } from "lucide-react";
-import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { EyeIcon, EyeOffIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { RowMenu } from "@/components/data-table/row-menu";
 import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { describeError } from "@/lib/repositories/errors";
 
 import { useDeleteProduct, useSetPublished } from "../queries/products.mutations";
 import type { ProductListItem } from "../schemas/product.schema";
 
-export function ProductRowActions({ product }: { product: ProductListItem }) {
+export function ProductRowActions({
+  row: product,
+  children,
+}: {
+  row: ProductListItem;
+  children: ReactNode;
+}) {
+  const navigate = useNavigate();
   const [isDeleting, setIsDeleting] = useState(false);
   const setPublished = useSetPublished();
   const remove = useDeleteProduct();
@@ -58,30 +58,30 @@ export function ProductRowActions({ product }: { product: ProductListItem }) {
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label={`Actions for ${product.name}`}>
-            <MoreHorizontalIcon />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem asChild>
-            <Link to="/products/$productId" params={{ productId: product.id }}>
-              <PencilIcon />
-              Edit
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => togglePublished(!product.is_published)}>
-            {product.is_published ? <EyeOffIcon /> : <EyeIcon />}
-            {product.is_published ? "Unpublish" : "Publish"}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onSelect={() => setIsDeleting(true)}>
-            <Trash2Icon />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <RowMenu
+        label={`Actions for ${product.name}`}
+        actions={[
+          {
+            label: "Edit",
+            icon: PencilIcon,
+            onSelect: () =>
+              void navigate({ to: "/products/$productId", params: { productId: product.id } }),
+          },
+          {
+            label: product.is_published ? "Unpublish" : "Publish",
+            icon: product.is_published ? EyeOffIcon : EyeIcon,
+            onSelect: () => togglePublished(!product.is_published),
+          },
+          {
+            label: "Delete",
+            icon: Trash2Icon,
+            onSelect: () => setIsDeleting(true),
+            isDestructive: true,
+          },
+        ]}
+      >
+        {children}
+      </RowMenu>
       <ConfirmDialog
         title={`Delete ${product.name}?`}
         description="Its variants and images go with it. This cannot be undone."

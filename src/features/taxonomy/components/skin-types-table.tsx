@@ -1,4 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
+import type { ReactNode } from "react";
 
 import { DataTable } from "@/components/data-table/data-table";
 
@@ -26,22 +27,22 @@ const COLUMNS: ColumnDef<SkinType>[] = [
   slugColumn<SkinType>(),
   sortOrderColumn<SkinType>(),
   usageColumn<SkinType, "product_count">("product_count", "Products"),
-  {
-    id: "actions",
-    cell: ({ row }) => (
-      <div className="text-right">
-        <RowActions
-          kind="skin-types"
-          id={row.original.id}
-          name={row.original.name}
-          inUseMessage="This skin type could not be deleted."
-          deleteDescription={deleteDescription(row.original.product_count)}
-          editDialog={(state) => <SkinTypeDialog skinType={row.original} {...state} />}
-        />
-      </div>
-    ),
-  },
 ];
+
+function SkinTypeRowActions({ row, children }: { row: SkinType; children: ReactNode }) {
+  return (
+    <RowActions
+      kind="skin-types"
+      id={row.id}
+      name={row.name}
+      inUseMessage="This skin type could not be deleted."
+      deleteDescription={deleteDescription(row.product_count)}
+      editDialog={(state) => <SkinTypeDialog skinType={row} {...state} />}
+    >
+      {children}
+    </RowActions>
+  );
+}
 
 export function SkinTypesTable({ query }: { query: string | undefined }) {
   const skinTypes = useTaxonomySearch("skin-types", query);
@@ -49,6 +50,7 @@ export function SkinTypesTable({ query }: { query: string | undefined }) {
     <DataTable
       columns={COLUMNS}
       data={skinTypes}
+      rowActions={SkinTypeRowActions}
       empty={<TaxonomyEmpty noun="skin types" query={query} />}
     />
   );

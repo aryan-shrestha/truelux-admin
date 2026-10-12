@@ -19,11 +19,12 @@ import { describeError } from "@/lib/repositories/errors";
 
 import { useUploadImages } from "../queries/products.mutations";
 import type { Product } from "../schemas/product.schema";
-import { ImageCard } from "./image-card";
+import { ImageCard, ImageCardSkeleton } from "./image-card";
 
 export function ImagesManager({ product }: { product: Product }) {
   const upload = useUploadImages(product.id);
   const [uploadError, setUploadError] = useState<string>();
+  const uploadingFiles = upload.isPending ? upload.variables.files : [];
 
   function handleFiles(event: ChangeEvent<HTMLInputElement>) {
     const files = [...(event.target.files ?? [])];
@@ -50,7 +51,9 @@ export function ImagesManager({ product }: { product: Product }) {
   }
 
   return (
-    <Card className="md:min-h-0">
+    // Card drops its bottom padding when it contains a footer, and `:has` also matches
+    // the image cards' footers, so the padding is restored here.
+    <Card className="has-data-[slot=card-footer]:pb-(--card-spacing) md:min-h-0">
       <CardHeader>
         <CardTitle>Images</CardTitle>
         <CardDescription>
@@ -85,14 +88,14 @@ export function ImagesManager({ product }: { product: Product }) {
             <AlertDescription>{uploadError}</AlertDescription>
           </Alert>
         )}
-        {product.images.length === 0 ? (
+        {product.images.length === 0 && uploadingFiles.length === 0 ? (
           <EmptyState
             icon={ImagesIcon}
             title="No images yet"
             description="The first image uploaded becomes the primary one."
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-6">
             {product.images.map((image, index) => (
               <ImageCard
                 key={image.id}
@@ -100,6 +103,9 @@ export function ImagesManager({ product }: { product: Product }) {
                 images={product.images}
                 index={index}
               />
+            ))}
+            {uploadingFiles.map((file, index) => (
+              <ImageCardSkeleton key={`${index}-${file.name}`} fileName={file.name} />
             ))}
           </div>
         )}

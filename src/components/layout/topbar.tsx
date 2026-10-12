@@ -12,7 +12,7 @@ export function Topbar({ children }: { children: ReactNode }) {
 
   return (
     <BreadcrumbSlotContext value={breadcrumbSlot}>
-      <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-5 md:px-8">
         <SidebarTrigger className="-ml-1" />
         <div ref={setBreadcrumbSlot} className="ml-auto min-w-0" />
       </header>

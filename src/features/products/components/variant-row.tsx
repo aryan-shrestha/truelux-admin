@@ -1,23 +1,10 @@
-import {
-  HistoryIcon,
-  MoreHorizontalIcon,
-  PackagePlusIcon,
-  PencilIcon,
-  Trash2Icon,
-} from "lucide-react";
+import { HistoryIcon, PackagePlusIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { RowMenu } from "@/components/data-table/row-menu";
 import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { formatMoney } from "@/lib/money";
 import { describeError } from "@/lib/repositories/errors";
@@ -67,82 +54,71 @@ export function VariantRow({
   }
 
   return (
-    <TableRow>
-      <TableCell className="font-mono">{variant.sku}</TableCell>
-      <TableCell>{variant.size.name}</TableCell>
-      <TableCell>
-        {variant.shade === null ? (
-          <span className="text-muted-foreground">No shade</span>
-        ) : (
-          <span className="flex items-center gap-2">
-            <span
-              aria-hidden
-              className="size-3 rounded-sm border"
-              style={{ backgroundColor: variant.shade.hex_code }}
-            />
-            {variant.shade.name}
-          </span>
-        )}
-      </TableCell>
-      <TableCell className="text-right tabular-nums">{variant.stock_quantity}</TableCell>
-      <TableCell className="text-right tabular-nums">{formatMoney(variant.price)}</TableCell>
-      <TableCell className="text-right tabular-nums">
-        {variant.compare_at_price === null ? (
-          <span className="text-muted-foreground">—</span>
-        ) : (
-          formatMoney(variant.compare_at_price)
-        )}
-        {/* The API decides a variant is on sale and by how much; nothing is compared here. */}
-        {variant.on_sale && variant.discount_percent !== null && (
-          <Badge variant="info" className="ml-2">
-            −{variant.discount_percent}%
-          </Badge>
-        )}
-      </TableCell>
-      <TableCell className="w-12">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label={`Actions for ${variant.sku}`}>
-              <MoreHorizontalIcon />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => setOpenPanel("edit")}>
-              <PencilIcon />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setOpenPanel("stock")}>
-              <PackagePlusIcon />
-              Change stock
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setOpenPanel("history")}>
-              <HistoryIcon />
-              Stock history
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onSelect={() => setOpenPanel("delete")}>
-              <Trash2Icon />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <VariantSheet
-          productId={productId}
-          basePrice={basePrice}
-          variant={variant}
-          {...panelProps("edit")}
-        />
-        <StockDialog productId={productId} variant={variant} {...panelProps("stock")} />
-        <StockHistory variant={variant} {...panelProps("history")} />
-        <ConfirmDialog
-          title={`Delete ${variant.sku}?`}
-          description="This cannot be undone."
-          confirmLabel="Delete"
-          isPending={remove.isPending}
-          {...panelProps("delete")}
-          onConfirm={handleDelete}
-        />
-      </TableCell>
-    </TableRow>
+    <>
+      <RowMenu
+        label={`Actions for ${variant.sku}`}
+        actions={[
+          { label: "Edit", icon: PencilIcon, onSelect: () => setOpenPanel("edit") },
+          { label: "Change stock", icon: PackagePlusIcon, onSelect: () => setOpenPanel("stock") },
+          { label: "Stock history", icon: HistoryIcon, onSelect: () => setOpenPanel("history") },
+          {
+            label: "Delete",
+            icon: Trash2Icon,
+            onSelect: () => setOpenPanel("delete"),
+            isDestructive: true,
+          },
+        ]}
+      >
+        <TableRow>
+          <TableCell className="font-mono">{variant.sku}</TableCell>
+          <TableCell>{variant.size.name}</TableCell>
+          <TableCell>
+            {variant.shade === null ? (
+              <span className="text-muted-foreground">No shade</span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <span
+                  aria-hidden
+                  className="size-3 rounded-sm border"
+                  style={{ backgroundColor: variant.shade.hex_code }}
+                />
+                {variant.shade.name}
+              </span>
+            )}
+          </TableCell>
+          <TableCell className="text-right tabular-nums">{variant.stock_quantity}</TableCell>
+          <TableCell className="text-right tabular-nums">{formatMoney(variant.price)}</TableCell>
+          <TableCell className="text-right tabular-nums">
+            {variant.compare_at_price === null ? (
+              <span className="text-muted-foreground">—</span>
+            ) : (
+              formatMoney(variant.compare_at_price)
+            )}
+            {/* The API decides a variant is on sale and by how much; nothing is compared here. */}
+            {variant.on_sale && variant.discount_percent !== null && (
+              <Badge variant="info" className="ml-2">
+                −{variant.discount_percent}%
+              </Badge>
+            )}
+          </TableCell>
+        </TableRow>
+      </RowMenu>
+      <VariantSheet
+        productId={productId}
+        basePrice={basePrice}
+        variant={variant}
+        {...panelProps("edit")}
+      />
+      <StockDialog productId={productId} variant={variant} {...panelProps("stock")} />
+      <StockHistory variant={variant} {...panelProps("history")} />
+      <ConfirmDialog
+        title={`Delete ${variant.sku}?`}
+        description="This cannot be undone."
+        confirmLabel="Delete"
+        isPending={remove.isPending}
+        {...panelProps("delete")}
+        onConfirm={handleDelete}
+      />
+    </>
   );
 }

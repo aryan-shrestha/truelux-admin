@@ -202,7 +202,7 @@ productKeys.lists() })`.
 
 React Hook Form with `zodResolver(<FORM_SCHEMA>)` and shadcn's `Field` components.
 Field components bound by `name` live in `src/components/form/` (`TextField`,
-`TextareaField`, `SwitchField`). The references are
+`TextareaField`, `SwitchField`, `ComboboxField`). The references are
 `src/features/taxonomy/components/taxonomy-form-dialog.tsx` (a form in a dialog) and
 `src/features/products/components/product-form.tsx` (a page form).
 
@@ -217,6 +217,12 @@ Field components bound by `name` live in `src/components/form/` (`TextField`,
 - Disable the submit button while the mutation is pending; never block on a
   timer.
 - Default values come from the query data, never from a store.
+- Every single choice, in a form or a list filter, is a searchable combobox:
+  `ComboboxField` in a form, `Combobox` (`src/components/form/combobox.tsx`)
+  elsewhere. Both are shadcn's Radix recipe, `popover` + `command`; shadcn's
+  `select` and its Base UI `combobox` are not used. An optional relation passes
+  `noneLabel` ("No shade"), which stands for `null`; a filter's first option ("All
+  brands") has the value `""`. A choice of several is `MultiSelectField`.
 
 ---
 
@@ -237,8 +243,22 @@ and `src/features/orders/components/orders-list.tsx`.
   `isPlaceholderData` (rows dim) and `isPending` (skeleton rows, first load only)
 - `toListParams({ pagination, sorting })` from `@/lib/repositories/pagination`
   turns table state into the API's `limit`, `offset` and `ordering`
+- a sortable list keeps its sort in a `sort` search param holding the API's
+  `ordering` value, validated against the orderings the API accepts, and passes
+  `sorting` / `onSortingChange` to `DataTable`; only columns the API can order are
+  sortable (`products-list.tsx` is the reference)
 - `rowCount` is the API's `count`
 - column definitions live in the feature (`orders-table.tsx`)
+- row actions open on right-click (or long-press) of the row, through `RowMenu`
+  (`src/components/data-table/row-menu.tsx`); rows have no ⋯ button or actions
+  column. A `DataTable` list passes a row component as `rowActions`
+  (`product-row-actions.tsx`); a hand-built table wraps its `TableRow` in `RowMenu`
+  and renders the row's dialogs beside it (`variant-row.tsx`). Tests open them with
+  `chooseRowAction` from `src/test/row-menu.ts`
+- a dialog's form is `flex min-h-0 flex-col gap-6` around a `DialogBody` (the fields)
+  and the `DialogFooter`, so only the fields scroll when the dialog reaches the
+  window's height; a sheet's form does the same with a scrolling field group between
+  `SheetHeader` and `SheetFooter` (`variant-sheet.tsx`)
 - the empty state is `EmptyState` from `src/components/feedback/`, with a filtered
   and an unfiltered message
 - search is `SearchInput` from `src/components/data-table/`, writing `?q=` after a

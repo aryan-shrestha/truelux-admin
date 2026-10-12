@@ -33,7 +33,7 @@ test("a compare-at price above the price puts a variant on sale", async ({ page 
   await page.getByRole("option").first().click();
   await sheet.getByRole("button", { name: "Add variant" }).click();
 
-  await page.getByRole("button", { name: `Actions for ${sku}` }).click();
+  await page.getByRole("row", { name: new RegExp(sku) }).click({ button: "right" });
   await page.getByRole("menuitem", { name: "Edit" }).click();
   const editSheet = page.getByRole("dialog", { name: `Edit ${sku}` });
   await editSheet.getByLabel("Price override").fill("2720");
@@ -44,7 +44,7 @@ test("a compare-at price above the price puts a variant on sale", async ({ page 
   await page.goto(`/products?q=${encodeURIComponent(name)}&on_sale=true`);
   const row = page.getByRole("row", { name: new RegExp(name) });
   await expect(row.getByText("On sale")).toBeVisible();
-  await row.getByRole("button", { name: `Actions for ${name}` }).click();
+  await row.click({ button: "right" });
   await page.getByRole("menuitem", { name: "Delete" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click();
   await expect(page.getByText(`${name} deleted`)).toBeVisible();

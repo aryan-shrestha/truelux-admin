@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -101,16 +102,22 @@ function TaxonomyForm<TInput extends FieldValues, TOutput>({
 
   return (
     <FormProvider {...form}>
-      <form noValidate onSubmit={form.handleSubmit(handleSubmit)}>
-        <FieldGroup>
-          {rootError && (
-            <Alert variant="destructive" aria-live="polite">
-              <AlertDescription>{rootError}</AlertDescription>
-            </Alert>
-          )}
-          {children}
-        </FieldGroup>
-        <DialogFooter className="mt-6">
+      <form
+        noValidate
+        className="flex min-h-0 flex-col gap-6"
+        onSubmit={form.handleSubmit(handleSubmit)}
+      >
+        <DialogBody>
+          <FieldGroup>
+            {rootError && (
+              <Alert variant="destructive" aria-live="polite">
+                <AlertDescription>{rootError}</AlertDescription>
+              </Alert>
+            )}
+            {children}
+          </FieldGroup>
+        </DialogBody>
+        <DialogFooter>
           <Button type="submit" disabled={save.isPending}>
             {save.isPending && <Spinner aria-hidden data-icon="inline-start" />}
             {submitLabel}

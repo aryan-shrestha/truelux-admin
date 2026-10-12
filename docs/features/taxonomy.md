@@ -21,8 +21,8 @@ What is included in this implementation?
   sits behind an `alert-dialog`.
 - Brand: name, slug (optional), description, logo upload with a preview, active
   `switch`, sort order. The table shows the logo and Active/Inactive.
-- Category: name, slug, parent (`select` of top-level categories, excluding itself, or
-  "None"), sort order. The table shows the hierarchy: children indented under their
+- Category: name, slug, parent (a combobox of top-level categories, excluding itself,
+  or "None (top level)"), sort order. The table shows the hierarchy: children indented under their
   parent, with a Parent column.
 - Shade: name, slug, hex (a native colour input paired with a hex text input,
   validated `#RRGGBB`, sent uppercase), sort order, and a swatch in the table.
@@ -88,11 +88,13 @@ None.
     trigger (New …) or by a row (Edit)
   - `components/{brand,category,shade,size,skin-type}-dialog.tsx` — brand:
     description, logo with an object-URL preview, Active switch; category: parent
-    `select` of other top-level categories or None; shade: colour picker and hex
+    `ComboboxField` of other top-level categories or None; shade: colour picker and hex
     text on one value
   - `components/{brands,categories,shades,sizes,skin-types}-table.tsx` with
-    `columns.tsx`, `row-actions.tsx` (Edit, Delete behind `ConfirmDialog`; a delete
-    `409` toasts the kind's in-use sentence with the row's count) and
+    `columns.tsx`, `row-actions.tsx` (Edit, Delete behind `ConfirmDialog`, as a
+    `RowMenu`, opened by right-clicking the row; each table wraps it in a
+    `{Kind}RowActions` passed to `DataTable` as `rowActions`; a delete `409` toasts the
+    kind's in-use sentence with the row's count) and
     `taxonomy-empty.tsx`
 - `src/routes/_dashboard/{brands,categories,shades,sizes,skin-types}.tsx` — await
   the list in the loader; **New …** in the header; search writes `?q=` with
@@ -198,13 +200,14 @@ Signed-in staff (the API).
   multipart, JSON otherwise.
 - `category-tree.test.ts` — children under their parent in sort order; an orphan is
   top level.
-- `components/brands-table.test.tsx` — status badges; search without a request;
+- `components/brands-table.test.tsx` — status badges; right-clicking a row opens
+  its actions (Edit opens the dialog); search without a request;
   create sends JSON without a blank slug and shows the new row; a logo upload is
   `multipart/form-data` with the file; an API field error lands on Name; a save
   `409` shows the duplicate alert; a delete `409` toasts the in-use sentence and
   keeps the row.
 - `components/categories-table.test.tsx` — tree order with the Parent column; the
-  parent select offers only other top-level categories; a cycle error lands on
+  parent combobox offers only other top-level categories; a cycle error lands on
   Parent.
 - `components/shades-table.test.tsx` — picker and hex text stay in step; the hex is
   sent in capitals.

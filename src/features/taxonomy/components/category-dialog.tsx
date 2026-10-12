@@ -1,15 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { Controller, useFormContext } from "react-hook-form";
 
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ComboboxField } from "@/components/form/combobox-field";
 
 import { taxonomyQueries } from "../queries/taxonomy.queries";
 import { CATEGORY_FORM_SCHEMA } from "../schemas/taxonomy-form.schema";
@@ -17,9 +9,6 @@ import type { Category } from "../schemas/taxonomy.schema";
 import { toTaxonomyBody } from "../taxonomy-body";
 import { NameSlugFields, SortOrderField } from "./form-fields";
 import { TaxonomyFormDialog } from "./taxonomy-form-dialog";
-
-// A Select item cannot have an empty value, so "no parent" needs a stand-in.
-const TOP_LEVEL = "top-level";
 
 export function CategoryDialog({
   category,
@@ -56,39 +45,19 @@ export function CategoryDialog({
 }
 
 function ParentField({ categoryId }: { categoryId: string | undefined }) {
-  const { control } = useFormContext();
   const { data: categories = [] } = useQuery(taxonomyQueries.list("categories"));
   const parents = categories.filter(
     (category) => category.parent_id === null && category.id !== categoryId,
   );
 
   return (
-    <Controller
+    <ComboboxField
       name="parent_id"
-      control={control}
-      render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <FieldLabel htmlFor="field-parent_id">Parent</FieldLabel>
-          <Select
-            value={field.value ?? TOP_LEVEL}
-            onValueChange={(value) => field.onChange(value === TOP_LEVEL ? null : value)}
-          >
-            <SelectTrigger id="field-parent_id" aria-invalid={fieldState.invalid}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={TOP_LEVEL}>None (top level)</SelectItem>
-              {parents.map((parent) => (
-                <SelectItem key={parent.id} value={parent.id}>
-                  {parent.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FieldDescription>Only top-level categories can be parents.</FieldDescription>
-          <FieldError errors={[fieldState.error]} />
-        </Field>
-      )}
+      label="Parent"
+      description="Only top-level categories can be parents."
+      emptyMessage="No categories match."
+      noneLabel="None (top level)"
+      options={parents.map((parent) => ({ value: parent.id, label: parent.name }))}
     />
   );
 }

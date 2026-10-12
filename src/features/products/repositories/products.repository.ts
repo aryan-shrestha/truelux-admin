@@ -1,6 +1,7 @@
 import { httpClient } from "@/lib/repositories/client";
 import { DEFAULT_PAGE_SIZE, paginatedSchema, toListParams } from "@/lib/repositories/pagination";
 
+import { toSorting } from "../product-sort";
 import type { ProductFilters } from "../schemas/product-filters.schema";
 import { STOCK_MOVEMENT_SCHEMA } from "../schemas/stock-movement.schema";
 import {
@@ -28,7 +29,7 @@ export async function listProducts(filters: ProductFilters) {
       on_sale: filters.on_sale,
       ...toListParams({
         pagination: { pageIndex: (filters.page ?? 1) - 1, pageSize: DEFAULT_PAGE_SIZE },
-        sorting: [{ id: "name", desc: false }],
+        sorting: toSorting(filters.sort),
       }),
     },
   });

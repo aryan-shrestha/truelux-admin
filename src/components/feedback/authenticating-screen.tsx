@@ -12,7 +12,7 @@ export function AuthenticatingScreen() {
       <div className="flex w-full max-w-xs flex-col items-center gap-6 text-center">
         <BrandLogo className="size-20 rounded-2xl shadow-md ring-1 ring-primary/10" />
         <div className="flex flex-col gap-1">
-          <p className="font-heading text-2xl tracking-tight">TrueLux Admin</p>
+          <p className="font-heading text-2xl font-semibold tracking-tight">TrueLux Admin</p>
           <p className="text-sm text-muted-foreground">Authenticating…</p>
         </div>
         <div aria-hidden className="h-1 w-40 overflow-hidden rounded-full bg-border">

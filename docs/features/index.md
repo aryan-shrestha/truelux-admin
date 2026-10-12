@@ -12,7 +12,7 @@ keeps the staff JWT in `localStorage` (ADR 0005). It replaces the Next.js admin 
 | 1   | scaffold           | Implemented | `features/scaffold.md`           | —           | 2026-10-11   |
 | 2   | bff                | Removed     | — (ADR 0005)                     | 1           | 2026-10-11   |
 | 3   | api-error-contract | Implemented | `features/api-error-contract.md` | 1           | 2026-10-11   |
-| 4   | app-shell          | Implemented | `features/app-shell.md`          | 1, 3        | 2026-10-11   |
+| 4   | app-shell          | Implemented | `features/app-shell.md`          | 1, 3        | 2026-10-12   |
 | 5   | tanstack-query     | Implemented | `features/tanstack-query.md`     | 1, 3        | 2026-10-11   |
 | 6   | staff-auth         | Implemented | `features/staff-auth.md`         | 3, 4        | 2026-10-11   |
 | 7   | dashboard          | Implemented | `features/dashboard.md`          | 4, 5, 6, 10 | 2026-10-11   |

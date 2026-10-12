@@ -52,15 +52,13 @@ test("staff create a product, give it a variant and an image, publish it and del
   });
   await expect(page.getByLabel("Alt text of image 1")).toBeVisible();
 
-  await page.getByRole("tab", { name: "Details" }).click();
-  await page.getByRole("switch", { name: "Published" }).click();
-  await page.getByRole("button", { name: "Save product" }).click();
-  await expect(page.getByText("Product saved")).toBeVisible();
+  await page.getByRole("button", { name: "Publish" }).click();
+  await expect(page.getByText(`${name} published`)).toBeVisible();
 
   await page.goto(`/products?q=${encodeURIComponent(name)}`);
   const row = page.getByRole("row", { name: new RegExp(name) });
   await expect(row.getByText("Published")).toBeVisible();
-  await row.getByRole("button", { name: `Actions for ${name}` }).click();
+  await row.click({ button: "right" });
   await page.getByRole("menuitem", { name: "Delete" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click();
 

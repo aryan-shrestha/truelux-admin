@@ -5,6 +5,7 @@ import { http, HttpResponse } from "msw";
 import { saveSession } from "@/lib/repositories/session";
 import { server } from "@/test/msw-server";
 import { renderApp } from "@/test/render-app";
+import { chooseRowAction } from "@/test/row-menu";
 import { meHandler } from "@/test/staff";
 
 const CATEGORIES_PATH = "*/api/v1/admin/categories/";
@@ -33,8 +34,7 @@ afterEach(() => localStorage.clear());
 
 async function editFace() {
   const user = userEvent.setup();
-  await user.click(await screen.findByRole("button", { name: "Actions for Face" }));
-  await user.click(await screen.findByRole("menuitem", { name: "Edit" }));
+  await chooseRowAction(user, "Face", "Edit");
   return { user, dialog: await screen.findByRole("dialog") };
 }
 

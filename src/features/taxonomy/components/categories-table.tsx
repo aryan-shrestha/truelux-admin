@@ -1,5 +1,6 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { CornerDownRightIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { DataTable } from "@/components/data-table/data-table";
 
@@ -33,21 +34,21 @@ const COLUMNS: ColumnDef<CategoryRow>[] = [
   slugColumn<CategoryRow>(),
   sortOrderColumn<CategoryRow>(),
   usageColumn<CategoryRow, "product_count">("product_count", "Products"),
-  {
-    id: "actions",
-    cell: ({ row }) => (
-      <div className="text-right">
-        <RowActions
-          kind="categories"
-          id={row.original.id}
-          name={row.original.name}
-          inUseMessage={`In use by ${row.original.product_count} products. Reassign them first.`}
-          editDialog={(state) => <CategoryDialog category={row.original} {...state} />}
-        />
-      </div>
-    ),
-  },
 ];
+
+function CategoryRowActions({ row, children }: { row: CategoryRow; children: ReactNode }) {
+  return (
+    <RowActions
+      kind="categories"
+      id={row.id}
+      name={row.name}
+      inUseMessage={`In use by ${row.product_count} products. Reassign them first.`}
+      editDialog={(state) => <CategoryDialog category={row} {...state} />}
+    >
+      {children}
+    </RowActions>
+  );
+}
 
 export function CategoriesTable({ query }: { query: string | undefined }) {
   const categories = useTaxonomySearch("categories", query);
@@ -55,6 +56,7 @@ export function CategoriesTable({ query }: { query: string | undefined }) {
     <DataTable
       columns={COLUMNS}
       data={toCategoryRows(categories)}
+      rowActions={CategoryRowActions}
       empty={<TaxonomyEmpty noun="categories" query={query} />}
     />
   );

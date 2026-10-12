@@ -19,7 +19,6 @@ export const PRODUCT_FORM_SCHEMA = z.object({
   skin_type_ids: z.array(z.uuid()),
   skin_feel: z.string().max(200, "Use at most 200 characters."),
   key_ingredients: z.string(),
-  is_published: z.boolean(),
 });
 
 export type ProductFormValues = z.infer<typeof PRODUCT_FORM_SCHEMA>;

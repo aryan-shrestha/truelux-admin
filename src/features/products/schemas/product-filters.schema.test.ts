@@ -16,6 +16,7 @@ describe("PRODUCT_FILTERS_SCHEMA", () => {
       published: "maybe",
       stock: "low",
       on_sale: true,
+      sort: "-created_at",
       page: "0",
     });
 
@@ -25,5 +26,9 @@ describe("PRODUCT_FILTERS_SCHEMA", () => {
       stock: "low",
       on_sale: true,
     });
+  });
+
+  it("keeps a sort the table offers", () => {
+    expect(PRODUCT_FILTERS_SCHEMA.parse({ sort: "-base_price" }).sort).toBe("-base_price");
   });
 });

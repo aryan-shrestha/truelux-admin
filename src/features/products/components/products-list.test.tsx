@@ -6,6 +6,7 @@ import { saveSession } from "@/lib/repositories/session";
 import { BRAND, CATEGORY, catalogueHandlers } from "@/test/catalogue";
 import { server } from "@/test/msw-server";
 import { renderApp } from "@/test/render-app";
+import { chooseRowAction } from "@/test/row-menu";
 import { meHandler } from "@/test/staff";
 
 const PRODUCTS_PATH = "*/api/v1/admin/products/";
@@ -96,6 +97,76 @@ describe("products list", () => {
     });
   });
 
+  it("filters by the brand chosen in its combobox and clears it with All brands", async () => {
+    const user = userEvent.setup();
+    let sent = new URLSearchParams();
+    server.use(
+      http.get(PRODUCTS_PATH, ({ request }) => {
+        sent = new URL(request.url).searchParams;
+        return HttpResponse.json(productPage([product("Silk Foundation")]));
+      }),
+    );
+    const { router } = renderApp("/products");
+    const brand = await screen.findByRole("combobox", { name: "Brand" });
+    expect(brand).toHaveTextContent("All brands");
+
+    await user.click(brand);
+    await user.click(await screen.findByRole("option", { name: BRAND.name }));
+
+    await vi.waitFor(() => expect(sent.get("brand")).toBe(BRAND.id));
+    expect(router.state.location.search).toMatchObject({ brand: BRAND.id });
+    expect(brand).toHaveTextContent(BRAND.name);
+
+    await user.click(brand);
+    await user.click(await screen.findByRole("option", { name: "All brands" }));
+
+    await vi.waitFor(() => expect(router.state.location.search).not.toHaveProperty("brand"));
+    expect(brand).toHaveTextContent("All brands");
+  });
+
+  it("sorts by price from its header, cheapest first and then dearest", async () => {
+    const user = userEvent.setup();
+    const orderings: (string | null)[] = [];
+    server.use(
+      http.get(PRODUCTS_PATH, ({ request }) => {
+        orderings.push(new URL(request.url).searchParams.get("ordering"));
+        return HttpResponse.json(productPage([product("Silk Foundation")]));
+      }),
+    );
+    const { router } = renderApp("/products?page=2");
+    const productHeader = await screen.findByRole("columnheader", { name: /Product/ });
+    expect(productHeader).toHaveAttribute("aria-sort", "ascending");
+
+    await user.click(screen.getByRole("button", { name: /Price/ }));
+
+    await vi.waitFor(() => expect(orderings.at(-1)).toBe("base_price"));
+    expect(router.state.location.search).toEqual({ sort: "base_price" });
+    expect(screen.getByRole("columnheader", { name: /Price/ })).toHaveAttribute(
+      "aria-sort",
+      "ascending",
+    );
+    expect(productHeader).not.toHaveAttribute("aria-sort");
+
+    await user.click(screen.getByRole("button", { name: /Price/ }));
+
+    await vi.waitFor(() => expect(orderings.at(-1)).toBe("-base_price"));
+    expect(router.state.location.search).toEqual({ sort: "-base_price" });
+  });
+
+  it("offers no sort on columns the API cannot order", async () => {
+    server.use(
+      http.get(PRODUCTS_PATH, () => HttpResponse.json(productPage([product("Silk Foundation")]))),
+    );
+    renderApp("/products");
+    await screen.findByText("Silk Foundation");
+
+    for (const name of ["Brand", "Category", "Variants", "Stock", "Status"]) {
+      expect(
+        within(screen.getByRole("columnheader", { name })).queryByRole("button"),
+      ).not.toBeInTheDocument();
+    }
+  });
+
   it("says when there are no products at all", async () => {
     server.use(http.get(PRODUCTS_PATH, () => HttpResponse.json(productPage([]))));
 
@@ -119,7 +190,7 @@ describe("products list", () => {
       "tr",
     ) as HTMLElement;
 
-    await user.click(within(row).getByRole("button", { name: "Actions for Rose Toner" }));
+    await user.pointer({ keys: "[MouseRight]", target: row });
     await user.click(await screen.findByRole("menuitem", { name: "Publish" }));
 
     expect(await within(row).findByText("Published")).toBeInTheDocument();
@@ -152,8 +223,7 @@ describe("products list", () => {
     );
     renderApp("/products");
 
-    await user.click(await screen.findByRole("button", { name: "Actions for Silk Foundation" }));
-    await user.click(await screen.findByRole("menuitem", { name: "Delete" }));
+    await chooseRowAction(user, "Silk Foundation", "Delete");
     await user.click(
       within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Delete" }),
     );
@@ -161,5 +231,36 @@ describe("products list", () => {
 
     expect(await screen.findByText("Silk Foundation unpublished")).toBeInTheDocument();
     expect(sentPatch).toEqual({ is_published: false });
+  });
+
+  it("opens the row's actions on right-click, with the same delete confirm", async () => {
+    const user = userEvent.setup();
+    let isDeleted = false;
+    const toner = product("Rose Toner");
+    server.use(
+      http.get(PRODUCTS_PATH, () => HttpResponse.json(productPage(isDeleted ? [] : [toner]))),
+      http.delete(`${PRODUCTS_PATH}${toner.id}/`, () => {
+        isDeleted = true;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderApp("/products");
+    const row = (await screen.findByRole("link", { name: "Rose Toner" })).closest(
+      "tr",
+    ) as HTMLElement;
+
+    await user.pointer({ keys: "[MouseRight]", target: within(row).getByText(BRAND.name) });
+    const menu = await screen.findByRole("menu");
+    expect(
+      within(menu)
+        .getAllByRole("menuitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Edit", "Unpublish", "Delete"]);
+    await user.click(within(menu).getByRole("menuitem", { name: "Delete" }));
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Delete" }),
+    );
+
+    expect(await screen.findByText("Rose Toner deleted")).toBeInTheDocument();
   });
 });

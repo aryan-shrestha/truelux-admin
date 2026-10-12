@@ -57,9 +57,6 @@ export function VariantsEditor({ product }: { product: Product }) {
                 <TableHead className="text-right">Stock</TableHead>
                 <TableHead className="text-right">Price</TableHead>
                 <TableHead className="text-right">Compare-at price</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

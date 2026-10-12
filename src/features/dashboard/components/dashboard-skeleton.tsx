@@ -53,8 +53,8 @@ export function DashboardSkeleton() {
           <Skeleton className="h-8 w-40" />
           <Skeleton className="size-9" />
         </div>
-        <div className="flex flex-col gap-4">
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="flex flex-col gap-6">
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
             {Array.from({ length: KPI_COUNT }, (_, index) => (
               <Card key={index}>
                 <CardHeader>
@@ -71,7 +71,7 @@ export function DashboardSkeleton() {
               </Card>
             ))}
           </div>
-          <div className="grid gap-4 xl:grid-cols-3">
+          <div className="grid gap-6 xl:grid-cols-3">
             <Card className="xl:col-span-2">
               <CardHeader>
                 <CardHeading />
@@ -91,7 +91,7 @@ export function DashboardSkeleton() {
               </CardContent>
             </Card>
           </div>
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid gap-6 xl:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardHeading hasDescription={false} />

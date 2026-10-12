@@ -80,7 +80,8 @@ All in `src/features/products/` (stock belongs to the variant):
   invalidating the product, product lists, the dashboard and that variant's history.
   Variant saves and deletes (`afterVariantChange`) and order moves
   (`useTransitionOrder`) now also invalidate every history.
-- `components/stock-dialog.tsx` — **Change stock of {SKU}**: what happened, how many,
+- `components/stock-dialog.tsx` — **Change stock of {SKU}** (fields in a `DialogBody`,
+  so they scroll under a fixed header and footer): what happened (a combobox), how many,
   a note (hidden for a count, which carries none). For a count, the quantity's help
   says it replaces the stock, so a sale made since counting is lost. The API's
   `quantity_change` or `stock_quantity` error lands on **How many**; anything else is

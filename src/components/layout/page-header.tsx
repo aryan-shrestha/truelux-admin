@@ -22,11 +22,13 @@ export function PageHeader({
   crumbs,
   title,
   description,
+  leadingActions,
   actions,
 }: {
   crumbs: readonly Crumb[];
   title: string;
   description?: string;
+  leadingActions?: ReactNode;
   actions?: ReactNode;
 }) {
   return (
@@ -53,10 +55,11 @@ export function PageHeader({
       </TopbarBreadcrumb>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0 space-y-1">
-          <h1 className="truncate font-heading text-2xl tracking-tight">{title}</h1>
+          <h1 className="truncate font-heading text-2xl font-semibold tracking-tight">{title}</h1>
           {description && <p className="text-sm text-muted-foreground">{description}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {leadingActions}
           <RefreshButton />
           {actions}
         </div>

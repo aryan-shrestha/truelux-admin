@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { describeError } from "@/lib/repositories/errors";
 
 import {
@@ -70,7 +71,7 @@ export function ImageCard({
   }
 
   return (
-    <Card className="overflow-hidden pt-0">
+    <Card size="sm" className="overflow-hidden pt-0">
       <div className="relative aspect-square bg-muted">
         <img src={image.url} alt={image.alt_text} className="size-full object-cover" />
         {image.is_primary && (
@@ -157,6 +158,25 @@ export function ImageCard({
             onConfirm={handleDelete}
           />
         </div>
+      </CardFooter>
+    </Card>
+  );
+}
+
+export function ImageCardSkeleton({ fileName }: { fileName: string }) {
+  return (
+    <Card
+      size="sm"
+      role="status"
+      aria-label={`Uploading ${fileName}`}
+      className="overflow-hidden pt-0"
+    >
+      <Skeleton className="aspect-square rounded-none" />
+      <CardContent>
+        <Skeleton className="h-8 w-full" />
+      </CardContent>
+      <CardFooter className="border-t">
+        <Skeleton className="h-8 w-full" />
       </CardFooter>
     </Card>
   );
