@@ -22,7 +22,7 @@ export function OrdersList({
   const isFiltered = Boolean(filters.status ?? filters.q ?? filters.from ?? filters.to);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 md:min-h-0">
       <StatusTabs selected={filters.status} onSelect={(status) => onFiltersChange({ status })} />
       <div className="flex flex-wrap items-center gap-2">
         <SearchInput

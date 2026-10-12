@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { Page } from "@/components/layout/page";
 import { PageHeader } from "@/components/layout/page-header";
 import { ProductForm } from "@/features/products";
 import { taxonomyQueries } from "@/features/taxonomy";
@@ -18,7 +19,7 @@ function NewProductPage() {
   const navigate = Route.useNavigate();
 
   return (
-    <div className="flex flex-col gap-6">
+    <Page>
       <PageHeader
         crumbs={[{ label: "Catalogue" }, { label: "Products", to: "/products" }, { label: "New" }]}
         title="New product"
@@ -33,6 +34,6 @@ function NewProductPage() {
           })
         }
       />
-    </div>
+    </Page>
   );
 }

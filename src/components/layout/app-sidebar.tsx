@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/sidebar";
 import { NAVIGATION } from "@/config/navigation";
 
+import { BrandLogo } from "./brand-logo";
+
 export function AppSidebar({ footer }: { footer: ReactNode }) {
   const { isMobile, setOpenMobile } = useSidebar();
 
@@ -30,9 +32,7 @@ export function AppSidebar({ footer }: { footer: ReactNode }) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link to="/" onClick={closeMobileSheet}>
-                <span className="flex size-8 items-center justify-center rounded-md bg-sidebar-primary text-sm font-bold text-sidebar-primary-foreground">
-                  TL
-                </span>
+                <BrandLogo className="size-8" />
                 <span className="font-semibold">TrueLux Admin</span>
               </Link>
             </SidebarMenuButton>

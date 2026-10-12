@@ -63,6 +63,29 @@ describe("new product", () => {
     expect(screen.getByText("Enter an amount such as 1250 or 1250.50.")).toBeInTheDocument();
   });
 
+  it("searches brands as staff type and shows the chosen one", async () => {
+    const user = userEvent.setup();
+    const maison = {
+      ...BRAND,
+      id: "0c000000-0000-4000-8000-000000000009",
+      name: "Maison",
+      slug: "maison",
+    };
+    server.use(http.get("*/api/v1/admin/brands/", () => HttpResponse.json([BRAND, maison])));
+    renderApp("/products/new");
+    const brand = await screen.findByRole("combobox", { name: "Brand" });
+
+    await user.type(brand, "mai");
+    expect(await screen.findByRole("option", { name: "Maison" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: BRAND.name })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("option", { name: "Maison" }));
+    expect(brand).toHaveValue("Maison");
+
+    await user.clear(brand);
+    await user.type(brand, "zzz");
+    expect(await screen.findByText("No brand matches.")).toBeInTheDocument();
+  });
+
   it("creates the product and opens it", async () => {
     const user = userEvent.setup();
     let sentBody: unknown;

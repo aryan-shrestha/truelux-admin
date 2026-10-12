@@ -249,6 +249,28 @@ and `src/features/orders/components/orders-list.tsx`.
 
 ---
 
+## Page layout and scrolling
+
+From `md` up the signed-in frame is exactly the window's height and never scrolls
+(`_dashboard.tsx`); each page decides what does. Below `md` pages scroll normally.
+
+- A page's root is `Page` (`src/components/layout/page.tsx`), which fills the frame
+  under the top bar. Only the dashboard scrolls as a whole (`<Page isScrollable>`).
+- A list page scrolls its table body: `DataTable` does it, with a sticky header row,
+  the filters above it and the pager below it staying in place. A table inside a card
+  (the variants editor) does the same: the card's content lets its
+  `[data-slot=table-container]` scroll, and `TableHeader` is `sticky top-0` with the
+  card's background.
+- A form page scrolls the form's fields: `form` → `Card` → `CardContent` with
+  `md:overflow-y-auto`, so the page header, the tabs and the card's footer (Save)
+  stay in view (`product-form.tsx`, `shipping-settings-form.tsx`).
+- Every element between `Page` and the scroll region is a flex column with
+  `md:min-h-0`, so it shrinks only when its content outgrows the page; a short
+  table or form keeps its natural height.
+- Every scroll region is `relative`. Radix's hidden form inputs (the switch's
+  checkbox) are absolutely positioned; without a positioned scroll region they
+  escape it and make the window scroll.
+
 ## Routes
 
 - File routes under `src/routes/`; `_auth` and `_dashboard` are pathless layouts.

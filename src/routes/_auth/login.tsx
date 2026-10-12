@@ -1,6 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
 
+import { BrandLogo } from "@/components/layout/brand-logo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoginForm, safeNextPath } from "@/features/auth";
 import { hasSession } from "@/lib/repositories/session";
@@ -28,6 +29,7 @@ function LoginPage() {
   return (
     <Card>
       <CardHeader>
+        <BrandLogo className="mb-2 size-14 rounded-xl" />
         <CardTitle>
           <h1>Sign in</h1>
         </CardTitle>

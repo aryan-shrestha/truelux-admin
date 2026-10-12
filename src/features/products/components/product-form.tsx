@@ -20,7 +20,7 @@ import { useSaveProduct } from "../queries/products.mutations";
 import { PRODUCT_FORM_SCHEMA, type ProductFormValues } from "../schemas/product-form.schema";
 import type { Product } from "../schemas/product.schema";
 import { MultiSelectField } from "./multi-select-field";
-import { SelectField } from "./select-field";
+import { ComboboxField } from "./combobox-field";
 
 // A child category is shown with its parent ("Lips › Gloss"), alphabetically.
 function categoryOptions(categories: readonly Category[]) {
@@ -97,9 +97,14 @@ export function ProductForm({
 
   return (
     <FormProvider {...form}>
-      <form noValidate onSubmit={form.handleSubmit(handleSubmit)}>
-        <Card>
-          <CardContent>
+      {/* The fields scroll between the card's top and its Save footer. */}
+      <form
+        noValidate
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="flex flex-col md:min-h-0"
+      >
+        <Card className="md:min-h-0">
+          <CardContent className="relative md:min-h-0 md:overflow-y-auto">
             <FieldGroup>
               {rootError && (
                 <Alert variant="destructive" aria-live="polite">
@@ -113,16 +118,18 @@ export function ProductForm({
                   label="Slug"
                   description="Leave empty to make one from the name."
                 />
-                <SelectField
+                <ComboboxField
                   name="brand_id"
                   label="Brand"
-                  placeholder="Choose a brand"
+                  placeholder="Search brands"
+                  emptyMessage="No brand matches."
                   options={brands.map((brand) => ({ value: brand.id, label: brand.name }))}
                 />
-                <SelectField
+                <ComboboxField
                   name="category_id"
                   label="Category"
-                  placeholder="Choose a category"
+                  placeholder="Search categories"
+                  emptyMessage="No category matches."
                   options={categoryOptions(categories)}
                 />
                 <TextField

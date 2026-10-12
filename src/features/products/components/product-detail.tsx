@@ -1,5 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 
+import { Page } from "@/components/layout/page";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,7 +23,7 @@ export function ProductDetail({
   const { data: product } = useSuspenseQuery(productQueries.detail(productId));
 
   return (
-    <div className="flex flex-col gap-6">
+    <Page>
       <PageHeader
         crumbs={[
           { label: "Catalogue" },
@@ -41,22 +42,26 @@ export function ProductDetail({
           {product.variants.length} {product.variants.length === 1 ? "variant" : "variants"}
         </span>
       </div>
-      <Tabs value={tab} onValueChange={(value) => onTabChange(value as ProductTab)}>
+      <Tabs
+        value={tab}
+        onValueChange={(value) => onTabChange(value as ProductTab)}
+        className="md:min-h-0"
+      >
         <TabsList>
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="variants">Variants</TabsTrigger>
           <TabsTrigger value="images">Images</TabsTrigger>
         </TabsList>
-        <TabsContent value="details">
+        <TabsContent value="details" className="flex flex-col md:min-h-0">
           <ProductForm key={product.id} product={product} />
         </TabsContent>
-        <TabsContent value="variants">
+        <TabsContent value="variants" className="flex flex-col md:min-h-0">
           <VariantsEditor product={product} />
         </TabsContent>
-        <TabsContent value="images">
+        <TabsContent value="images" className="flex flex-col md:min-h-0">
           <ImagesManager product={product} />
         </TabsContent>
       </Tabs>
-    </div>
+    </Page>
   );
 }

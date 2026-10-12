@@ -53,9 +53,14 @@ export function ShippingSettingsForm() {
 
   return (
     <FormProvider {...form}>
-      <form noValidate onSubmit={form.handleSubmit(handleSubmit)}>
-        <Card>
-          <CardContent>
+      {/* The fields scroll between the card's top and its Save footer. */}
+      <form
+        noValidate
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="flex flex-col md:min-h-0"
+      >
+        <Card className="md:min-h-0">
+          <CardContent className="relative md:min-h-0 md:overflow-y-auto">
             <FieldGroup>
               {rootError && (
                 <Alert variant="destructive" aria-live="polite">

@@ -50,7 +50,7 @@ export function ImagesManager({ product }: { product: Product }) {
   }
 
   return (
-    <Card>
+    <Card className="md:min-h-0">
       <CardHeader>
         <CardTitle>Images</CardTitle>
         <CardDescription>
@@ -78,7 +78,8 @@ export function ImagesManager({ product }: { product: Product }) {
           </Button>
         </CardAction>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+      {/* The grid scrolls; Upload images stays in view. */}
+      <CardContent className="relative flex flex-col gap-4 md:min-h-0 md:overflow-y-auto">
         {uploadError && (
           <Alert variant="destructive" aria-live="polite">
             <AlertDescription>{uploadError}</AlertDescription>

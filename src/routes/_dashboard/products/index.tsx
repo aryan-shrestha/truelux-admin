@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 
+import { Page } from "@/components/layout/page";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,7 +40,7 @@ function ProductsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <Page>
       <PageHeader
         crumbs={[{ label: "Catalogue" }, { label: "Products" }]}
         title="Products"
@@ -53,6 +54,6 @@ function ProductsPage() {
         }
       />
       <ProductsList filters={filters} onFiltersChange={handleFiltersChange} />
-    </div>
+    </Page>
   );
 }

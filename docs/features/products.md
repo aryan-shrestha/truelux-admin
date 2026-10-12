@@ -100,8 +100,9 @@ None.
   string (`MONEY_PATTERN` in `src/lib/money.ts`), brand and category required, skin
   feel ≤ 200; a blank slug is left out; `skin_type_ids` is always sent (PATCH
   replaces the set).
-- `components/product-form.tsx` — create and edit: name, slug, brand, category
-  (children as "Parent › Child"), base price in an `Rs` group, sort order,
+- `components/product-form.tsx` — create and edit: name, slug, brand and category
+  as searchable comboboxes (`combobox-field.tsx`, shadcn `combobox`; categories'
+  children as "Parent › Child"), base price in an `Rs` group, sort order,
   description, skin types (`multi-select-field.tsx`: `popover` + `command` +
   `checkbox`, the choice as badges), skin feel, key ingredients, Published.
   `product_has_no_variants` lands on the Published switch; field errors go under
@@ -202,8 +203,12 @@ A move is one to N PATCH calls, in sequence.
 - `price_override` and `compare_at_price` are `string | null` both ways.
 - A `409 conflict` on save means a taken slug or SKU, or a second variant with the
   same size and shade.
-- The combobox's `checkbox` is `tabIndex={-1}` with no pointer events; the `command`
-  item is what the keyboard and mouse toggle.
+- The skin-types combobox's `checkbox` is `tabIndex={-1}` with no pointer events; the
+  `command` item is what the keyboard and mouse toggle.
+- shadcn's `combobox` (brand and category) is built on Base UI (`@base-ui/react`), not
+  Radix: it is the one shadcn component here on that base. It holds the option
+  object, so `combobox-field.tsx` maps it to and from the id the form holds. It loads
+  only with the product form's chunk.
 
 ---
 
@@ -250,7 +255,9 @@ Signed-in staff (the API).
   **Unpublish instead**, which sends `{ is_published: false }`.
 - `components/product-form.test.tsx` — brand, category and price are required before
   anything is sent; create sends the documented body without a blank slug and opens
-  the product; edit starts from the saved product and sends the whole skin-type set;
+  the product; brands are searched as staff type, with "No brand matches." when none
+  does, and the chosen name shows in the field; edit starts from the saved product and
+  sends the whole skin-type set;
   `product_has_no_variants` lands on Published; an API field error lands on its
   field; an unknown id shows not-found.
 - `variant-body.test.ts` — blank prices are `null`; stock only for a new variant;

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { Page } from "@/components/layout/page";
 import { PageHeader } from "@/components/layout/page-header";
 import {
   ORDER_FILTERS_SCHEMA,
@@ -33,9 +34,9 @@ function OrdersPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <Page>
       <PageHeader crumbs={[{ label: "Shop" }, { label: "Orders" }]} title="Orders" />
       <OrdersList filters={filters} onFiltersChange={handleFiltersChange} />
-    </div>
+    </Page>
   );
 }

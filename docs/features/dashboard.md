@@ -76,8 +76,11 @@ None.
   - `components/low-stock-table.tsx` — product (linked to its Variants tab), SKU,
     size and shade, stock as a badge (`Out` at zero); empty state ("Stock is
     healthy")
-  - `components/dashboard-view.tsx`, `dashboard-skeleton.tsx` — the layout and a
-    skeleton shaped like it
+  - `components/dashboard-view.tsx`, `dashboard-skeleton.tsx` — the layout, and a
+    skeleton built from the same `Card`s, header, footer and grid gaps (KPI cards with
+    footers, the chart card beside the status card, the two table cards, the page
+    header with its **Refresh data** button), so nothing shifts when the figures
+    arrive.
 - `src/routes/_dashboard/index.tsx` — awaits the dashboard in the loader;
   `pendingComponent: DashboardSkeleton`.
 - `src/features/orders/queries/orders.mutations.ts` — `useTransitionOrder`
@@ -166,6 +169,7 @@ Signed-in staff (the API).
   queue; recent orders link to the order; low stock shows size and shade and `Out` at
   zero; both empty states.
 - `components/sales-points.test.ts` — 30 points; values and labels.
+- `components/dashboard-skeleton.test.tsx` — the eight cards of the layout.
 - `src/lib/money.test.ts` (`toChartNumber`), `src/lib/date.test.ts`
   (`shopDaysAgo` across the UTC/Kathmandu day boundary).
 - `src/features/orders/components/order-detail.test.tsx` — a move marks the

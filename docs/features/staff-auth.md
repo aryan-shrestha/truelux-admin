@@ -95,7 +95,10 @@ None.
   - `components/user-menu.tsx` — see [app-shell.md](app-shell.md)
 - `src/routes/_dashboard.tsx` — `beforeLoad`: without a stored session, redirect to
   `/login` (with `next` unless the path is `/`); otherwise
-  `ensureQueryData(authQueries.me())`.
+  `ensureQueryData(authQueries.me())`, which waits only while the staff member is not
+  cached (a first load, a reload, a fresh sign-in). That wait shows the
+  `AuthenticatingScreen` at once (`pendingMs: 0`; see [app-shell.md](app-shell.md)).
+  Token refreshes after that happen out of sight: they show no screen of their own.
 - `src/routes/_auth/login.tsx` — `validateSearch` for `next` and `expired`;
   `beforeLoad` sends a signed-in visitor to `safeNextPath(next)` unless `expired`.
 
@@ -167,6 +170,9 @@ refresh, finds the winner's token in storage and retries with it.
   gets `429`. Any HTTP answer to a refresh other than 2xx is a refusal.
 - An origin missing from the API's `DJANGO_CORS_ALLOWED_ORIGINS` makes sign-in fail
   as `network_error`, with nothing in the API's logs.
+- The layout's pending screen appears only when the layout mounts. On a client-side
+  navigation TanStack Router keeps the current screen while `beforeLoad` re-runs, so
+  "Authenticating…" cannot show mid-session, however long a refresh takes.
 - Any script running on the admin origin can read both tokens (ADR 0005). Signing out
   revokes this browser's refresh token only; to cut off a stolen one, deactivate the
   user or remove `is_staff` in `/django-admin/`.

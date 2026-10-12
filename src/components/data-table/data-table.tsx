@@ -81,11 +81,13 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
   });
 
+  // The body scrolls inside the bordered box under a sticky header row, while the
+  // pager stays below it; the box shrinks only when the rows outgrow the page.
   return (
-    <div className="space-y-3">
-      <div className="overflow-hidden rounded-md border">
+    <div className="flex flex-col gap-3 md:min-h-0">
+      <div className="flex flex-col overflow-hidden rounded-md border md:min-h-0 md:[&>[data-slot=table-container]]:min-h-0 md:[&>[data-slot=table-container]]:overflow-auto">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 z-10 bg-background">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {

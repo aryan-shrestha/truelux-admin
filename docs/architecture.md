@@ -50,7 +50,8 @@ src/
     features/         one folder per domain (ADR 0003)
     components/
         ui/           shadcn, generated
-        layout/       app sidebar, top bar, page header, refresh button
+        layout/       app sidebar, top bar, Page, page header, refresh button,
+                      brand logo
         data-table/   DataTable (paginated or whole-array lists), SearchInput
         form/         react-hook-form fields bound by name, showApiError
         feedback/     route error, not-found and pending pages, ConfirmDialog,

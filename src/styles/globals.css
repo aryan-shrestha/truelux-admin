@@ -54,83 +54,101 @@
   --radius-4xl: var(--radius);
 }
 
-/* The storefront's tokens (front-end/app/globals.css), plus the admin's status
-   hues and a greige sidebar, as in ../admin. Keep the shared values in step with the
-   storefront. */
+/* An indeterminate progress bar: a segment crossing its track. */
+@theme {
+  --animate-indeterminate: indeterminate 1.4s ease-in-out infinite;
+
+  @keyframes indeterminate {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(250%);
+    }
+  }
+}
+
+/* From the TrueLux logo (public/truelux-logo.jpg): its green, deepened to a quiet
+   near-black emerald (#0F2622), and its gold, brightened to shine on it (#E8C26A).
+   Light: warm ivory surfaces, green primary actions and a green sidebar with gold
+   highlights. Dark: near-black green surfaces with gold primary actions. Every text
+   pair meets WCAG AA (4.5:1) and every control boundary 3:1; see
+   docs/features/app-shell.md. Status hues and charts are tuned to sit beside them. */
 :root {
-  --background: #fdfdfb;
-  --foreground: #333333;
+  --background: #faf7f0;
+  --foreground: #14231f;
   --card: #ffffff;
-  --card-foreground: #333333;
+  --card-foreground: #14231f;
   --popover: #ffffff;
-  --popover-foreground: #333333;
-  --primary: #333333;
-  --primary-foreground: #ffffff;
-  --secondary: #e8e6dd;
-  --secondary-foreground: #333333;
-  --muted: #f3f2ee;
-  --muted-foreground: #66655f;
-  --accent: #f3f2ee;
-  --accent-foreground: #333333;
+  --popover-foreground: #14231f;
+  --primary: #0f2622;
+  --primary-foreground: #f2d58e;
+  --secondary: #efe6d3;
+  --secondary-foreground: #0f2622;
+  --muted: #f2ede2;
+  --muted-foreground: #5c625b;
+  --accent: #efe6d3;
+  --accent-foreground: #0f2622;
   --destructive: #a3392f;
-  --success: #3f6546;
+  --success: #2e6a47;
   --warning: #86591a;
-  --info: #3f5a78;
-  --border: #d6d5cf;
-  /* A control boundary needs 3:1 against the page and the sidebar (WCAG 1.4.11). */
-  --input: #8a8983;
-  --ring: #333333;
-  --chart-1: #333333;
-  --chart-2: #8a7556;
-  --chart-3: #5e7a6a;
-  --chart-4: #a5776a;
-  --chart-5: #62708a;
+  --info: #315b80;
+  --border: #e3daca;
+  /* A control boundary needs 3:1 against the page and the card (WCAG 1.4.11). */
+  --input: #8c887a;
+  --ring: #a07e2a;
   --radius: 0.375rem;
-  --sidebar: #f3f2ee;
-  --sidebar-foreground: #333333;
-  --sidebar-primary: #333333;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e8e6dd;
-  --sidebar-accent-foreground: #333333;
-  --sidebar-border: #d6d5cf;
-  --sidebar-ring: #333333;
+  --chart-1: #0f2622;
+  --chart-2: #a07e2a;
+  --chart-3: #4f7a64;
+  --chart-4: #a5776a;
+  --chart-5: #5e6e8a;
+  --sidebar: #0e2420;
+  --sidebar-foreground: #efe7d4;
+  --sidebar-primary: #e8c26a;
+  --sidebar-primary-foreground: #0e2420;
+  --sidebar-accent: #183931;
+  --sidebar-accent-foreground: #f7d98f;
+  --sidebar-border: #1e3e36;
+  --sidebar-ring: #e8c26a;
 }
 
 .dark {
-  --background: #1b1b1a;
-  --foreground: #ecebe6;
-  --card: #232322;
-  --card-foreground: #ecebe6;
-  --popover: #232322;
-  --popover-foreground: #ecebe6;
-  --primary: #ecebe6;
-  --primary-foreground: #1b1b1a;
-  --secondary: #2e2d2a;
-  --secondary-foreground: #ecebe6;
-  --muted: #252523;
-  --muted-foreground: #a9a8a1;
-  --accent: #2e2d2a;
-  --accent-foreground: #ecebe6;
-  --destructive: #e0776b;
-  --success: #93b99a;
-  --warning: #d9ae6c;
-  --info: #9db4cf;
-  --border: #3a3936;
-  --input: #7d7c76;
-  --ring: #ecebe6;
-  --chart-1: #ecebe6;
-  --chart-2: #c2a878;
-  --chart-3: #8fb09c;
+  --background: #0a1412;
+  --foreground: #ece6d8;
+  --card: #0f1d1a;
+  --card-foreground: #ece6d8;
+  --popover: #0f1d1a;
+  --popover-foreground: #ece6d8;
+  --primary: #e8c26a;
+  --primary-foreground: #0e2420;
+  --secondary: #182c27;
+  --secondary-foreground: #ece6d8;
+  --muted: #13231f;
+  --muted-foreground: #a9b0a6;
+  --accent: #1c332d;
+  --accent-foreground: #ece6d8;
+  --destructive: #e58a7e;
+  --success: #8fc6a2;
+  --warning: #ddb06a;
+  --info: #9db8d4;
+  --border: #243630;
+  /* A control boundary needs 3:1 against the page and the card (WCAG 1.4.11). */
+  --input: #6a7b73;
+  --ring: #e8c26a;
+  --chart-1: #e8c26a;
+  --chart-2: #8fc6a2;
+  --chart-3: #9db8d4;
   --chart-4: #d09a8a;
-  --chart-5: #9aa7c2;
-  --sidebar: #202020;
-  --sidebar-foreground: #ecebe6;
-  --sidebar-primary: #ecebe6;
-  --sidebar-primary-foreground: #1b1b1a;
-  --sidebar-accent: #2e2d2a;
-  --sidebar-accent-foreground: #ecebe6;
-  --sidebar-border: #3a3936;
-  --sidebar-ring: #ecebe6;
+  --chart-5: #b9a6d6;
+  --sidebar: #08110f;
+  --sidebar-foreground: #e7e0d0;
+  --sidebar-primary: #e8c26a;
+  --sidebar-primary-foreground: #0e2420;
+  --sidebar-accent: #142821;
+  --sidebar-accent-foreground: #f7d98f;
+  --sidebar-border: #1a2d27;
+  --sidebar-ring: #e8c26a;
 }
 
 @layer base {
@@ -143,5 +161,33 @@
   }
   html {
     @apply font-sans;
+    /* The theme's primary at half strength: green on ivory, gold on dark green, at
+       least 3:1 against every surface; darker on hover. */
+    --scrollbar-thumb: color-mix(in oklab, var(--primary) 50%, transparent);
+    --scrollbar-thumb-hover: color-mix(in oklab, var(--primary) 70%, transparent);
+  }
+  /* Chrome and Firefox take the standard properties (and then ignore the WebKit
+     pseudo-elements below); Safari takes the pseudo-elements. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background: var(--scrollbar-thumb) padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover) padding-box;
+  }
+  ::-webkit-scrollbar-corner {
+    background: transparent;
   }
 }

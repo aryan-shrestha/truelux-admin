@@ -36,7 +36,7 @@ export function VariantsEditor({ product }: { product: Product }) {
   }
 
   return (
-    <Card>
+    <Card className="md:min-h-0">
       <CardHeader>
         <CardTitle>Variants</CardTitle>
         <CardDescription>
@@ -53,7 +53,8 @@ export function VariantsEditor({ product }: { product: Product }) {
           </Button>
         </CardAction>
       </CardHeader>
-      <CardContent>
+      {/* The table body scrolls under its sticky header row; Add variant stays in view. */}
+      <CardContent className="flex flex-col md:min-h-0 md:[&>[data-slot=table-container]]:min-h-0 md:[&>[data-slot=table-container]]:overflow-auto">
         {product.variants.length === 0 && drafts.length === 0 ? (
           <EmptyState
             icon={BoxesIcon}
@@ -62,7 +63,7 @@ export function VariantsEditor({ product }: { product: Product }) {
           />
         ) : (
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow>
                 <TableHead>SKU</TableHead>
                 <TableHead>Size</TableHead>

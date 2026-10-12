@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 
 import { SearchInput } from "@/components/data-table/search-input";
+import { Page } from "@/components/layout/page";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +23,7 @@ function SizesPage() {
   const navigate = Route.useNavigate();
 
   return (
-    <div className="flex flex-col gap-6">
+    <Page>
       <PageHeader
         crumbs={[{ label: "Catalogue" }, { label: "Sizes" }]}
         title="Sizes"
@@ -43,6 +44,6 @@ function SizesPage() {
         onSearch={(query) => void navigate({ search: { q: query || undefined }, replace: true })}
       />
       <SizesTable query={q} />
-    </div>
+    </Page>
   );
 }

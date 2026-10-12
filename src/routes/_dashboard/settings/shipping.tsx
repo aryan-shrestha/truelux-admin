@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { Page } from "@/components/layout/page";
 import { PageHeader } from "@/components/layout/page-header";
 import { settingsQueries, ShippingSettingsForm } from "@/features/settings";
 
@@ -10,9 +11,9 @@ export const Route = createFileRoute("/_dashboard/settings/shipping")({
 
 function ShippingSettingsPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <Page>
       <PageHeader crumbs={[{ label: "Settings" }, { label: "Shipping" }]} title="Shipping" />
       <ShippingSettingsForm />
-    </div>
+    </Page>
   );
 }

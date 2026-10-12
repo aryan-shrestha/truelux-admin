@@ -21,7 +21,7 @@ export function ProductsList({
   const isFiltered = Object.values(activeFilters).some((value) => value !== undefined);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 md:min-h-0">
       <ProductFilters filters={filters} onFiltersChange={onFiltersChange} />
       <ProductsTable
         products={page?.results ?? []}
