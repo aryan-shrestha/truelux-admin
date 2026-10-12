@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-10-11
+Last updated: 2026-10-12
 
 ---
 
@@ -28,10 +28,12 @@ What is included in this implementation?
   - Details: name, slug, description, brand, category, base price, sort order, skin
     types (a multi-select of `popover` + `command` with `checkbox`es, the choice shown
     as `badge`s), skin feel, key ingredients, published `switch`
-  - Variants: an editable `table` of SKU, size, shade (with swatches, or "No shade"),
-    stock, price override and compare-at price ([sale-prices.md](sale-prices.md)).
-    Stock is an input only on a new row; a saved variant changes stock through
-    [stock-ledger.md](stock-ledger.md). Rows are added, and removed after a confirm.
+  - Variants: a read-only `table` of SKU, size, shade (with swatch, or "No shade"),
+    stock, the API's price and compare-at price ([sale-prices.md](sale-prices.md)).
+    **Add variant** and each row's **Edit** open the variant form in a `sheet` from
+    the right. Each row's actions (Edit, Change stock, Stock history, Delete) are in a
+    `dropdown-menu`. Stock is an input only when adding; a saved variant changes
+    stock through [stock-ledger.md](stock-ledger.md). Delete asks for a confirm.
   - Images: upload (several, ≤ 5 MB each, JPEG/PNG/WebP), a grid with alt-text
     editing, make primary, move earlier/later, delete after a confirm
 - Publishing without variants shows `422 product_has_no_variants` on the Published
@@ -129,16 +131,21 @@ None.
   `deleteVariant`; `queries/products.mutations.ts` — `useSaveVariant`,
   `useDeleteVariant`, invalidating the product, product lists, every taxonomy list
   (size and shade counts) and the dashboard (low stock).
-- `components/variants-editor.tsx`, `variant-row.tsx` — a table where each row is
-  its own form (`values` keeps a saved row in step after the refetch): SKU, size,
-  shade (swatches or "No shade"), stock (an input only on a draft), price (the base
-  price as placeholder), compare-at ([sale-prices.md](sale-prices.md): placeholder,
-  discount badge, prices above 0). **Save** is enabled only when a saved row
-  changed. Drafts are added and discarded locally; a saved variant is deleted after
-  a confirm. Every cell is labelled with the variant ("Price override of
-  LUM-SF-30-WB").
-  A save `409` reads "Another variant already has this SKU, or this size and shade."
-  under the row; a delete `409` toasts that the variant has been ordered.
+- `components/variants-editor.tsx`, `variant-row.tsx` — a read-only table: SKU,
+  size, shade (swatch or "No shade"), stock, the API's `price`, compare-at ("—" when
+  none, and the API's discount badge; [sale-prices.md](sale-prices.md)). Each row's
+  actions are a `dropdown-menu` ("Actions for {SKU}": Edit, Change stock, Stock
+  history, Delete), which opens the matching sheet or dialog; one row has at most one
+  open. A saved variant is deleted after a confirm; a delete `409` toasts that the
+  variant has been ordered.
+- `components/variant-sheet.tsx` — **Add variant** ("New variant") and **Edit**
+  ("Edit {SKU}") open the variant form in a `sheet` on the right, mounted only while
+  open so an edit always starts from the saved variant and closing discards it:
+  SKU, size, shade (swatches or "No shade"), opening stock (only when adding), price
+  override (the base price as placeholder) and compare-at, the amounts in an `Rs`
+  group. The sheet reads the size and shade lists itself (cached). It closes on a
+  successful save. A save `409` reads "Another variant already has this SKU, or this
+  size and shade." as an alert in the sheet.
 - `src/features/dashboard/components/low-stock-table.tsx` — the product name links
   to `/products/$productId?tab=variants`.
 
@@ -174,6 +181,23 @@ None.
 ---
 
 ## Decisions
+
+### Decision: variants are edited in a sheet, not in the table
+
+**Decision**
+
+The variants table is read-only. Adding or editing a variant opens one form in a
+right-hand `sheet`; the row's other actions sit in a `dropdown-menu`.
+
+**Reason**
+
+The owner asked for it (2026-10-12): a table of inputs with four icon buttons per
+row was crowded, and drafts mixed into saved rows.
+
+**Consequence**
+
+One variant is edited at a time. **Save variant** is always enabled, as in the
+taxonomy dialogs; the earlier "only when changed" rule of the inline rows is gone.
 
 ### Decision: reordering renumbers from the displayed order
 
@@ -263,11 +287,12 @@ Signed-in staff (the API).
 - `variant-body.test.ts` — blank prices are `null`; stock only for a new variant;
   price and stock rules.
 - `components/variants-editor.test.tsx` — the tab comes from and goes back to the
-  URL; a saved variant's stock is read-only and **Save** waits for a change, then
-  sends no stock and a cleared price as `null`; a draft is added with its opening
-  stock and replaced by the saved row; a draft is discarded without a request; a
-  save `409` is explained on the row; a delete needs the confirmation and a `409`
-  keeps the row.
+  URL; the table shows the API's values with no inputs; **Edit** opens the sheet
+  without a stock field and sends no stock and a cleared price as `null`; **Add
+  variant** sends the opening stock, shows the new row and closes the sheet; SKU and
+  size are required before anything is sent; closing the sheet sends nothing; a save
+  `409` is explained in the sheet; a delete from the menu needs the confirmation and a
+  `409` keeps the row; the API's compare-at error lands on the sheet's field.
 - `image-order.test.ts` — a move renumbers from the new position and reports only
   the changed images, including colliding stored numbers.
 - `components/images-manager.test.tsx` — uploads go one at a time, the first primary
@@ -289,5 +314,5 @@ src/routes/_dashboard/products/     planned
 
 ## Future context
 
-`../admin/components/products/` and `lib/products/` are the reference for the variant
-row forms and the image manager.
+`../admin/components/products/` and `lib/products/` are the reference for the image
+manager.

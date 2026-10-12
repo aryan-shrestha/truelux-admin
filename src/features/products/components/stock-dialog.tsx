@@ -1,6 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PackagePlusIcon } from "lucide-react";
-import { useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
@@ -17,7 +15,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
@@ -33,16 +30,19 @@ import { SelectField } from "./select-field";
 
 type FormInput = z.input<typeof STOCK_CHANGE_SCHEMA>;
 
-export function StockDialog({ productId, variant }: { productId: string; variant: Variant }) {
-  const [isOpen, setIsOpen] = useState(false);
-
+export function StockDialog({
+  productId,
+  variant,
+  open,
+  onOpenChange,
+}: {
+  productId: string;
+  variant: Variant;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button size="icon" variant="ghost" aria-label={`Change stock of ${variant.sku}`}>
-          <PackagePlusIcon />
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Change stock of {variant.sku}</DialogTitle>
@@ -51,8 +51,8 @@ export function StockDialog({ productId, variant }: { productId: string; variant
             history.
           </DialogDescription>
         </DialogHeader>
-        {isOpen && (
-          <StockForm productId={productId} variant={variant} onDone={() => setIsOpen(false)} />
+        {open && (
+          <StockForm productId={productId} variant={variant} onDone={() => onOpenChange(false)} />
         )}
       </DialogContent>
     </Dialog>

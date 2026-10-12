@@ -37,11 +37,12 @@ test("staff create a product, give it a variant and an image, publish it and del
   await expect(page).toHaveURL(/tab=variants/);
 
   await page.getByRole("button", { name: "Add variant" }).click();
-  await page.getByLabel("SKU of new variant 1").fill(sku);
-  await page.getByLabel("Size of new variant 1").click();
+  const sheet = page.getByRole("dialog", { name: "New variant" });
+  await sheet.getByLabel("SKU").fill(sku);
+  await sheet.getByLabel("Size").click();
   await page.getByRole("option").first().click();
-  await page.getByRole("button", { name: "Add new variant 1" }).click();
-  await expect(page.getByLabel(`SKU of ${sku}`)).toBeVisible();
+  await sheet.getByRole("button", { name: "Add variant" }).click();
+  await expect(page.getByRole("cell", { name: sku })).toBeVisible();
 
   await page.getByRole("tab", { name: "Images" }).click();
   await page.getByLabel("Upload images").setInputFiles({

@@ -27,14 +27,18 @@ test("a compare-at price above the price puts a variant on sale", async ({ page 
   await page.getByLabel("Base price").fill("3200");
   await page.getByRole("button", { name: "Create product" }).click();
   await page.getByRole("button", { name: "Add variant" }).click();
-  await page.getByLabel("SKU of new variant 1").fill(sku);
-  await page.getByLabel("Size of new variant 1").click();
+  const sheet = page.getByRole("dialog", { name: "New variant" });
+  await sheet.getByLabel("SKU").fill(sku);
+  await sheet.getByLabel("Size").click();
   await page.getByRole("option").first().click();
-  await page.getByRole("button", { name: "Add new variant 1" }).click();
+  await sheet.getByRole("button", { name: "Add variant" }).click();
 
-  await page.getByLabel(`Price override of ${sku}`).fill("2720");
-  await page.getByLabel(`Compare-at price of ${sku}`).fill("3200");
-  await page.getByRole("button", { name: `Save ${sku}` }).click();
+  await page.getByRole("button", { name: `Actions for ${sku}` }).click();
+  await page.getByRole("menuitem", { name: "Edit" }).click();
+  const editSheet = page.getByRole("dialog", { name: `Edit ${sku}` });
+  await editSheet.getByLabel("Price override").fill("2720");
+  await editSheet.getByLabel("Compare-at price").fill("3200");
+  await editSheet.getByRole("button", { name: "Save variant" }).click();
 
   await expect(page.getByText("−15%")).toBeVisible();
   await page.goto(`/products?q=${encodeURIComponent(name)}&on_sale=true`);

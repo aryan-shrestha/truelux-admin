@@ -17,11 +17,11 @@ keeps the staff JWT in `localStorage` (ADR 0005). It replaces the Next.js admin 
 | 6   | staff-auth         | Implemented | `features/staff-auth.md`         | 3, 4        | 2026-10-11   |
 | 7   | dashboard          | Implemented | `features/dashboard.md`          | 4, 5, 6, 10 | 2026-10-11   |
 | 8   | taxonomy           | Implemented | `features/taxonomy.md`           | 5, 6        | 2026-10-11   |
-| 9   | products           | Implemented | `features/products.md`           | 5, 6, 8     | 2026-10-11   |
+| 9   | products           | Implemented | `features/products.md`           | 5, 6, 8     | 2026-10-12   |
 | 10  | orders             | Implemented | `features/orders.md`             | 4, 5, 6     | 2026-10-11   |
 | 11  | shipping-settings  | Implemented | `features/shipping-settings.md`  | 4, 5, 6     | 2026-10-12   |
-| 12  | sale-prices        | Implemented | `features/sale-prices.md`        | 9           | 2026-10-11   |
-| 13  | stock-ledger       | Implemented | `features/stock-ledger.md`       | 9           | 2026-10-11   |
+| 12  | sale-prices        | Implemented | `features/sale-prices.md`        | 9           | 2026-10-12   |
+| 13  | stock-ledger       | Implemented | `features/stock-ledger.md`       | 9           | 2026-10-12   |
 | 14  | deployment         | Blocked     | `features/deployment.md`         | 6           | 2026-10-11   |
 
 `Depends on` refers to the `#` column of this table. Row 2 stays so the numbering

@@ -1,18 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { HistoryIcon } from "lucide-react";
-import { useState } from "react";
 
 import { EmptyState } from "@/components/feedback/empty-state";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -30,16 +27,17 @@ import { stockQueries } from "../queries/products.queries";
 import type { Variant } from "../schemas/product.schema";
 import { STOCK_REASON_LABEL, type StockMovement } from "../schemas/stock-movement.schema";
 
-export function StockHistory({ variant }: { variant: Variant }) {
-  const [isOpen, setIsOpen] = useState(false);
-
+export function StockHistory({
+  variant,
+  open,
+  onOpenChange,
+}: {
+  variant: Variant;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button size="icon" variant="ghost" aria-label={`Stock history of ${variant.sku}`}>
-          <HistoryIcon />
-        </Button>
-      </SheetTrigger>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-2xl">
         <SheetHeader>
           <SheetTitle>Stock history of {variant.sku}</SheetTitle>
@@ -47,7 +45,7 @@ export function StockHistory({ variant }: { variant: Variant }) {
         </SheetHeader>
         {/* Fetched only when opened: most rows' histories are never looked at. */}
         <div className="overflow-y-auto px-4 pb-4">
-          {isOpen && <Movements variantId={variant.id} />}
+          {open && <Movements variantId={variant.id} />}
         </div>
       </SheetContent>
     </Sheet>

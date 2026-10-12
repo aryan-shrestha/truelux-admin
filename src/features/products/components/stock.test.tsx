@@ -72,7 +72,8 @@ afterEach(() => localStorage.clear());
 
 async function openStockDialog() {
   const user = userEvent.setup();
-  await user.click(await screen.findByRole("button", { name: "Change stock of LUM-SF-30-WB" }));
+  await user.click(await screen.findByRole("button", { name: "Actions for LUM-SF-30-WB" }));
+  await user.click(await screen.findByRole("menuitem", { name: "Change stock" }));
   const dialog = await screen.findByRole("dialog");
   return { user, dialog };
 }
@@ -110,8 +111,8 @@ describe("changing stock", () => {
 
     expect(await screen.findByText("Stock of LUM-SF-30-WB changed")).toBeInTheDocument();
     expect(sentBody).toEqual({ reason: "damaged", quantity_change: -2, note: "Box crushed" });
-    expect(await screen.findByText("Stock of LUM-SF-30-WB:")).toBeInTheDocument();
-    expect(screen.getByText("Stock of LUM-SF-30-WB:").parentElement).toHaveTextContent("10");
+    const row = screen.getByRole("cell", { name: "LUM-SF-30-WB" }).closest("tr") as HTMLElement;
+    expect(await within(row).findByRole("cell", { name: "10" })).toBeInTheDocument();
   });
 
   it("sends a count as the variant's absolute stock, without a note", async () => {
@@ -214,7 +215,8 @@ describe("stock history", () => {
     );
     renderApp(`/products/${PRODUCT_ID}?tab=variants`);
 
-    await user.click(await screen.findByRole("button", { name: "Stock history of LUM-SF-30-WB" }));
+    await user.click(await screen.findByRole("button", { name: "Actions for LUM-SF-30-WB" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Stock history" }));
 
     const sheet = await screen.findByRole("dialog");
     expect(await within(sheet).findByText("+6")).toBeInTheDocument();
@@ -240,7 +242,8 @@ describe("stock history", () => {
     );
     renderApp(`/products/${PRODUCT_ID}?tab=variants`);
 
-    await user.click(await screen.findByRole("button", { name: "Stock history of LUM-SF-30-WB" }));
+    await user.click(await screen.findByRole("button", { name: "Actions for LUM-SF-30-WB" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Stock history" }));
 
     expect(await screen.findByText("No stock changes yet")).toBeInTheDocument();
   });

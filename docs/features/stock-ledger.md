@@ -2,7 +2,7 @@
 
 Status: Implemented
 
-Last updated: 2026-10-11
+Last updated: 2026-10-12
 
 ---
 
@@ -18,13 +18,13 @@ made it.
 
 What is included in this implementation?
 
-- **Saved variant rows**: stock is read-only, and the row's **Save** never sends it
+- **Saved variants**: stock is read-only, and the edit sheet's **Save** never sends it
 - **Change stock dialog**, one per saved variant. Staff choose what happened:
   received, returned, damaged, expired, tester or sample, correction (adds),
   correction (removes), or counted the shelf. The quantity is always positive; the
   choice fixes the sign.
 - **Stock history sheet**, one per saved variant: the latest 50 movements
-- **New variants**: a draft row still takes the opening stock as an input
+- **New variants**: the add sheet still takes the opening stock as an input
 
 What is explicitly outside the scope?
 
@@ -90,8 +90,9 @@ All in `src/features/products/` (stock belongs to the variant):
   order number linked to the order, the note), the signed change, the balance after,
   who (the API's email, or "Customer" for a sale); "Showing the latest N of M
   changes." when there are more.
-- `components/variant-row.tsx` — a saved row shows its stock (with a visually hidden
-  "Stock of {SKU}:") and the two icon buttons; a delete `409` now suggests setting its
+- `components/variant-row.tsx` — a row shows its stock; **Change stock** and **Stock
+  history** are items in the row's actions menu, which opens them (both are
+  controlled, with no trigger of their own). A delete `409` suggests setting the
   stock to 0 instead.
 
 ---
@@ -106,12 +107,12 @@ All in `src/features/products/` (stock belongs to the variant):
 
 ## Decisions
 
-### Decision: stock leaves the row's save
+### Decision: stock leaves the variant's save
 
 **Decision**
 
-A saved variant's **Save** sends everything except `stock_quantity`; stock changes
-only through the dialog.
+Saving a saved variant sends everything except `stock_quantity`; stock changes only
+through the dialog.
 
 **Reason**
 
@@ -182,8 +183,8 @@ Signed-in staff (the API).
   API's quantity error lands on **How many**; nothing is sent without a reason or
   with 0; the history's signed changes, order link, note, "Customer", actor email and
   truncation line, sent for that variant; the empty history.
-- `variants-editor.test.tsx` — a saved row's save sends no `stock_quantity`; the
-  delete `409` message.
+- `variants-editor.test.tsx` — the edit sheet has no stock field and sends no
+  `stock_quantity`; the delete `409` message.
 
 ---
 
@@ -195,6 +196,7 @@ src/features/products/schemas/stock-movement.schema.ts
 src/features/products/components/stock-dialog.tsx
 src/features/products/components/stock-history.tsx
 src/features/products/components/variant-row.tsx
+src/features/products/components/variant-sheet.tsx
 ```
 
 ---

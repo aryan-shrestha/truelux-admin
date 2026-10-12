@@ -57,20 +57,43 @@ beforeEach(() => {
 
 afterEach(() => localStorage.clear());
 
+function rowOf(sku: string) {
+  return screen.getByRole("cell", { name: sku }).closest("tr") as HTMLElement;
+}
+
+async function openAction(user: ReturnType<typeof userEvent.setup>, sku: string, action: string) {
+  await user.click(await screen.findByRole("button", { name: `Actions for ${sku}` }));
+  await user.click(await screen.findByRole("menuitem", { name: action }));
+}
+
 describe("variants", () => {
   it("opens on the tab in the URL and writes the tab back when switched", async () => {
     const user = userEvent.setup();
     server.use(http.get(PRODUCT_PATH, () => HttpResponse.json(product())));
     const { router } = renderApp(`/products/${PRODUCT_ID}?tab=variants`);
 
-    expect(await screen.findByLabelText("SKU of LUM-SF-30-WB")).toHaveValue("LUM-SF-30-WB");
+    expect(await screen.findByRole("cell", { name: "LUM-SF-30-WB" })).toBeInTheDocument();
     await user.click(screen.getByRole("tab", { name: "Details" }));
 
     await vi.waitFor(() => expect(router.state.location.search).toEqual({}));
     expect(screen.getByLabelText("Name")).toHaveValue("Silk Foundation");
   });
 
-  it("shows a saved variant's stock read-only and saves only what changed", async () => {
+  it("lists each variant as the API returned it, without inputs", async () => {
+    server.use(http.get(PRODUCT_PATH, () => HttpResponse.json(product())));
+    renderApp(`/products/${PRODUCT_ID}?tab=variants`);
+
+    await screen.findByRole("cell", { name: "LUM-SF-30-WB" });
+    const row = rowOf("LUM-SF-30-WB");
+
+    expect(within(row).getByRole("cell", { name: SIZE.name })).toBeInTheDocument();
+    expect(within(row).getByRole("cell", { name: SHADE.name })).toBeInTheDocument();
+    expect(within(row).getByRole("cell", { name: "12" })).toBeInTheDocument();
+    expect(within(row).getByRole("cell", { name: "Rs 2,720.00" })).toBeInTheDocument();
+    expect(within(row).queryByRole("textbox")).not.toBeInTheDocument();
+  });
+
+  it("edits a saved variant in the sheet, without its stock", async () => {
     const user = userEvent.setup();
     let sentBody: unknown;
     server.use(
@@ -81,12 +104,13 @@ describe("variants", () => {
       }),
     );
     renderApp(`/products/${PRODUCT_ID}?tab=variants`);
-    const save = await screen.findByRole("button", { name: "Save LUM-SF-30-WB" });
 
-    expect(screen.queryByLabelText("Opening stock of LUM-SF-30-WB")).not.toBeInTheDocument();
-    expect(save).toBeDisabled();
-    await user.clear(screen.getByLabelText("Price override of LUM-SF-30-WB"));
-    await user.click(save);
+    await openAction(user, "LUM-SF-30-WB", "Edit");
+    const sheet = await screen.findByRole("dialog", { name: "Edit LUM-SF-30-WB" });
+    expect(within(sheet).getByLabelText("SKU")).toHaveValue("LUM-SF-30-WB");
+    expect(within(sheet).queryByLabelText("Opening stock")).not.toBeInTheDocument();
+    await user.clear(within(sheet).getByLabelText("Price override"));
+    await user.click(within(sheet).getByRole("button", { name: "Save variant" }));
 
     expect(await screen.findByText("LUM-SF-30-WB saved")).toBeInTheDocument();
     expect(sentBody).toEqual({
@@ -96,9 +120,10 @@ describe("variants", () => {
       price_override: null,
       compare_at_price: null,
     });
+    await vi.waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
-  it("adds a new variant with its opening stock", async () => {
+  it("adds a new variant with its opening stock from the sheet", async () => {
     const user = userEvent.setup();
     let sentBody: unknown;
     let isCreated = false;
@@ -113,12 +138,13 @@ describe("variants", () => {
     renderApp(`/products/${PRODUCT_ID}?tab=variants`);
 
     await user.click(await screen.findByRole("button", { name: "Add variant" }));
-    await user.type(screen.getByLabelText("SKU of new variant 1"), "LUM-SF-30-WB");
-    await user.click(screen.getByLabelText("Size of new variant 1"));
+    const sheet = await screen.findByRole("dialog", { name: "New variant" });
+    await user.type(within(sheet).getByLabelText("SKU"), "LUM-SF-30-WB");
+    await user.click(within(sheet).getByLabelText("Size"));
     await user.click(await screen.findByRole("option", { name: SIZE.name }));
-    await user.clear(screen.getByLabelText("Opening stock of new variant 1"));
-    await user.type(screen.getByLabelText("Opening stock of new variant 1"), "12");
-    await user.click(screen.getByRole("button", { name: "Add new variant 1" }));
+    await user.clear(within(sheet).getByLabelText("Opening stock"));
+    await user.type(within(sheet).getByLabelText("Opening stock"), "12");
+    await user.click(within(sheet).getByRole("button", { name: "Add variant" }));
 
     expect(await screen.findByText("LUM-SF-30-WB added")).toBeInTheDocument();
     expect(sentBody).toEqual({
@@ -129,23 +155,46 @@ describe("variants", () => {
       compare_at_price: null,
       stock_quantity: 12,
     });
-    expect(await screen.findByLabelText("SKU of LUM-SF-30-WB")).toBeInTheDocument();
-    expect(screen.queryByLabelText("SKU of new variant 1")).not.toBeInTheDocument();
+    expect(await screen.findByRole("cell", { name: "LUM-SF-30-WB" })).toBeInTheDocument();
+    await vi.waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
-  it("discards a draft row without asking the API", async () => {
+  it("sends nothing until a SKU and a size are given", async () => {
+    const user = userEvent.setup();
+    let requests = 0;
+    server.use(
+      http.get(PRODUCT_PATH, () => HttpResponse.json(product([]))),
+      http.post(`${PRODUCT_PATH}variants/`, () => {
+        requests += 1;
+        return HttpResponse.json(SAVED_VARIANT, { status: 201 });
+      }),
+    );
+    renderApp(`/products/${PRODUCT_ID}?tab=variants`);
+
+    await user.click(await screen.findByRole("button", { name: "Add variant" }));
+    const sheet = await screen.findByRole("dialog", { name: "New variant" });
+    await user.click(within(sheet).getByRole("button", { name: "Add variant" }));
+
+    expect(await within(sheet).findByText("Enter a SKU.")).toBeInTheDocument();
+    expect(within(sheet).getByText("Choose a size.")).toBeInTheDocument();
+    expect(requests).toBe(0);
+  });
+
+  it("closing the sheet discards a new variant without asking the API", async () => {
     const user = userEvent.setup();
     server.use(http.get(PRODUCT_PATH, () => HttpResponse.json(product([]))));
     renderApp(`/products/${PRODUCT_ID}?tab=variants`);
 
     await user.click(await screen.findByRole("button", { name: "Add variant" }));
-    await user.click(screen.getByRole("button", { name: "Discard new variant 1" }));
+    const sheet = await screen.findByRole("dialog", { name: "New variant" });
+    await user.type(within(sheet).getByLabelText("SKU"), "LUM-SF-30-WB");
+    await user.click(within(sheet).getByRole("button", { name: "Close" }));
 
-    expect(screen.queryByLabelText("SKU of new variant 1")).not.toBeInTheDocument();
+    await vi.waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(screen.getByText("No variants yet")).toBeInTheDocument();
   });
 
-  it("explains a duplicate SKU, or size and shade, on the row", async () => {
+  it("explains a duplicate SKU, or size and shade, in the sheet", async () => {
     const user = userEvent.setup();
     server.use(
       http.get(PRODUCT_PATH, () => HttpResponse.json(product())),
@@ -153,11 +202,15 @@ describe("variants", () => {
     );
     renderApp(`/products/${PRODUCT_ID}?tab=variants`);
 
-    await user.type(await screen.findByLabelText("SKU of LUM-SF-30-WB"), "-2");
-    await user.click(screen.getByRole("button", { name: "Save LUM-SF-30-WB" }));
+    await openAction(user, "LUM-SF-30-WB", "Edit");
+    const sheet = await screen.findByRole("dialog", { name: "Edit LUM-SF-30-WB" });
+    await user.type(within(sheet).getByLabelText("SKU"), "-2");
+    await user.click(within(sheet).getByRole("button", { name: "Save variant" }));
 
     expect(
-      await screen.findByText("Another variant already has this SKU, or this size and shade."),
+      await within(sheet).findByText(
+        "Another variant already has this SKU, or this size and shade.",
+      ),
     ).toBeInTheDocument();
   });
 
@@ -173,7 +226,7 @@ describe("variants", () => {
     );
     renderApp(`/products/${PRODUCT_ID}?tab=variants`);
 
-    await user.click(await screen.findByRole("button", { name: "Delete LUM-SF-30-WB" }));
+    await openAction(user, "LUM-SF-30-WB", "Delete");
     const dialog = await screen.findByRole("alertdialog");
     expect(deleteRequests).toBe(0);
     await user.click(within(dialog).getByRole("button", { name: "Delete" }));
@@ -184,7 +237,7 @@ describe("variants", () => {
       ),
     ).toBeInTheDocument();
     expect(deleteRequests).toBe(1);
-    expect(screen.getByLabelText("SKU of LUM-SF-30-WB")).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "LUM-SF-30-WB" })).toBeInTheDocument();
   });
 
   it("shows the API's discount only on a variant it marks on sale", async () => {
@@ -199,46 +252,35 @@ describe("variants", () => {
     server.use(http.get(PRODUCT_PATH, () => HttpResponse.json(product([SAVED_VARIANT, onSale]))));
     renderApp(`/products/${PRODUCT_ID}?tab=variants`);
 
-    const saleRow = (await screen.findByLabelText("SKU of LUM-SF-50-WB")).closest(
-      "tr",
-    ) as HTMLElement;
-    const otherRow = screen.getByLabelText("SKU of LUM-SF-30-WB").closest("tr") as HTMLElement;
+    await screen.findByRole("cell", { name: "LUM-SF-50-WB" });
+    const saleRow = rowOf("LUM-SF-50-WB");
+    const otherRow = rowOf("LUM-SF-30-WB");
 
+    expect(within(saleRow).getByText("Rs 3,200.00")).toBeInTheDocument();
     expect(within(saleRow).getByText("−15%")).toBeInTheDocument();
     expect(within(otherRow).queryByText(/%$/)).not.toBeInTheDocument();
-    expect(within(otherRow).getByLabelText("Compare-at price of LUM-SF-30-WB")).toHaveAttribute(
-      "placeholder",
-      "Not on sale",
-    );
+    expect(within(otherRow).getByText("—")).toBeInTheDocument();
   });
 
-  it("puts the API's compare-at error on the edited row only", async () => {
+  it("puts the API's compare-at error on the field in the sheet", async () => {
     const user = userEvent.setup();
-    const second = {
-      ...SAVED_VARIANT,
-      id: "0e000000-0000-4000-8000-000000000002",
-      sku: "LUM-SF-50-WB",
-    };
     server.use(
-      http.get(PRODUCT_PATH, () => HttpResponse.json(product([SAVED_VARIANT, second]))),
-      http.patch(`*/api/v1/admin/variants/${second.id}/`, () =>
+      http.get(PRODUCT_PATH, () => HttpResponse.json(product())),
+      http.patch(`*/api/v1/admin/variants/${VARIANT_ID}/`, () =>
         errorEnvelope(400, "validation_error", {
           compare_at_price: ["Must be greater than the price."],
         }),
       ),
     );
     renderApp(`/products/${PRODUCT_ID}?tab=variants`);
-    const field = await screen.findByLabelText("Compare-at price of LUM-SF-50-WB");
 
+    await openAction(user, "LUM-SF-30-WB", "Edit");
+    const sheet = await screen.findByRole("dialog", { name: "Edit LUM-SF-30-WB" });
+    const field = within(sheet).getByLabelText("Compare-at price");
     await user.type(field, "2000");
-    await user.click(screen.getByRole("button", { name: "Save LUM-SF-50-WB" }));
+    await user.click(within(sheet).getByRole("button", { name: "Save variant" }));
 
-    const secondRow = field.closest("tr") as HTMLElement;
-    const firstRow = screen.getByLabelText("SKU of LUM-SF-30-WB").closest("tr") as HTMLElement;
-    expect(
-      await within(secondRow).findByText("Must be greater than the price."),
-    ).toBeInTheDocument();
+    expect(await within(sheet).findByText("Must be greater than the price.")).toBeInTheDocument();
     expect(field).toHaveAttribute("aria-invalid", "true");
-    expect(within(firstRow).queryByText("Must be greater than the price.")).not.toBeInTheDocument();
   });
 });

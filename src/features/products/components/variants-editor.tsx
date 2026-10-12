@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { BoxesIcon, PlusIcon } from "lucide-react";
 import { useState } from "react";
 
@@ -13,27 +12,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { taxonomyQueries } from "@/features/taxonomy";
 import { formatMoney } from "@/lib/money";
 
 import type { Product } from "../schemas/product.schema";
 import { VariantRow } from "./variant-row";
+import { VariantSheet } from "./variant-sheet";
 
 export function VariantsEditor({ product }: { product: Product }) {
-  const { data: sizes = [] } = useQuery(taxonomyQueries.list("sizes"));
-  const { data: shades = [] } = useQuery(taxonomyQueries.list("shades"));
-  // Unsaved rows, numbered so each keeps its own form and label.
-  const [drafts, setDrafts] = useState<number[]>([]);
-  const [nextDraft, setNextDraft] = useState(1);
-
-  function addDraft() {
-    setDrafts((current) => [...current, nextDraft]);
-    setNextDraft((current) => current + 1);
-  }
-
-  function removeDraft(draft: number) {
-    setDrafts((current) => current.filter((item) => item !== draft));
-  }
+  const [isAdding, setIsAdding] = useState(false);
 
   return (
     <Card className="md:min-h-0">
@@ -43,11 +29,11 @@ export function VariantsEditor({ product }: { product: Product }) {
           Each size and shade a product comes in. A blank price uses the base price,{" "}
           {formatMoney(product.base_price)}. Opening stock is set when a variant is added; after
           that, use Change stock, which keeps a history. To put a variant on sale, lower its price
-          (or the base price), enter the old price as the compare-at price, and save; clear the
-          compare-at price to end the sale.
+          (or the base price) and enter the old price as the compare-at price; clear the compare-at
+          price to end the sale.
         </CardDescription>
         <CardAction>
-          <Button variant="outline" onClick={addDraft}>
+          <Button variant="outline" onClick={() => setIsAdding(true)}>
             <PlusIcon data-icon="inline-start" />
             Add variant
           </Button>
@@ -55,7 +41,7 @@ export function VariantsEditor({ product }: { product: Product }) {
       </CardHeader>
       {/* The table body scrolls under its sticky header row; Add variant stays in view. */}
       <CardContent className="flex flex-col md:min-h-0 md:[&>[data-slot=table-container]]:min-h-0 md:[&>[data-slot=table-container]]:overflow-auto">
-        {product.variants.length === 0 && drafts.length === 0 ? (
+        {product.variants.length === 0 ? (
           <EmptyState
             icon={BoxesIcon}
             title="No variants yet"
@@ -69,8 +55,8 @@ export function VariantsEditor({ product }: { product: Product }) {
                 <TableHead>Size</TableHead>
                 <TableHead>Shade</TableHead>
                 <TableHead className="text-right">Stock</TableHead>
-                <TableHead>Price override (Rs)</TableHead>
-                <TableHead>Compare-at price (Rs)</TableHead>
+                <TableHead className="text-right">Price</TableHead>
+                <TableHead className="text-right">Compare-at price</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -83,27 +69,18 @@ export function VariantsEditor({ product }: { product: Product }) {
                   productId={product.id}
                   basePrice={product.base_price}
                   variant={variant}
-                  label={variant.sku}
-                  sizes={sizes}
-                  shades={shades}
-                />
-              ))}
-              {drafts.map((draft) => (
-                <VariantRow
-                  key={`draft-${draft}`}
-                  productId={product.id}
-                  basePrice={product.base_price}
-                  label={`new variant ${draft}`}
-                  sizes={sizes}
-                  shades={shades}
-                  onDiscard={() => removeDraft(draft)}
-                  onCreated={() => removeDraft(draft)}
                 />
               ))}
             </TableBody>
           </Table>
         )}
       </CardContent>
+      <VariantSheet
+        productId={product.id}
+        basePrice={product.base_price}
+        open={isAdding}
+        onOpenChange={setIsAdding}
+      />
     </Card>
   );
 }
