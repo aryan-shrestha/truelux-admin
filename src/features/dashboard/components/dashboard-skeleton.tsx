@@ -49,12 +49,9 @@ export function DashboardSkeleton() {
         <span role="status" className="sr-only">
           Loading the dashboard
         </span>
-        <div className="flex flex-col gap-3">
-          <Skeleton className="h-4 w-24" />
-          <div className="flex items-end justify-between gap-4">
-            <Skeleton className="h-8 w-40" />
-            <Skeleton className="size-9" />
-          </div>
+        <div className="flex items-end justify-between gap-4">
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="size-9" />
         </div>
         <div className="flex flex-col gap-4">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

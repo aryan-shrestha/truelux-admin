@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/breadcrumb";
 
 import { RefreshButton } from "./refresh-button";
+import { TopbarBreadcrumb } from "./topbar";
 
 export interface Crumb {
   label: string;
@@ -29,25 +30,27 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3">
-      <Breadcrumb>
-        <BreadcrumbList>
-          {crumbs.map((crumb, index) => (
-            <Fragment key={crumb.label}>
-              {index > 0 && <BreadcrumbSeparator />}
-              <BreadcrumbItem>
-                {crumb.to === undefined ? (
-                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink asChild>
-                    <Link to={crumb.to}>{crumb.label}</Link>
-                  </BreadcrumbLink>
-                )}
-              </BreadcrumbItem>
-            </Fragment>
-          ))}
-        </BreadcrumbList>
-      </Breadcrumb>
+    <>
+      <TopbarBreadcrumb>
+        <Breadcrumb>
+          <BreadcrumbList>
+            {crumbs.map((crumb, index) => (
+              <Fragment key={crumb.label}>
+                {index > 0 && <BreadcrumbSeparator />}
+                <BreadcrumbItem>
+                  {crumb.to === undefined ? (
+                    <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink asChild>
+                      <Link to={crumb.to}>{crumb.label}</Link>
+                    </BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
+              </Fragment>
+            ))}
+          </BreadcrumbList>
+        </Breadcrumb>
+      </TopbarBreadcrumb>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0 space-y-1">
           <h1 className="truncate font-heading text-2xl tracking-tight">{title}</h1>
@@ -58,6 +61,6 @@ export function PageHeader({
           {actions}
         </div>
       </div>
-    </div>
+    </>
   );
 }

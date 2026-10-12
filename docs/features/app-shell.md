@@ -24,8 +24,9 @@ What is included in this implementation?
   route.
 - A user menu in the sidebar footer: the staff email, a Light/Dark/System choice and
   **Sign out**
-- A page header with a `breadcrumb`, the title, **Refresh data**
-  ([tanstack-query.md](tanstack-query.md)) and a primary-action slot
+- A page header with the title, **Refresh data**
+  ([tanstack-query.md](tanstack-query.md)) and a primary-action slot; the page's
+  `breadcrumb` sits at the right of the top bar
 - `sonner` toasts for mutation results
 - Loading skeletons, a route error page and a not-found page
 - Theme: the TrueLux logo's deep green and gold as shadcn variables, with status hues
@@ -82,12 +83,15 @@ shadcn `empty`) live in `src/components/feedback/`, built with
   `SidebarFooter`: initials, name and email from `authQueries.me()`, a
   Light/Dark/System radio group bound to `ui.store`'s `theme`, and **Sign out**.
   It replaced the top bar's two-state theme toggle.
-- `src/components/layout/topbar.tsx` — the sidebar trigger.
+- `src/components/layout/topbar.tsx` — the sidebar trigger and, on the right, an
+  empty slot for the page's breadcrumb. `Topbar` wraps the `Outlet` so it can share
+  the slot through context; `TopbarBreadcrumb` portals its children into it.
 - `src/components/layout/page.tsx` — `Page`, every signed-in page's root: it fills
   the frame under the top bar, and its table body or form section scrolls rather
   than the page; the dashboard alone scrolls whole (`isScrollable`). The rules are in
   [../convention.md](../convention.md#page-layout-and-scrolling).
-- `src/components/layout/page-header.tsx` — a `breadcrumb` from `crumbs`, the title
+- `src/components/layout/page-header.tsx` — a `breadcrumb` from `crumbs`, rendered
+  into the top bar through `TopbarBreadcrumb`, then the title
   (heading face), description, **Refresh data**
   ([tanstack-query.md](tanstack-query.md)) and the `actions` slot.
 - `src/components/feedback/page-skeleton.tsx` — skeletons shaped like a page header,
@@ -202,6 +206,9 @@ controls).
   [scaffold.md](scaffold.md#gotchas)).
 - Re-adding shadcn's `sonner` restores a `next-themes` import (see
   [scaffold.md](scaffold.md#decisions)).
+- The breadcrumb is portalled, so it is absent on a page's first render and appears
+  once the top bar's slot has mounted; a `PageHeader` rendered outside `Topbar` shows
+  no breadcrumb. The page skeletons have no breadcrumb placeholder.
 - shadcn's `BreadcrumbPage` renders `role="link"` with `aria-current="page"`, so a
   test looking for the sidebar's current link must scope to the "Main" navigation.
 - `badge.tsx` and `sidebar.tsx` carry local edits; re-adding them with the shadcn CLI
@@ -232,7 +239,8 @@ None beyond staff-auth's guard.
 ## Tests
 
 - `src/app/router.test.tsx` — the dashboard renders in the shell with its link
-  marked current in the "Main" navigation; an unknown path renders not-found.
+  marked current in the "Main" navigation; the page's breadcrumb renders in the top
+  bar, apart from the title; an unknown path renders not-found.
 - `src/features/auth/components/user-menu.test.tsx` — the menu shows the staff
   email; choosing Dark sets the theme; Sign out lands on `/login`.
 - `src/components/layout/refresh-button.test.tsx` — **Refresh data**.

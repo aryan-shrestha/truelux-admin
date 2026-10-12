@@ -11,10 +11,7 @@ export function PageSkeleton() {
         <span role="status" className="sr-only">
           Loading
         </span>
-        <div className="space-y-3">
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-8 w-56" />
-        </div>
+        <Skeleton className="h-8 w-56" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: KPI_COUNT }, (_, index) => (
             <Skeleton key={index} className="h-24" />

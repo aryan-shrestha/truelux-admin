@@ -25,6 +25,20 @@ describe("route tree", () => {
     );
   });
 
+  it("shows the page's breadcrumb in the top bar", async () => {
+    saveSession({ access: "a1", refresh: "r1" });
+    server.use(meHandler, dashboardHandler());
+
+    renderApp("/");
+
+    const heading = await screen.findByRole("heading", { name: "Dashboard" });
+    const breadcrumb = screen.getByRole("navigation", { name: "breadcrumb" });
+    const topbar = breadcrumb.closest("header");
+    expect(topbar).not.toBeNull();
+    expect(topbar).not.toContainElement(heading);
+    expect(within(breadcrumb).getByText("Dashboard")).toHaveAttribute("aria-current", "page");
+  });
+
   it("shows the authenticating screen at once while a first load checks the session", async () => {
     saveSession({ access: "a1", refresh: "r1" });
     server.use(
